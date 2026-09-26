@@ -361,7 +361,7 @@ var App = {
       App.irPara('despesas');
       return;
     }
-    if (pgAtiva === 'viagem-form') {
+    if (pgAtiva === 'viagem-form' ||pgAtiva === 'viagem-plano') {
       App.irPara('viagens');
       return;
     }
