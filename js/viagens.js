@@ -1051,23 +1051,56 @@ abrirPlanejador: function (idExistente) {
     Viagens._continuarAbrirNoMaps();
   },
   _continuarAbrirNoMaps: function () {
-    var origem = Viagens.plano.origem;
-    var destino = Viagens.plano.destino;
-    if (!origem || !origem.lat || !destino || !destino.lat) {
-      App.toast('Não foi possível localizar os endereços', 'erro');
-      return;
-    }
-    if (!Viagens.ehDispositivoMovel()) {
-      Viagens.abrirAppNavegacao('google', origem, destino, false);
-      return;
-    }
-    var preferido = usuarioAtual && usuarioAtual.appNavegacaoPadrao ? String(usuarioAtual.appNavegacaoPadrao).trim() : '';
-    if (preferido) {
-      Viagens.abrirAppNavegacao(preferido, origem, destino, false);
-      return;
-    }
-    Viagens.mostrarModalNavegacao();
-  },
+  var origem = Viagens.plano.origem;
+  var destino = Viagens.plano.destino;
+
+  if (
+    !origem || !origem.lat ||
+    !destino || !destino.lat
+  ) {
+    App.toast(
+      'Não foi possível localizar os endereços',
+      'erro'
+    );
+    return;
+  }
+
+  if (!Viagens.ehDispositivoMovel()) {
+    Viagens.abrirAppNavegacao(
+      'google',
+      origem,
+      destino,
+      false
+    );
+    return;
+  }
+
+  var preferido = '';
+
+  if (usuarioAtual) {
+    preferido = String(
+      usuarioAtual.appNavegacaoPreferido ||
+      usuarioAtual.appNavegacaoPadrao ||
+      ''
+    ).trim();
+  }
+
+  if (preferido === 'google_maps') {
+    preferido = 'google';
+  }
+
+  if (preferido) {
+    Viagens.abrirAppNavegacao(
+      preferido,
+      origem,
+      destino,
+      false
+    );
+    return;
+  }
+
+  Viagens.mostrarModalNavegacao();
+},
   mostrarModalNavegacao: function () {
     var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
     var html =
@@ -1098,17 +1131,35 @@ abrirPlanejador: function (idExistente) {
       '</label>';
     App.abrirModal('Abrir no Maps', html, null);
   },
-  escolherAppNavegacao: function (app) {
-    var lembrar = document.getElementById('lembrarApp');
-    var salvar = lembrar ? lembrar.checked : true;
-    App.fecharModal();
-    if (salvar && usuarioAtual && usuarioAtual.id) {
-      sb.from('usuarios').update({ appNavegacaoPadrao: app }).eq('id', usuarioAtual.id)
-        .then(function () { usuarioAtual.appNavegacaoPadrao = app; })
-        .catch(function () {});
-    }
-    Viagens.abrirAppNavegacao(app, Viagens.plano.origem, Viagens.plano.destino, false);
-  },
+escolherAppNavegacao: function (app) {
+  var lembrar = document.getElementById('lembrarApp');
+  var salvar = lembrar ? lembrar.checked : true;
+
+  App.fecharModal();
+
+  if (salvar && usuarioAtual && usuarioAtual.id) {
+    var valorSalvo =
+      app === 'google' ? 'google_maps' : app;
+
+    sb.from('usuarios')
+      .update({
+        appNavegacaoPreferido: valorSalvo
+      })
+      .eq('id', usuarioAtual.id)
+      .then(function () {
+        usuarioAtual.appNavegacaoPreferido =
+          valorSalvo;
+      })
+      .catch(function () {});
+  }
+
+  Viagens.abrirAppNavegacao(
+    app,
+    Viagens.plano.origem,
+    Viagens.plano.destino,
+    false
+  );
+},
   abrirAppNavegacao: function (app, origem, destino, silencioso) {
     if (!origem || !destino) return;
     var lat = destino.lat, lon = destino.lon;
