@@ -39,6 +39,7 @@ var CATEGORIAS_DESPESA = [
   { id: 'Outros',            icone: 'receipt_long',  classe: 'cat-outros',         cor: '#94a3b8' }
 ];
 var Despesas = {
+var Despesas = {
   lista: [],
   veiculos: [],
   viagens: [],
@@ -46,6 +47,7 @@ var Despesas = {
   editando: null,
   categoriaSel: 'Alimentação',
   _salvando: false,
+  _listenerVeiculoRegistrado: false,
   carregarLista: function () {
     var el = document.getElementById('listaDespesas');
     el.innerHTML = '<div class="vazio-veiculo"><span class="ms">hourglass_top</span><p>Carregando...</p></div>';
@@ -63,6 +65,66 @@ var Despesas = {
         Despesas.renderLista();
       });
   },
+
+   _registrarListenerVeiculoGlobal: function () {
+  if (Despesas._listenerVeiculoRegistrado) return;
+
+  if (
+    typeof App === 'undefined' ||
+    typeof App.aoTrocarVeiculoAtivo !== 'function'
+  ) {
+    return;
+  }
+
+  Despesas._listenerVeiculoRegistrado = true;
+
+  App.aoTrocarVeiculoAtivo(function (veiculoId) {
+    var paginaLista = document.getElementById('pg-despesas');
+
+    if (
+      paginaLista &&
+      paginaLista.classList.contains('ativa')
+    ) {
+      Despesas.renderKpis();
+      Despesas.renderLista();
+    }
+
+    var paginaFormulario =
+      document.getElementById('pg-despesa-form');
+
+    if (
+      paginaFormulario &&
+      paginaFormulario.classList.contains('ativa')
+    ) {
+      var seletor = document.getElementById('dpVeiculo');
+
+      if (
+        seletor &&
+        veiculoId &&
+        seletor.querySelector(
+          'option[value="' + veiculoId + '"]'
+        )
+      ) {
+        seletor.value = veiculoId;
+      }
+    }
+  });
+},
+
+_listaDoVeiculoAtivo: function () {
+  var lista = Despesas.lista || [];
+
+  if (
+    typeof App === 'undefined' ||
+    !App.veiculoAtivoId
+  ) {
+    return lista.slice();
+  }
+
+  return lista.filter(function (despesa) {
+    return despesa.veiculoId === App.veiculoAtivoId;
+  });
+},
   /* KPIs com ícones coloridos explicitamente, seguindo o mesmo padrão
      já usado em Abastecimentos/Viagens: Total em azul, Em viagens em
      roxo, Dia a dia em verde, contagem em âmbar. */
