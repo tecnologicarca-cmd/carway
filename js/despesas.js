@@ -1,4 +1,4 @@
-/* APP_VERSION: v3.4 - offline com formulários locais */
+/* APP_VERSION: v3.5 - offline com formulários locais */
 /* =====================================================================
    CARWAY - DESPESAS v3.2
    - Conectado ao seletor global de veiculo (App.veiculoAtivoId).
@@ -207,6 +207,16 @@ var Despesas = {
   },
 
   abrirForm: async function (id) {
+    /* Sincroniza o formulário com a fonte central já carregada pelo módulo Veiculos. */
+    if (
+      (!Array.isArray(Despesas.veiculos) || !Despesas.veiculos.length) &&
+      typeof Veiculos !== 'undefined' &&
+      Array.isArray(Veiculos.lista) &&
+      Veiculos.lista.length
+    ) {
+      Despesas.veiculos = Veiculos.lista.slice();
+    }
+
     Despesas._registrarListenerVeiculoGlobal();
 
     var cacheVeiculos = Array.isArray(Despesas.veiculos) ? Despesas.veiculos.slice() : [];
