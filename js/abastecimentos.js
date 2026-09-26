@@ -1,45 +1,45 @@
-/* APP_VERSION: v3.6 - multi-energeticos + fila offline */
+/* APP_VERSION: v3.7 - offline com formulário local */
 /* =====================================================================
    CARWAY - ABASTECIMENTOS
    v3.2 (esta versao)
-   - LAYOUT (mobile): "Valor total" agora fica sozinho em sua prÃ³pria
-     linha (campo largo, mais fÃ¡cil de tocar no celular). Logo abaixo
-     dele fica a prÃ©via de cÃ¡lculo (litros x preÃ§o = total), e logo
-     abaixo o campo "Posto / ponto de recarga" â€” antes Valor e Posto
+   - LAYOUT (mobile): "Valor total" agora fica sozinho em sua própria
+     linha (campo largo, mais fácil de tocar no celular). Logo abaixo
+     dele fica a prévia de cálculo (litros x preço = total), e logo
+     abaixo o campo "Posto / ponto de recarga" — antes Valor e Posto
      ficavam lado a lado, apertados demais em telas pequenas.
-   - CORRIGIDO: o FORMULÃRIO de abastecimento agora tambÃ©m escuta a
-     barra de veÃ­culo GLOBAL (App.aoTrocarVeiculoAtivo). Antes, sÃ³ a
-     LISTA reagia a trocas de veÃ­culo no topo â€” se o usuÃ¡rio estivesse
-     com o formulÃ¡rio "Novo/Editar abastecimento" aberto e trocasse o
-     veÃ­culo pelos Ã­cones do topo, o formulÃ¡rio continuava mostrando o
-     veÃ­culo antigo. Agora, ao trocar o veÃ­culo ativo com o formulÃ¡rio
-     aberto, o campo "VeÃ­culo" do formulÃ¡rio Ã© atualizado automaticamente
-     (e o combustÃ­vel/unidades resincronizam juntos, como jÃ¡ acontecia
+   - CORRIGIDO: o FORMULÁRIO de abastecimento agora também escuta a
+     barra de veículo GLOBAL (App.aoTrocarVeiculoAtivo). Antes, só a
+     LISTA reagia a trocas de veículo no topo — se o usuário estivesse
+     com o formulário "Novo/Editar abastecimento" aberto e trocasse o
+     veículo pelos ícones do topo, o formulário continuava mostrando o
+     veículo antigo. Agora, ao trocar o veículo ativo com o formulário
+     aberto, o campo "Veículo" do formulário é atualizado automaticamente
+     (e o combustível/unidades resincronizam juntos, como já acontecia
      ao trocar manualmente pelo select).
-   - CORRIGIDO (cores): vÃ¡rios Ã­cones ainda apareciam em tom de azul/
-     azul-claro por herdarem a cor padrÃ£o do CSS, sem cor prÃ³pria
-     definida. Agora TODOS os Ã­cones usados nesta pÃ¡gina tÃªm cor
-     explÃ­cita e distinta:
-       â›½ bomba de combustÃ­vel -> sempre vermelho (regra do app)
-       ðŸ“ localizaÃ§Ã£o (alfinete do posto) -> ciano
-       ðŸ  dia a dia -> verde | ðŸ§³ viagem especÃ­fica -> roxo
-       âœï¸ editar -> azul | ðŸ—‘ï¸ excluir -> vermelho
-       ðŸ’° total -> azul | ðŸ§³ em viagens -> roxo | ðŸ  dia a dia -> verde
-       â±ï¸ mÃ©dia -> Ã¢mbar
-     AlÃ©m disso, o botÃ£o "Buscar postos" jÃ¡ existente na pÃ¡gina (markup
-     estÃ¡tico, fora do nosso controle direto) agora tem o Ã­cone da
-     bomba forÃ§ado para vermelho via JavaScript no momento em que nos
-     conectamos a ele â€” corrigindo o azul residual que vinha do HTML
+   - CORRIGIDO (cores): vários ícones ainda apareciam em tom de azul/
+     azul-claro por herdarem a cor padrão do CSS, sem cor própria
+     definida. Agora TODOS os ícones usados nesta página têm cor
+     explícita e distinta:
+       ⛽ bomba de combustível -> sempre vermelho (regra do app)
+       📍 localização (alfinete do posto) -> ciano
+       🏠 dia a dia -> verde | 🧳 viagem específica -> roxo
+       ✏️ editar -> azul | 🗑️ excluir -> vermelho
+       💰 total -> azul | 🧳 em viagens -> roxo | 🏠 dia a dia -> verde
+       ⏱️ média -> âmbar
+     Além disso, o botão "Buscar postos" já existente na página (markup
+     estático, fora do nosso controle direto) agora tem o ícone da
+     bomba forçado para vermelho via JavaScript no momento em que nos
+     conectamos a ele — corrigindo o azul residual que vinha do HTML
      original.
 
    v3.1
-   - BotÃ£o duplicado corrigido (conecta no botÃ£o jÃ¡ existente, sem criar outro)
-   - "HÃ­brido" removido da lista de combustÃ­vel do formulÃ¡rio
-   - Filtro de perÃ­odo (MÃªs/Ano/Tudo)
-   - PrÃ©via de cÃ¡lculo oculta quando vazia
-   - Medidor visual (ponteiro) para nÃ­vel do tanque + 3 servidores Overpass
+   - Botão duplicado corrigido (conecta no botão já existente, sem criar outro)
+   - "Híbrido" removido da lista de combustível do formulário
+   - Filtro de período (Mês/Ano/Tudo)
+   - Prévia de cálculo oculta quando vazia
+   - Medidor visual (ponteiro) para nível do tanque + 3 servidores Overpass
 
-   v3.0 / v2.0 â€” ver changelog nas versÃµes anteriores.
+   v3.0 / v2.0 — ver changelog nas versões anteriores.
    ===================================================================== */
 var Abastecimentos = {
   lista: [],
@@ -59,9 +59,9 @@ var Abastecimentos = {
 
   _listenerVeiculoRegistrado: false,
 
-  /* Registra (uma Ãºnica vez) um ouvinte na barra de veÃ­culo GLOBAL.
-     Este ÃšNICO callback agora atualiza tanto a LISTA (se estiver
-     ativa) quanto o FORMULÃRIO (se estiver aberto) â€” antes sÃ³ a lista
+  /* Registra (uma única vez) um ouvinte na barra de veículo GLOBAL.
+     Este ÚNICO callback agora atualiza tanto a LISTA (se estiver
+     ativa) quanto o FORMULÁRIO (se estiver aberto) — antes só a lista
      era avisada. */
   _registrarListenerVeiculoGlobal: function () {
     if (Abastecimentos._listenerVeiculoRegistrado) return;
@@ -80,19 +80,19 @@ var Abastecimentos = {
     });
   },
 
-  /* Atualiza o SELECT de veÃ­culo do formulÃ¡rio (se ele existir e o
-     veÃ­culo global escolhido estiver na lista de veÃ­culos do form),
-     e dispara a mesma rotina de troca manual (resincroniza combustÃ­vel,
-     unidades e viagens vinculadas). Se o veÃ­culo escolhido nÃ£o existir
-     na lista (raro) ou for "Todos" (null), nÃ£o faz nada â€” o formulÃ¡rio
-     precisa sempre ter UM veÃ­culo selecionado. */
+  /* Atualiza o SELECT de veículo do formulário (se ele existir e o
+     veículo global escolhido estiver na lista de veículos do form),
+     e dispara a mesma rotina de troca manual (resincroniza combustível,
+     unidades e viagens vinculadas). Se o veículo escolhido não existir
+     na lista (raro) ou for "Todos" (null), não faz nada — o formulário
+     precisa sempre ter UM veículo selecionado. */
   _sincronizarFormComVeiculoGlobal: function (veiculoId) {
     if (!veiculoId) return;
     var sel = document.getElementById('abVeiculo');
     if (!sel) return;
     var existe = Abastecimentos.veiculos.some(function (v) { return v.id === veiculoId; });
     if (!existe) return;
-    if (sel.value === veiculoId) return; /* jÃ¡ estÃ¡ sincronizado */
+    if (sel.value === veiculoId) return; /* já está sincronizado */
     sel.value = veiculoId;
     Abastecimentos.trocarVeiculoForm();
   },
@@ -140,11 +140,11 @@ var Abastecimentos = {
     kpis.parentNode.insertBefore(el, kpis);
   },
 
-  /* Procura o botÃ£o "Buscar postos" JÃ EXISTENTE na pÃ¡gina (markup
-     estÃ¡tico do index.html) e: (1) conecta o clique Ã  nossa lÃ³gica
-     nova; (2) forÃ§a a cor do ÃCONE da bomba dentro dele para vermelho
-     â€” porque esse botÃ£o nÃ£o Ã© gerado por nÃ³s, e o HTML original nÃ£o
-     tinha nenhuma cor explÃ­cita (herdava o azul padrÃ£o do CSS). */
+  /* Procura o botão "Buscar postos" JÁ EXISTENTE na página (markup
+     estático do index.html) e: (1) conecta o clique à nossa lógica
+     nova; (2) força a cor do ÍCONE da bomba dentro dele para vermelho
+     — porque esse botão não é gerado por nós, e o HTML original não
+     tinha nenhuma cor explícita (herdava o azul padrão do CSS). */
   _conectarBotaoBuscarPostosExistente: function () {
     var pg = document.getElementById('pg-abastecimentos');
     if (!pg) return;
@@ -196,22 +196,22 @@ var Abastecimentos = {
 
     var resumoQtd = Object.keys(quantidades).map(function (u) {
       return Abastecimentos.fmtNum(quantidades[u], 1) + ' ' + u;
-    }).join(' Â· ') || 'Sem quantidade';
+    }).join(' · ') || 'Sem quantidade';
 
     var chavesEff = Object.keys(eficiencias);
-    var mediaTxt = 'â€”';
-    var mediaSub = 'Sem mÃ©dia';
+    var mediaTxt = '—';
+    var mediaSub = 'Sem média';
     if (chavesEff.length === 1) {
       var e = eficiencias[chavesEff[0]];
       mediaTxt = (e.soma / e.qtd).toFixed(2);
-      mediaSub = 'km/' + e.unidade + ' Â· ' + chavesEff[0];
+      mediaSub = 'km/' + e.unidade + ' · ' + chavesEff[0];
     } else if (chavesEff.length > 1) {
       mediaTxt = chavesEff.length;
-      mediaSub = 'mÃ©dias por energÃ©tico';
+      mediaSub = 'médias por energético';
     }
 
     document.getElementById('kpisAbast').innerHTML =
-      '<div class="kpi-abast"><span class="ms" style="color:#3b82f6">payments</span><b>' + App.moeda(total) + '</b><span class="lbl">Total Â· ' + App.esc(resumoQtd) + '</span></div>' +
+      '<div class="kpi-abast"><span class="ms" style="color:#3b82f6">payments</span><b>' + App.moeda(total) + '</b><span class="lbl">Total · ' + App.esc(resumoQtd) + '</span></div>' +
       '<div class="kpi-abast roxo"><span class="ms" style="color:#a78bfa">luggage</span><b>' + App.moeda(totalViagem) + '</b><span class="lbl">Em viagens</span></div>' +
       '<div class="kpi-abast verde"><span class="ms" style="color:#22c55e">home</span><b>' + App.moeda(totalRotina) + '</b><span class="lbl">Dia a dia</span></div>' +
       '<div class="kpi-abast amarelo"><span class="ms" style="color:#f59e0b">speed</span><b>' + mediaTxt + '</b><span class="lbl">' + App.esc(mediaSub) + '</span></div>';
@@ -223,7 +223,7 @@ var Abastecimentos = {
   },
 
   /* =========================================================
-     FILTRO DE PERIODO (MÃªs / Ano / Tudo)
+     FILTRO DE PERIODO (Mês / Ano / Tudo)
      ========================================================= */
   noPeriodo: function (dataStr) {
     var f = Abastecimentos.filtroPeriodo;
@@ -276,13 +276,13 @@ var Abastecimentos = {
     } else {
       campos = '<div style="flex:1;display:flex;align-items:center;justify-content:center;gap:7px;' +
         'color:var(--txt2,#93a4c8);font-size:13px;padding:10px;background:var(--bg2,#111c33);border-radius:9px;' +
-        'border:1px solid var(--linha,#26365c)"><span class="ms" style="color:#60a5fa">all_inclusive</span>Todos os lanÃ§amentos</div>';
+        'border:1px solid var(--linha,#26365c)"><span class="ms" style="color:#60a5fa">all_inclusive</span>Todos os lançamentos</div>';
     }
 
     el.innerHTML = '<div style="background:var(--card,#16213b);border:1px solid var(--linha,#26365c);border-radius:16px;' +
       'padding:10px;margin-bottom:14px">' +
         '<div style="display:flex;gap:5px;background:var(--bg2,#111c33);border-radius:10px;padding:4px;margin-bottom:9px">' +
-          '<button style="' + estiloAba(f.modo === 'mes') + '" onclick="Abastecimentos.setModoPeriodo(\'mes\')">MÃªs</button>' +
+          '<button style="' + estiloAba(f.modo === 'mes') + '" onclick="Abastecimentos.setModoPeriodo(\'mes\')">Mês</button>' +
           '<button style="' + estiloAba(f.modo === 'ano') + '" onclick="Abastecimentos.setModoPeriodo(\'ano\')">Ano</button>' +
           '<button style="' + estiloAba(f.modo === 'tudo') + '" onclick="Abastecimentos.setModoPeriodo(\'tudo\')">Tudo</button>' +
         '</div>' +
@@ -323,9 +323,9 @@ var Abastecimentos = {
         '<span class="ms" style="color:#ef4444">local_gas_station</span>' +
         '<b>Nenhum abastecimento</b>' +
         '<p>' + (semVeiculoFiltrado
-          ? 'Nenhum abastecimento deste veÃ­culo neste perÃ­odo. Selecione "Todos" ou troque o perÃ­odo acima.'
+          ? 'Nenhum abastecimento deste veículo neste período. Selecione "Todos" ou troque o período acima.'
           : (Abastecimentos.filtro === 'todos'
-              ? 'Nenhum lanÃ§amento neste perÃ­odo. Troque o filtro de perÃ­odo acima ou registre um novo.'
+              ? 'Nenhum lançamento neste período. Troque o filtro de período acima ou registre um novo.'
               : 'Nenhum registro nesse filtro.')) + '</p>' +
         '<button class="btn-novo" onclick="App.irParaFormAbastecimento()">' +
           '<span class="ms">add</span> Novo abastecimento' +
@@ -357,7 +357,7 @@ var Abastecimentos = {
       var icone = App._iconeTipoVeiculo ? App._iconeTipoVeiculo(veic.tipo) : 'directions_car';
       chipVeiculo = '<small style="display:flex;align-items:center;gap:4px;margin-top:2px;color:' + cor + ';font-weight:600">' +
         '<span class="ms" style="font-size:14px">' + icone + '</span>' +
-        App.esc(veic.nome) + (veic.placa ? ' Â· ' + App.esc(veic.placa) : '') +
+        App.esc(veic.nome) + (veic.placa ? ' · ' + App.esc(veic.placa) : '') +
       '</small>';
     }
 
@@ -365,9 +365,9 @@ var Abastecimentos = {
       '<div class="cab-abast">' +
         '<div class="ico-abast"><span class="ms" style="color:#ef4444">local_gas_station</span></div>' +
         '<div class="info-abast">' +
-          '<b>' + App.esc(Abastecimentos.fmtNum(litros, 2)) + ' ' + unidade.sigla + ' Â· ' + App.esc(App.moeda(valor)) + '</b>' +
-          '<small>' + App.esc(data) + ' Â· ' + App.fmtNum(km) + ' km Â· ' + App.esc(a.combustivel || 'Gasolina') + '</small>' +
-          (a.posto ? '<small>' + App.esc(a.posto) + ' Â· ' + App.esc(App.moeda(preco)) + '/' + unidade.sigla + '</small>' : '') +
+          '<b>' + App.esc(Abastecimentos.fmtNum(litros, 2)) + ' ' + unidade.sigla + ' · ' + App.esc(App.moeda(valor)) + '</b>' +
+          '<small>' + App.esc(data) + ' · ' + App.fmtNum(km) + ' km · ' + App.esc(a.combustivel || 'Gasolina') + '</small>' +
+          (a.posto ? '<small>' + App.esc(a.posto) + ' · ' + App.esc(App.moeda(preco)) + '/' + unidade.sigla + '</small>' : '') +
           chipVeiculo +
           '<div class="tags-abast">' + tags.join('') + '</div>' +
         '</div>' +
@@ -384,23 +384,23 @@ var Abastecimentos = {
   },
 
   /* =========================================================
-     UNIDADES POR COMBUSTIVEL (Litros / kWh / mÂ³)
+     UNIDADES POR COMBUSTIVEL (Litros / kWh / m³)
      ========================================================= */
   _unidadePorCombustivel: function (combustivel) {
     var c = String(combustivel || '').toUpperCase();
-    if (c.indexOf('ELÃ‰TR') > -1 || c.indexOf('ELETR') > -1) {
-      return { sigla: 'kWh', labelQtd: 'Energia (kWh)', labelPreco: 'PreÃ§o / kWh', placeholder: '0,00', cor: '#22c55e', icone: 'ev_station' };
+    if (c.indexOf('ELÉTR') > -1 || c.indexOf('ELETR') > -1) {
+      return { sigla: 'kWh', labelQtd: 'Energia (kWh)', labelPreco: 'Preço / kWh', placeholder: '0,00', cor: '#22c55e', icone: 'ev_station' };
     }
     if (c.indexOf('GNV') > -1) {
-      return { sigla: 'mÂ³', labelQtd: 'GÃ¡s (mÂ³)', labelPreco: 'PreÃ§o / mÂ³', placeholder: '0,00', cor: '#22d3ee', icone: 'propane_tank' };
+      return { sigla: 'm³', labelQtd: 'Gás (m³)', labelPreco: 'Preço / m³', placeholder: '0,00', cor: '#22d3ee', icone: 'propane_tank' };
     }
     if (c.indexOf('ETANOL') > -1) {
-      return { sigla: 'L', labelQtd: 'Litros', labelPreco: 'PreÃ§o / litro', placeholder: '0,00', cor: '#22c55e', icone: 'local_gas_station' };
+      return { sigla: 'L', labelQtd: 'Litros', labelPreco: 'Preço / litro', placeholder: '0,00', cor: '#22c55e', icone: 'local_gas_station' };
     }
     if (c.indexOf('DIESEL') > -1) {
-      return { sigla: 'L', labelQtd: 'Litros', labelPreco: 'PreÃ§o / litro', placeholder: '0,00', cor: '#f59e0b', icone: 'local_gas_station' };
+      return { sigla: 'L', labelQtd: 'Litros', labelPreco: 'Preço / litro', placeholder: '0,00', cor: '#f59e0b', icone: 'local_gas_station' };
     }
-    return { sigla: 'L', labelQtd: 'Litros', labelPreco: 'PreÃ§o / litro', placeholder: '0,00', cor: '#ef4444', icone: 'local_gas_station' };
+    return { sigla: 'L', labelQtd: 'Litros', labelPreco: 'Preço / litro', placeholder: '0,00', cor: '#ef4444', icone: 'local_gas_station' };
   },
 
   _energeticosDoVeiculo: function (veiculo) {
@@ -411,10 +411,10 @@ var Abastecimentos = {
       if (lista.length) return lista;
     }
     var c = String(veiculo.combustivel || '').toUpperCase();
-    if (c.indexOf('ELÃ‰TR') > -1 || c.indexOf('ELETR') > -1) return ['ElÃ©trico'];
+    if (c.indexOf('ELÉTR') > -1 || c.indexOf('ELETR') > -1) return ['Elétrico'];
     if (c.indexOf('FLEX') > -1) return ['Gasolina', 'Etanol'];
     if (c.indexOf('GNV') > -1) return ['Gasolina', 'GNV'];
-    if (c.indexOf('HÃBR') > -1 || c.indexOf('HIBR') > -1) return veiculo.plugIn ? ['Gasolina', 'ElÃ©trico'] : ['Gasolina'];
+    if (c.indexOf('HÍBR') > -1 || c.indexOf('HIBR') > -1) return veiculo.plugIn ? ['Gasolina', 'Elétrico'] : ['Gasolina'];
     if (c.indexOf('DIESEL') > -1) return ['Diesel'];
     if (c.indexOf('ETANOL') > -1) return ['Etanol'];
     return ['Gasolina'];
@@ -462,10 +462,10 @@ var Abastecimentos = {
 
   _rotuloNivel: function (nivel) {
     var n = Number(nivel);
-    if (n === 100 || !nivel) return 'âœ“ Completo';
-    if (n === 75) return '3/4 disponÃ­vel';
-    if (n === 50) return 'Metade disponÃ­vel';
-    if (n === 25) return '1/4 disponÃ­vel';
+    if (n === 100 || !nivel) return '✓ Completo';
+    if (n === 75) return '3/4 disponível';
+    if (n === 50) return 'Metade disponível';
+    if (n === 25) return '1/4 disponível';
     return 'Parcial';
   },
 
@@ -492,18 +492,18 @@ var Abastecimentos = {
 
   _categoriaCombustivel: function (combustivel) {
     var c = String(combustivel || '').toUpperCase();
-    if (c.indexOf('ELÃ‰TR') > -1 || c.indexOf('ELETR') > -1) return 'eletrico';
+    if (c.indexOf('ELÉTR') > -1 || c.indexOf('ELETR') > -1) return 'eletrico';
     if (c.indexOf('GNV') > -1) return 'gnv';
     return 'combustivel';
   },
 
   _obterLocalizacaoAtual: function () {
     return new Promise(function (resolve, reject) {
-      if (!navigator.geolocation) { reject(new Error('GPS indisponÃ­vel')); return; }
+      if (!navigator.geolocation) { reject(new Error('GPS indisponível')); return; }
       navigator.geolocation.getCurrentPosition(function (pos) {
         resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude });
       }, function () {
-        reject(new Error('NÃ£o foi possÃ­vel obter sua localizaÃ§Ã£o'));
+        reject(new Error('Não foi possível obter sua localização'));
       }, { enableHighAccuracy: true, timeout: 15000 });
     });
   },
@@ -532,7 +532,7 @@ var Abastecimentos = {
 
     var tentar = function (idx) {
       if (idx >= Abastecimentos._OVERPASS_MIRRORS.length) {
-        return Promise.reject(new Error('Servidores de mapas indisponÃ­veis no momento'));
+        return Promise.reject(new Error('Servidores de mapas indisponíveis no momento'));
       }
       var url = Abastecimentos._OVERPASS_MIRRORS[idx] + '?data=' + encodeURIComponent(query);
       var controller = (typeof AbortController !== 'undefined') ? new AbortController() : null;
@@ -582,22 +582,22 @@ var Abastecimentos = {
     }
     var html = '<div style="display:flex;flex-direction:column;gap:10px">' +
       '<button class="app-nav-item" onclick="App.fecharModal();Abastecimentos._buscarPostosPara(\'combustivel\')">' +
-        '<span class="ms" style="color:#ef4444">local_gas_station</span><b>Postos de combustÃ­vel</b>' +
+        '<span class="ms" style="color:#ef4444">local_gas_station</span><b>Postos de combustível</b>' +
       '</button>' +
       '<button class="app-nav-item" onclick="App.fecharModal();Abastecimentos._buscarPostosPara(\'eletrico\')">' +
-        '<span class="ms" style="color:#22c55e">ev_station</span><b>Pontos de recarga elÃ©trica</b>' +
+        '<span class="ms" style="color:#22c55e">ev_station</span><b>Pontos de recarga elétrica</b>' +
       '</button>' +
       '<button class="app-nav-item" onclick="App.fecharModal();Abastecimentos._buscarPostosPara(\'gnv\')">' +
         '<span class="ms" style="color:#3b82f6">local_gas_station</span><b>Postos de GNV</b>' +
       '</button>' +
     '</div>';
-    App.abrirModal('O que vocÃª procura?', html, null);
+    App.abrirModal('O que você procura?', html, null);
   },
 
   _buscarPostosPara: function (categoria) {
-    App.abrirModal(categoria === 'eletrico' ? 'Pontos de recarga prÃ³ximos' : 'Postos prÃ³ximos',
+    App.abrirModal(categoria === 'eletrico' ? 'Pontos de recarga próximos' : 'Postos próximos',
       '<div style="text-align:center;padding:20px 0"><span class="ms" style="font-size:36px;opacity:.5">hourglass_top</span>' +
-      '<p style="color:var(--txt2);margin-top:10px">Obtendo sua localizaÃ§Ã£o...</p></div>', null);
+      '<p style="color:var(--txt2);margin-top:10px">Obtendo sua localização...</p></div>', null);
 
     Abastecimentos._obterLocalizacaoAtual().then(function (loc) {
       var busca = categoria === 'eletrico'
@@ -607,25 +607,25 @@ var Abastecimentos = {
       busca.then(function (locais) {
         Abastecimentos._mostrarListaPostos(categoria, locais, loc);
       }).catch(function () {
-        var termo = categoria === 'eletrico' ? 'carregador para carro elÃ©trico' : (categoria === 'gnv' ? 'posto de GNV' : 'posto de combustÃ­vel');
+        var termo = categoria === 'eletrico' ? 'carregador para carro elétrico' : (categoria === 'gnv' ? 'posto de GNV' : 'posto de combustível');
         window.open(Abastecimentos._linkBuscaMaps(termo, loc.lat, loc.lon), '_blank', 'noopener');
         App.fecharModal();
-        App.toast('Busca detalhada indisponÃ­vel â€” abrindo Google Maps', 'ok');
+        App.toast('Busca detalhada indisponível — abrindo Google Maps', 'ok');
       });
     }).catch(function () {
-      var termo = categoria === 'eletrico' ? 'carregador para carro elÃ©trico' : (categoria === 'gnv' ? 'posto de GNV' : 'posto de combustÃ­vel');
+      var termo = categoria === 'eletrico' ? 'carregador para carro elétrico' : (categoria === 'gnv' ? 'posto de GNV' : 'posto de combustível');
       window.open(Abastecimentos._linkBuscaMaps(termo, null, null), '_blank', 'noopener');
       App.fecharModal();
-      App.toast('LocalizaÃ§Ã£o nÃ£o disponÃ­vel â€” abrindo busca geral no Maps', 'ok');
+      App.toast('Localização não disponível — abrindo busca geral no Maps', 'ok');
     });
   },
 
   _mostrarListaPostos: function (categoria, locais, loc) {
-    var termo = categoria === 'eletrico' ? 'carregador para carro elÃ©trico' : (categoria === 'gnv' ? 'posto de GNV' : 'posto de combustÃ­vel');
+    var termo = categoria === 'eletrico' ? 'carregador para carro elétrico' : (categoria === 'gnv' ? 'posto de GNV' : 'posto de combustível');
     var linkGenerico = Abastecimentos._linkBuscaMaps(termo, loc.lat, loc.lon);
 
     if (!locais || !locais.length) {
-      App.abrirModal(categoria === 'eletrico' ? 'Pontos de recarga prÃ³ximos' : 'Postos prÃ³ximos',
+      App.abrirModal(categoria === 'eletrico' ? 'Pontos de recarga próximos' : 'Postos próximos',
         '<div style="text-align:center;padding:10px 0;color:var(--txt2)">' +
           '<span class="ms" style="font-size:44px;opacity:.5">location_off</span>' +
           '<p style="margin-top:10px">Nenhum resultado encontrado nas proximidades.</p>' +
@@ -658,7 +658,7 @@ var Abastecimentos = {
       '</button>' +
     '</div>';
 
-    App.abrirModal(categoria === 'eletrico' ? 'Pontos de recarga prÃ³ximos' : 'Postos prÃ³ximos', html, null);
+    App.abrirModal(categoria === 'eletrico' ? 'Pontos de recarga próximos' : 'Postos próximos', html, null);
   },
 
   usarLocalizacaoPosto: function () {
@@ -683,61 +683,85 @@ var Abastecimentos = {
         input.value = locais[0].nome;
         App.toast('Preenchido: ' + locais[0].nome, 'ok');
       } else {
-        App.toast('Nenhum local encontrado por perto â€” preencha manualmente', 'erro');
+        App.toast('Nenhum local encontrado por perto — preencha manualmente', 'erro');
       }
     }).catch(function (e) {
       if (btn) { btn.disabled = false; var icoBtn3 = btn.querySelector('.ms'); if (icoBtn3) icoBtn3.textContent = 'my_location'; }
       input.placeholder = categoria === 'eletrico' ? 'Ponto de recarga...' : 'Shell, Ipiranga...';
-      App.toast(e.message || 'NÃ£o foi possÃ­vel localizar automaticamente', 'erro');
+      App.toast(e.message || 'Não foi possível localizar automaticamente', 'erro');
     });
   },
 
   /* =========================================================
      FORMULARIO
      ========================================================= */
-  abrirForm: function (id, veiculoIdPre) {
-    sb.from('veiculos').select('id, nome, placa, tipo, cor, combustivel, energeticos, plugIn, tanque, capacidadeGnv, capacidadeBateria', { count: 'exact' })
-      .eq('organizacaoId', orgAtual.id)
-      .order('nome')
-      .then(function (r) {
-        if (r.error || !r.data || r.data.length === 0) {
-          App.abrirModal('VeÃ­culo necessÃ¡rio',
-            '<div style="text-align:center;padding:10px 0">' +
-              '<span class="ms" style="font-size:56px;color:var(--txt2);opacity:0.5">directions_car</span>' +
-              '<h3 style="margin:16px 0 10px">Cadastre um veÃ­culo primeiro</h3>' +
-              '<p style="color:var(--txt2);font-size:14px;line-height:1.6;margin:0 0 20px">' +
-                'Para lanÃ§ar abastecimentos, vocÃª precisa cadastrar pelo menos um veÃ­culo.' +
-              '</p>' +
-            '</div>',
-            function () { App.fecharModal(); App.irParaFormVeiculo(); },
-            'Cadastrar veÃ­culo'
-          );
-          return;
-        }
-        Abastecimentos.veiculos = r.data;
-        Abastecimentos._form.tipoLancamento = 'diaadia';
-        Abastecimentos._form.nivelTanque = 100;
-        Abastecimentos._form.viagensDoVeiculo = [];
-        Abastecimentos._form.energetico = 'Gasolina';
-        Abastecimentos._registrarListenerVeiculoGlobal(); /* garante que o form tambem escute, mesmo se aberto direto */
+  abrirForm: async function (id, veiculoIdPre) {
+    var cacheVeiculos = Array.isArray(Abastecimentos.veiculos) ? Abastecimentos.veiculos.slice() : [];
 
-        if (id) {
-          sb.from('abastecimentos').select('*').eq('id', id).single().then(function (r2) {
-            if (r2.error || !r2.data) {
-              App.toast('Abastecimento nÃ£o encontrado', 'erro');
-              return;
-            }
-            Abastecimentos.editando = r2.data;
-            Abastecimentos._form.tipoLancamento = r2.data.viagemId ? 'viagem' : 'diaadia';
-            Abastecimentos._form.nivelTanque = Number(r2.data.nivelTanque) || 100;
-            Abastecimentos.renderForm(veiculoIdPre);
-          });
-        } else {
-          Abastecimentos.editando = null;
-          Abastecimentos.renderForm(veiculoIdPre);
+    function abrirComVeiculos() {
+      if (!Abastecimentos.veiculos.length) {
+        App.abrirModal(
+          'Veículo necessário',
+          '<div style="text-align:center;padding:10px 0">' +
+            '<span class="ms" style="font-size:56px;color:var(--txt2);opacity:.5">directions_car</span>' +
+            '<h3 style="margin:16px 0 10px">Cadastre um veículo primeiro</h3>' +
+            '<p style="color:var(--txt2);font-size:14px;line-height:1.6;margin:0 0 20px">' +
+              'Para lançar abastecimentos, você precisa cadastrar pelo menos um veículo.' +
+            '</p>' +
+          '</div>',
+          function () { App.fecharModal(); App.irParaFormVeiculo(); },
+          'Cadastrar veículo'
+        );
+        return;
+      }
+
+      Abastecimentos._form.tipoLancamento = 'diaadia';
+      Abastecimentos._form.nivelTanque = 100;
+      Abastecimentos._form.viagensDoVeiculo = [];
+      Abastecimentos._form.energetico = 'Gasolina';
+      Abastecimentos._registrarListenerVeiculoGlobal();
+
+      if (id) {
+        var local = (Abastecimentos.lista || []).filter(function (x) { return x.id === id; })[0];
+        if (!local) { App.toast('Abastecimento não encontrado neste aparelho', 'erro'); return; }
+        Abastecimentos.editando = local;
+        Abastecimentos._form.tipoLancamento = local.viagemId ? 'viagem' : 'diaadia';
+        Abastecimentos._form.nivelTanque = Number(local.nivelTanque) || 100;
+      } else {
+        Abastecimentos.editando = null;
+      }
+      Abastecimentos.renderForm(veiculoIdPre);
+    }
+
+    if (!navigator.onLine) {
+      Abastecimentos.veiculos = cacheVeiculos;
+      abrirComVeiculos();
+      return;
+    }
+
+    try {
+      var r = await sb.from('veiculos')
+        .select('id,nome,placa,tipo,cor,combustivel,energeticos,plugIn,tanque,capacidadeGnv,capacidadeBateria', { count: 'exact' })
+        .eq('organizacaoId', orgAtual.id).order('nome');
+
+      Abastecimentos.veiculos = (!r.error && r.data && r.data.length) ? r.data : cacheVeiculos;
+
+      if (id) {
+        var r2 = await sb.from('abastecimentos').select('*').eq('id', id).single();
+        if (!r2.error && r2.data) {
+          Abastecimentos.editando = r2.data;
+          Abastecimentos._form.tipoLancamento = r2.data.viagemId ? 'viagem' : 'diaadia';
+          Abastecimentos._form.nivelTanque = Number(r2.data.nivelTanque) || 100;
         }
-      });
+      }
+      abrirComVeiculos();
+    } catch (erro) {
+      console.warn('CarWay abastecimentos - usando dados locais:', erro);
+      Abastecimentos.veiculos = cacheVeiculos;
+      abrirComVeiculos();
+    }
   },
+
 
   renderForm: function (veiculoIdPre) {
     var a = Abastecimentos.editando || {};
@@ -746,7 +770,7 @@ var Abastecimentos = {
     var veicSel = veiculos.filter(function (v) { return v.id === vSel; })[0] || veiculos[0];
     var dataHoje = App.hojeISO();
     var veicOpts = veiculos.map(function (v) {
-      return '<option value="' + v.id + '"' + (v.id === vSel ? ' selected' : '') + '>' + App.esc(v.nome) + (v.placa ? ' Â· ' + App.esc(v.placa) : '') + '</option>';
+      return '<option value="' + v.id + '"' + (v.id === vSel ? ' selected' : '') + '>' + App.esc(v.nome) + (v.placa ? ' · ' + App.esc(v.placa) : '') + '</option>';
     }).join('');
     var permitidos = Abastecimentos._energeticosDoVeiculo(veicSel);
     var inicial = a.id && permitidos.indexOf(a.combustivel) > -1 ? a.combustivel : permitidos[0];
@@ -755,10 +779,10 @@ var Abastecimentos = {
 
     var html =
       '<h2 class="form-titulo">' + (a.id ? 'Editar abastecimento' : 'Novo abastecimento') + '</h2>' +
-      '<div class="campo-form"><label>VeÃ­culo</label><select id="abVeiculo" onchange="Abastecimentos.trocarVeiculoForm()">' + veicOpts + '</select></div>' +
-      '<div class="campo-form"><label>EnergÃ©tico utilizado</label>' +
+      '<div class="campo-form"><label>Veículo</label><select id="abVeiculo" onchange="Abastecimentos.trocarVeiculoForm()">' + veicOpts + '</select></div>' +
+      '<div class="campo-form"><label>Energético utilizado</label>' +
         '<div id="abEnergeticos" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px"></div>' +
-        '<small>SÃ£o exibidos somente os energÃ©ticos aceitos pelo veÃ­culo selecionado.</small>' +
+        '<small>São exibidos somente os energéticos aceitos pelo veículo selecionado.</small>' +
       '</div>' +
       '<div class="linha-2">' +
         '<div class="campo-form"><label>Data</label><input type="date" id="abData" value="' + (a.data || dataHoje) + '"></div>' +
@@ -772,24 +796,24 @@ var Abastecimentos = {
       '<div class="previa-abast" id="previaAbast" style="display:none"></div>' +
       '<div class="campo-form"><label>Posto / ponto de recarga <small style="text-transform:none;color:var(--txt2);font-weight:400">(opcional)</small></label>' +
         '<div style="display:flex;gap:8px"><input type="text" id="abPosto" placeholder="Posto ou ponto de recarga..." value="' + App.esc(a.posto || '') + '" style="flex:1;min-width:0">' +
-        '<button type="button" id="btnPinPosto" class="btn-icone-campo" onclick="Abastecimentos.usarLocalizacaoPosto()" title="Usar minha localizaÃ§Ã£o"><span class="ms" style="color:#22d3ee">my_location</span></button></div>' +
-        '<small style="display:block;margin-top:6px;color:var(--txt2);font-size:12px">Toque no alfinete para preencher automaticamente com o mais prÃ³ximo, ou digite manualmente.</small>' +
+        '<button type="button" id="btnPinPosto" class="btn-icone-campo" onclick="Abastecimentos.usarLocalizacaoPosto()" title="Usar minha localização"><span class="ms" style="color:#22d3ee">my_location</span></button></div>' +
+        '<small style="display:block;margin-top:6px;color:var(--txt2);font-size:12px">Toque no alfinete para preencher automaticamente com o mais próximo, ou digite manualmente.</small>' +
       '</div>' +
-      '<div class="campo-form"><label>Este abastecimento Ã©...</label>' +
+      '<div class="campo-form"><label>Este abastecimento é...</label>' +
         '<div class="toggle-ida-volta" id="abTipoLancamentoBtns">' +
           '<button type="button" class="iv-btn' + (Abastecimentos._form.tipoLancamento === 'diaadia' ? ' sel' : '') + '" onclick="Abastecimentos.setTipoLancamento(\'diaadia\')"><span class="ms" style="color:#22c55e">home</span><b>Dia a dia</b><small>uso rotineiro</small></button>' +
-          '<button type="button" class="iv-btn' + (Abastecimentos._form.tipoLancamento === 'viagem' ? ' sel' : '') + '" onclick="Abastecimentos.setTipoLancamento(\'viagem\')"><span class="ms" style="color:#a78bfa">luggage</span><b>Viagem especÃ­fica</b><small>vincular a uma viagem</small></button>' +
+          '<button type="button" class="iv-btn' + (Abastecimentos._form.tipoLancamento === 'viagem' ? ' sel' : '') + '" onclick="Abastecimentos.setTipoLancamento(\'viagem\')"><span class="ms" style="color:#a78bfa">luggage</span><b>Viagem específica</b><small>vincular a uma viagem</small></button>' +
         '</div><div id="abViagemWrap" style="margin-top:10px;' + (Abastecimentos._form.tipoLancamento === 'viagem' ? '' : 'display:none') + '"></div>' +
       '</div>' +
-      '<div class="campo-form"><label>NÃ­vel disponÃ­vel apÃ³s o lanÃ§amento</label>' +
+      '<div class="campo-form"><label>Nível disponível após o lançamento</label>' +
         '<div style="background:var(--bg2,#111c33);border:1px solid var(--linha,#26365c);border-radius:14px;padding:14px">' +
           Abastecimentos._gaugeSVG(Abastecimentos._form.nivelTanque) +
           '<div id="abNivelBtns" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px">' + Abastecimentos._botoesNivel(Abastecimentos._form.nivelTanque) + '</div>' +
         '</div>' +
       '</div>' +
-      '<div class="campo-form"><label>ObservaÃ§Ãµes</label><textarea id="abObs" rows="2" style="width:100%;background:var(--bg2);border:1px solid var(--linha);border-radius:11px;padding:12px;color:var(--txt);font-family:inherit;font-size:14px;resize:vertical">' + App.esc(a.obs || '') + '</textarea></div>' +
+      '<div class="campo-form"><label>Observações</label><textarea id="abObs" rows="2" style="width:100%;background:var(--bg2);border:1px solid var(--linha);border-radius:11px;padding:12px;color:var(--txt);font-family:inherit;font-size:14px;resize:vertical">' + App.esc(a.obs || '') + '</textarea></div>' +
       '<div class="form-acoes"><button class="btn-cancelar-form" onclick="App.irPara(\'abastecimentos\')">Cancelar</button>' +
-        '<button class="btn-salvar-form" id="btnSalvarAb" onclick="Abastecimentos.validarESalvar()">' + (a.id ? 'Salvar alteraÃ§Ãµes' : 'Registrar abastecimento') + '</button></div>';
+        '<button class="btn-salvar-form" id="btnSalvarAb" onclick="Abastecimentos.validarESalvar()">' + (a.id ? 'Salvar alterações' : 'Registrar abastecimento') + '</button></div>';
 
     document.getElementById('formAbastecimentoContainer').innerHTML = html;
     Abastecimentos._renderCardsEnergeticos();
@@ -822,8 +846,8 @@ var Abastecimentos = {
   },
 
   /* =========================================================
-     TIPO DE LANÃ‡AMENTO  /* =========================================================
-     TIPO DE LANÃ‡AMENTO: DIA A DIA vs VIAGEM ESPECÃFICA
+     TIPO DE LANÇAMENTO  /* =========================================================
+     TIPO DE LANÇAMENTO: DIA A DIA vs VIAGEM ESPECÍFICA
      ========================================================= */
   setTipoLancamento: function (tipo) {
     Abastecimentos._form.tipoLancamento = tipo;
@@ -875,19 +899,19 @@ var Abastecimentos = {
     if (!viagens.length) {
       wrap.innerHTML = '<div style="font-size:12.5px;color:var(--txt2);padding:10px;background:var(--card,#16213b);border-radius:9px;border:1px solid var(--linha,#26365c)">' +
         '<span class="ms" style="font-size:14px;vertical-align:middle;color:#60a5fa">info</span> ' +
-        'Nenhuma viagem planejada ou em andamento para este veÃ­culo. Crie uma viagem primeiro.' +
+        'Nenhuma viagem planejada ou em andamento para este veículo. Crie uma viagem primeiro.' +
       '</div>';
       return;
     }
     var opts = viagens.map(function (v) {
-      var titulo = v.titulo || (v.origem + ' â†’ ' + v.destino);
+      var titulo = v.titulo || (v.origem + ' → ' + v.destino);
       return '<option value="' + v.id + '"' + (v.id === viagemSelecionadaId ? ' selected' : '') + '>' + App.esc(titulo) + '</option>';
     }).join('');
     wrap.innerHTML = '<select id="abViagem">' + opts + '</select>';
   },
 
   /* =========================================================
-     NÃVEL DO TANQUE â€” medidor visual (ponteiro) + botÃµes coloridos
+     NÍVEL DO TANQUE — medidor visual (ponteiro) + botões coloridos
      ========================================================= */
   _gaugeSVG: function (valorAtual) {
     var v = Number(valorAtual) || 100;
@@ -969,7 +993,7 @@ var Abastecimentos = {
     if (l <= 0 && t <= 0) { el.innerHTML = ''; el.style.display = 'none'; return; }
     el.style.display = 'block';
     var html = '<div><b>' + Abastecimentos.fmtNum(l, 2) + ' ' + unidade.sigla + '</b>';
-    if (p > 0) html += ' Â· R$ ' + Abastecimentos.fmtNum(p, 3) + '/' + unidade.sigla;
+    if (p > 0) html += ' · R$ ' + Abastecimentos.fmtNum(p, 3) + '/' + unidade.sigla;
     if (t > 0) html += ' = <b>' + App.moeda(t) + '</b>';
     html += '</div>';
     el.innerHTML = html;
@@ -994,9 +1018,9 @@ validarESalvar: function () {
     App.confirmar({
       titulo: 'Salvar sem o KM do painel?',
       mensagem:
-        'VocÃª nÃ£o informou o <b>KM do painel</b>. ' +
-        'Esse dado Ã© importante para calcular corretamente as prÃ³ximas revisÃµes ' +
-        'de manutenÃ§Ã£o baseadas em quilometragem. VocÃª pode voltar e preencher, ' +
+        'Você não informou o <b>KM do painel</b>. ' +
+        'Esse dado é importante para calcular corretamente as próximas revisões ' +
+        'de manutenção baseadas em quilometragem. Você pode voltar e preencher, ' +
         'ou salvar mesmo assim.',
       textoBotao: 'Salvar mesmo assim',
       tipo: 'aviso',
@@ -1304,14 +1328,14 @@ buscarUltimoKmVeiculo: async function (veiculoId, ignorarId) {
     App.confirmar({
       titulo: 'Excluir abastecimento',
       mensagem: 'O abastecimento de <b>' + litros + '</b> por <b>' + valor + '</b> ' +
-        'serÃ¡ excluÃ­do permanentemente.',
+        'será excluído permanentemente.',
       textoBotao: 'Excluir abastecimento',
       tipo: 'perigo',
       icone: 'local_gas_station',
       aoConfirmar: function () {
         sb.from('abastecimentos').delete().eq('id', id).then(function (r) {
           if (r.error) { App.toast('Erro: ' + r.error.message, 'erro'); return; }
-          App.toast('Abastecimento excluÃ­do', 'ok');
+          App.toast('Abastecimento excluído', 'ok');
           Abastecimentos.carregarLista();
         });
       }
@@ -1322,7 +1346,7 @@ buscarUltimoKmVeiculo: async function (veiculoId, ignorarId) {
      UTILITARIOS
      ========================================================= */
   fmtData: function (s) {
-    if (!s) return 'â€”';
+    if (!s) return '—';
     var p = String(s).substring(0, 10).split('-');
     return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : s;
   },
