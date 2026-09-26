@@ -1,46 +1,57 @@
-/* APP_VERSION: v8.0 */
+/* APP_VERSION: v9.0 */
 /* =====================================================================
    CARWAY v16 - VIAGENS
    Planejador completo com Google Routes + Geocoding + Places
    via Edge Functions + verificação de manutenção.
 
-   v8.0 (esta versão) — rotas clicáveis, mapa em tela cheia, orçamento
-   - CORRIGIDO (bug importante): ao clicar em "Postos" na tela de
-     resultados de rotas, um veículo elétrico mostrava POSTOS DE
-     COMBUSTÍVEL em vez de PONTOS DE RECARGA. Causa raiz: o app lia o
-     veículo pelo campo #plVeiculo do formulário, mas esse elemento já
-     não existe mais na tela de resultados (o HTML foi substituído).
-     Agora o veículo escolhido é guardado em Viagens.plano.veiculoSelecionado
-     assim que a busca de rotas começa, e é usado em QUALQUER tela depois
-     disso (resultados, mapa cheio, etc.) — não depende mais do DOM.
-   - NOVO: as ROTAS (Rota principal / Alternativa 1 / Alternativa 2) agora
-     são CLICÁVEIS. Clicar em uma rota a torna a "rota em destaque": ela
-     fica com borda destacada, e as paradas/postos são recalculados e
-     exibidos para ELA (antes só a primeira rota tinha paradas calculadas).
-     "Mais rápida" vem selecionada por padrão.
-   - NOVO: painel "Autonomia e paradas" (3 KPIs: km tanque cheio, km
-     disponíveis, km entre paradas), calculado uma vez a partir dos dados
-     informados no planejador.
-   - MELHORADO: destaque de classificação do posto — cada parada agora
-     mostra nome, endereço, desvio em km e AVALIAÇÃO (nota + estrela),
-     igual à versão anterior em uso.
-   - MELHORADO: alertas de manutenção durante a viagem agora usam caixas
-     VERMELHAS bem destacadas, com blocos SEPARADOS para "vence na IDA" e
-     "vence na VOLTA" (antes eram avisos em âmbar/amarelo misturados).
-   - MUDANÇA DE FLUXO (mapa): o mapa NÃO aparece mais embutido na tela de
-     resultados. Agora existe um botão "Ver no mapa" em cada rota, que
-     abre um MAPA EM TELA CHEIA (overlay), com botão "Voltar" no topo e,
-     embaixo, os botões "Postos nesta área" (busca postos/recarga ao
-     redor do centro do mapa exibido) e "Ver opções" (volta para a lista
-     de rotas) — replicando o comportamento da versão anterior em uso.
-   - NOVO: a tela final "Criar viagem" ganhou o bloco "Orçamento previsto"
-     (Alimentação, Hospedagem, Outros gastos), com aviso de que
-     Combustível e Pedágio já estão incluídos automaticamente. O botão
-     de voltar agora usa o padrão do app (btn-cancelar-form), não mais
-     um botão solto fora do padrão.
-   - MELHORADO: botões "Postos" e "Exportar PDF" da lista de viagens
-     agora ficam ACIMA do filtro de período (Mês/Ano/Tudo), com o mesmo
-     estilo visual dos demais botões do app (não mais cinza/apagado).
+   v9.0 (esta versão)
+   - CORRIGIDO: seletor de veículo GLOBAL (barra do topo) e o campo
+     "Veículo" do planejador agora ficam SINCRONIZADOS NOS DOIS SENTIDOS.
+     Antes, trocar o veículo na barra do topo não refletia no formulário
+     (e vice-versa nem sempre).
+   - CORRIGIDO (segurança de dados): quando uma parada não tem posto
+     mapeado, em vez de deixar "sem posto" sem explicação, o app agora
+     copia o posto da PARADA ANTERIOR como sugestão de segurança, com um
+     aviso claro explicando o motivo ("Nenhum posto encontrado aqui —
+     sugestão baseada na parada anterior, a X km de distância").
+   - CORRIGIDO: selo "Mais rápida"/"Mais econômica" — quando a mesma
+     rota é a mais rápida E a mais econômica ao mesmo tempo, agora
+     aparecem os DOIS selos juntos nela (antes só aparecia "Mais
+     rápida" e o outro selo "sumia").
+   - CORRIGIDO (visual): bloco de informação do veículo no topo dos
+     resultados agora usa a COR CADASTRADA do veículo (não mais azul
+     fixo), e "placa" e "combustível" ficam em linhas/espaçamento
+     separados (antes apareciam colados).
+   - CORRIGIDO (visual): botões "Voltar"/"Cancelar" em todas as telas
+     do planejador agora usam o padrão arredondado do app (antes
+     apareciam quadrados em algumas telas).
+   - MUDANÇA DE MAPA: os marcadores de parada deixaram de ser quadrados
+     numerados — agora são um PIN estilo Google Maps, com o NOME DO
+     POSTO como rótulo permanente abaixo do pino (não só num popup).
+   - MUDANÇA: "Postos nesta área" agora busca num raio de 20 km ao
+     redor da PARADA mais próxima do centro do mapa (não do mapa
+     inteiro), e os resultados são adicionados como marcadores extras
+     no MESMO mapa aberto — sem abrir modal novo e sem esconder as
+     paradas já plotadas.
+   - CORRIGIDO (custo de API): se a busca de postos ou a verificação de
+     manutenção falhar, o app NÃO perde mais as rotas já buscadas (que
+     custam uma chamada paga). As rotas ficam em cache e o usuário só
+     paga de novo se mudar origem/destino/ida-volta.
+   - NOVO: botão "Excluir" nos cards de viagem PLANEJADA (lista), para
+     remover rapidamente sem precisar abrir o detalhe.
+   - NOVO: "Editar" ficou INTELIGENTE — se você só mudar dados que não
+     afetam a rota (nome, datas, km inicial, orçamento, consumo, tanque,
+     preço), o app salva direto (sem nenhuma chamada paga). Só se você
+     mudar origem, destino ou ida/volta é que uma nova busca de rota é
+     feita. A tela de edição agora mostra também a previsão de gastos.
+   - CORRIGIDO (visual): tela "Iniciar/Encerrar viagem" com os mesmos
+     botões arredondados/coloridos do resto do app.
+   - MELHORADO: relatório PDF da viagem, muito mais completo (dados do
+     veículo, KPIs, Orçado x Realizado com Previsto/Realizado/Diferença,
+     paradas planejadas com endereço completo). Ao clicar em "Exportar
+     PDF", agora abre um modal perguntando o que fazer: Abrir e
+     imprimir, Salvar no aparelho, ou Compartilhar (Drive/outros apps,
+     via Web Share API quando disponível no aparelho).
    ===================================================================== */
 var Viagens = {
   lista: [],
@@ -49,8 +60,13 @@ var Viagens = {
   despesas: [],
   manutencoes: [],
   editando: null,
+  _modoEdicao: false,
+  _origemOriginalTxt: '',
+  _destinoOriginalTxt: '',
+  _idaVoltaOriginal: false,
   _salvando: false,
   _mapaFull: null,
+  _marcadoresExtras: [],
   periodo: { modo: 'mes', ano: 0, mes: 0 },
   filtroStatus: 'todos',
   plano: {
@@ -159,6 +175,40 @@ var Viagens = {
       localStorage.setItem(Viagens._chaveHistorico, JSON.stringify(lista));
     } catch (e) {}
   },
+
+  /* Registra (uma unica vez) o ouvinte do veiculo ativo GLOBAL. Agora
+     cobre TANTO a lista de viagens QUANTO o formulario do planejador
+     (se estiver aberto), resolvendo o problema de sincronizacao nos
+     dois sentidos: barra do topo -> formulario. */
+  _listenerVeiculoRegistrado: false,
+  _registrarListenerVeiculoGlobal: function () {
+    if (Viagens._listenerVeiculoRegistrado) return;
+    if (typeof App === 'undefined' || !App.aoTrocarVeiculoAtivo) return;
+    Viagens._listenerVeiculoRegistrado = true;
+    App.aoTrocarVeiculoAtivo(function (veiculoId) {
+      var pgLista = document.getElementById('pg-viagens');
+      if (pgLista && pgLista.classList.contains('ativa')) {
+        Viagens.renderKpis();
+        Viagens.renderTudo();
+      }
+      var pgPlano = document.getElementById('pg-viagem-plano');
+      if (pgPlano && pgPlano.classList.contains('ativa')) {
+        Viagens._sincronizarFormComVeiculoGlobal(veiculoId);
+      }
+    });
+  },
+  /* Atualiza o SELECT de veiculo do planejador quando o veiculo ativo
+     muda na barra global — e dispara a mesma logica de troca manual
+     (recalcula tanque/preco). */
+  _sincronizarFormComVeiculoGlobal: function (veiculoId) {
+    if (!veiculoId) return;
+    var sel = document.getElementById('plVeiculo');
+    if (!sel) return;
+    var existe = Viagens.veiculos.some(function (v) { return v.id === veiculoId; });
+    if (!existe || sel.value === veiculoId) return;
+    sel.value = veiculoId;
+    Viagens.trocarVeiculoPlano();
+  },
   /* =========================================================
      LISTA DE VIAGENS
      ========================================================= */
@@ -191,24 +241,6 @@ var Viagens = {
     });
   },
 
-  _listenerVeiculoRegistrado: false,
-  _registrarListenerVeiculoGlobal: function () {
-    if (Viagens._listenerVeiculoRegistrado) return;
-    if (typeof App === 'undefined' || !App.aoTrocarVeiculoAtivo) return;
-    Viagens._listenerVeiculoRegistrado = true;
-    App.aoTrocarVeiculoAtivo(function () {
-      var pg = document.getElementById('pg-viagens');
-      if (pg && pg.classList.contains('ativa')) {
-        Viagens.renderKpis();
-        Viagens.renderTudo();
-      }
-    });
-  },
-
-  /* Insere os chips de status e o bloco de acoes (Postos/Exportar PDF)
-     ACIMA do filtro de periodo (#filtroViagens), que ja existe no
-     index.html. Se por algum motivo #filtroViagens nao existir, cai
-     para logo antes dos KPIs. */
   _garantirContainersTopo: function () {
     if (document.getElementById('chipsStatusViagens')) return;
     var filtroEl = document.getElementById('filtroViagens');
@@ -368,9 +400,6 @@ var Viagens = {
     Viagens.renderAcoesRodape();
   },
 
-  /* Botões "Postos" e "Exportar PDF" — agora acima do filtro de periodo,
-     com o mesmo estilo visual dos demais botões secundarios do app
-     (classe btn-novo-sec), em vez de botoes cinza sem destaque. */
   renderAcoesRodape: function () {
     var el = document.getElementById('acoesTopoViagens') || document.getElementById('acoesViagensRodape');
     if (!el) return;
@@ -453,8 +482,7 @@ var Viagens = {
       doc.text('Página ' + i + ' de ' + totalPaginas, 196, 290, { align: 'right' });
     }
 
-    doc.save('carway-viagens-' + App.hojeISO() + '.pdf');
-    App.toast('PDF gerado!', 'ok');
+    Viagens._finalizarPDF(doc, 'carway-viagens-' + App.hojeISO() + '.pdf');
   },
 
   /* =========================================================
@@ -492,6 +520,8 @@ var Viagens = {
     return Math.round((soma / ultimos5.length) * 100) / 100;
   },
 
+  /* Card da lista: PLANEJADA agora tem 3 botoes (Ver, Iniciar, Excluir),
+     em vez de so 2 — permite excluir sem entrar no detalhe. */
   cardHTML: function (v) {
     var veiculo = Viagens.veiculos.filter(function (x) { return x.id === v.veiculoId; })[0];
     var totais = Viagens.calcularTotais(v.id);
@@ -509,7 +539,8 @@ var Viagens = {
     var acoes = '';
     if (status === 'planejada') {
       acoes = '<button class="pri" onclick="App.irParaDetalheViagem(\'' + v.id + '\')"><span class="ms">visibility</span> Ver</button>' +
-              '<button class="encerrar" onclick="App.irParaEncerrarViagem(\'' + v.id + '\')"><span class="ms">play_arrow</span> Iniciar</button>';
+              '<button class="encerrar" onclick="App.irParaEncerrarViagem(\'' + v.id + '\')"><span class="ms">play_arrow</span> Iniciar</button>' +
+              '<button class="excluir" onclick="Viagens.excluir(\'' + v.id + '\')"><span class="ms">delete</span></button>';
     } else if (status === 'andamento') {
       acoes = '<button class="pri" onclick="App.irParaDetalheViagem(\'' + v.id + '\')"><span class="ms">visibility</span> Ver</button>' +
               '<button class="encerrar" onclick="App.irParaEncerrarViagem(\'' + v.id + '\')"><span class="ms">stop_circle</span> Encerrar</button>';
@@ -572,17 +603,33 @@ var Viagens = {
         sb.from('viagens').select('*').eq('id', idExistente).single().then(function (r) {
           if (r.error || !r.data) { App.toast('Viagem não encontrada', 'erro'); return; }
           Viagens.editando = r.data;
+          Viagens._modoEdicao = true;
+          Viagens._origemOriginalTxt = r.data.origem || '';
+          Viagens._destinoOriginalTxt = r.data.destino || '';
+          Viagens._idaVoltaOriginal = String(r.data.idaVolta).toUpperCase() === 'SIM';
           Viagens.plano = {
             origem: r.data.origem ? { lat: 0, lon: 0, endereco: r.data.origem } : null,
             destino: r.data.destino ? { lat: 0, lon: 0, endereco: r.data.destino } : null,
-            idaVolta: String(r.data.idaVolta).toUpperCase() === 'SIM',
+            idaVolta: Viagens._idaVoltaOriginal,
             rotas: null, rotaAtiva: 0, paradasPorRota: {},
             veiculoSelecionado: null, parametrosAutonomia: null
           };
+          /* Se ja existe uma rota salva (JSON), carrega ela em cache —
+             assim, se o usuario nao mudar origem/destino/ida-volta, o
+             botao "Salvar alteracoes" NUNCA precisa chamar a API paga
+             de rotas de novo. */
+          if (r.data.rota) {
+            try {
+              var rotaSalva = JSON.parse(r.data.rota);
+              Viagens.plano.origem = rotaSalva.origem || Viagens.plano.origem;
+              Viagens.plano.destino = rotaSalva.destino || Viagens.plano.destino;
+            } catch (e) {}
+          }
           Viagens.renderPlanejador(r.data);
         });
       } else {
         Viagens.editando = null;
+        Viagens._modoEdicao = false;
         Viagens.plano = {
           origem: null, destino: null, idaVolta: false,
           rotas: null, rotaAtiva: 0, paradasPorRota: {},
@@ -595,7 +642,7 @@ var Viagens = {
   renderPlanejador: function (viagemExistente) {
     var v = viagemExistente || {};
     var veiculos = Viagens.veiculos;
-    var vSel = v.veiculoId || veiculos[0].id;
+    var vSel = v.veiculoId || (App.veiculoAtivoId && veiculos.some(function(x){return x.id===App.veiculoAtivoId;}) ? App.veiculoAtivoId : veiculos[0].id);
     var veic = veiculos.filter(function (x) { return x.id === vSel; })[0] || veiculos[0];
     var veicOpts = veiculos.map(function (x) {
       return '<option value="' + x.id + '"' + (x.id === vSel ? ' selected' : '') + '>' +
@@ -605,13 +652,20 @@ var Viagens = {
     var precoInicial = v.precoLitro || precoMedio || 6.29;
     var nivelSel = v.nivelPct || 100;
     var reservaSel = v.reservaPct || 15;
+    var ehEdicao = Viagens._modoEdicao;
+    var corVeic = App._corVeiculo ? App._corVeiculo(veic) : '#3b82f6';
+    var icoVeic = App._iconeTipoVeiculo ? App._iconeTipoVeiculo(veic.tipo) : 'directions_car';
+
     var html =
       '<h2 class="form-titulo">' + (v.id ? 'Editar viagem' : 'Planejar viagem') + '</h2>' +
-      '<div class="veic-unico" id="cardVeicPlano" style="--c:#3b82f6">' +
-        '<span class="ms">directions_car</span>' +
+      /* Bloco do veiculo: usa a COR CADASTRADA (nao mais azul fixo), e
+         placa/combustivel em linhas separadas (antes ficavam colados). */
+      '<div class="veic-unico" id="cardVeicPlano" style="--c:' + corVeic + ';border-color:' + corVeic + '44">' +
+        '<span class="ms" style="color:' + corVeic + '">' + icoVeic + '</span>' +
         '<div>' +
           '<b>' + App.esc(veic.nome) + '</b>' +
-          '<small>' + App.esc(veic.placa || 'sem placa') + '</small>' +
+          '<small style="display:block">' + App.esc(veic.placa || 'sem placa') + '</small>' +
+          '<small style="display:block;color:' + corVeic + '">' + App.esc(veic.combustivel || '') + '</small>' +
         '</div>' +
       '</div>' +
       '<div class="campo-form"><label>Veículo</label>' +
@@ -655,9 +709,9 @@ var Viagens = {
       '</div>' +
       '<div class="toggle-ida-volta">' +
         '<button type="button" class="iv-btn' + (!Viagens.plano.idaVolta ? ' sel' : '') + '" data-iv="0" onclick="Viagens.setIdaVolta(false)">' +
-          '<span class="ms">east</span><b>Só ida</b><small>trajeto simples</small></button>' +
+          '<span class="ms" style="color:#60a5fa">east</span><b>Só ida</b><small>trajeto simples</small></button>' +
         '<button type="button" class="iv-btn' + (Viagens.plano.idaVolta ? ' sel' : '') + '" data-iv="1" onclick="Viagens.setIdaVolta(true)">' +
-          '<span class="ms">sync_alt</span><b>Ida e volta</b><small>dobra o custo</small></button>' +
+          '<span class="ms" style="color:#a78bfa">sync_alt</span><b>Ida e volta</b><small>dobra o custo</small></button>' +
       '</div>' +
       '<div class="linha-2">' +
         '<div class="campo-form"><label>Consumo (km/L)</label>' +
@@ -689,19 +743,48 @@ var Viagens = {
       '<div class="campo-form">' +
         '<label>Preço / L' + (precoMedio > 0 ? ' <small style="text-transform:none;color:var(--txt2);font-weight:400">(média dos últimos 5: ' + App.moeda(precoMedio) + ')</small>' : '') + '</label>' +
         '<input type="number" id="plPreco" step="0.01" placeholder="6,29" value="' + precoInicial + '">' +
-      '</div>' +
-      '<div class="resumo-autonomia" id="plResumoAut">' +
+      '</div>';
+
+    if (ehEdicao) {
+      html += '<h3 style="margin:18px 0 10px;font-size:12.5px;color:var(--txt2);text-transform:uppercase;letter-spacing:.5px">Orçamento previsto</h3>' +
+        '<div class="linha-2">' +
+          '<div class="campo-form"><label>Alimentação</label><input type="number" id="plAlim" step="0.01" value="' + (v.alimentacaoPrev || '') + '"></div>' +
+          '<div class="campo-form"><label>Hospedagem</label><input type="number" id="plHosp" step="0.01" value="' + (v.hospedagemPrev || '') + '"></div>' +
+        '</div>' +
+        '<div class="campo-form"><label>Outros gastos</label><input type="number" id="plOutros" step="0.01" value="' + (v.outrosPrev || '') + '"></div>' +
+        '<div class="linha-2">' +
+          '<div class="campo-form"><label>Data de saída</label><input type="date" id="plDataInicio" value="' + (v.dataInicio || '') + '"></div>' +
+          '<div class="campo-form"><label>Data de retorno</label><input type="date" id="plDataFim" value="' + (v.dataFim || '') + '"></div>' +
+        '</div>' +
+        '<div class="campo-form"><label>KM do painel ao sair</label><input type="number" id="plKmInicialEdicao" value="' + (v.kmInicial || '') + '"></div>';
+    }
+
+    html += '<div class="resumo-autonomia" id="plResumoAut">' +
         '<div class="grid3">' +
           '<div><b>—</b><small>km tanque cheio</small></div>' +
           '<div><b>—</b><small>km agora</small></div>' +
           '<div><b>—</b><small>km entre paradas</small></div>' +
         '</div>' +
-      '</div>' +
-      '<div class="form-acoes-viagem">' +
-        '<button class="btn-cancelar-vermelho" onclick="App.irPara(\'viagens\')"><span class="ms">close</span> Cancelar</button>' +
-        '<button class="btn-novo-sec" onclick="Viagens.abrirNoMaps()"><span class="ms">navigation</span> Abrir no Maps</button>' +
-        '<button class="btn-novo btn-bloco-full" id="btnBuscarRotas" onclick="Viagens.buscarRotas()"><span class="ms">route</span> Buscar rotas</button>' +
       '</div>';
+
+    if (ehEdicao) {
+      html +=
+        '<div class="form-acoes-viagem">' +
+          '<button class="btn-cancelar-form" onclick="App.irParaDetalheViagem(\'' + v.id + '\')"><span class="ms">close</span> Cancelar</button>' +
+          '<button class="btn-novo-sec" onclick="Viagens.abrirNoMaps()"><span class="ms">navigation</span> Abrir no Maps</button>' +
+          '<button class="btn-novo btn-bloco-full" id="btnSalvarEdicao" onclick="Viagens.salvarEdicaoInteligente(\'' + v.id + '\')">' +
+            '<span class="ms">check</span> Salvar alterações' +
+          '</button>' +
+        '</div>';
+    } else {
+      html +=
+        '<div class="form-acoes-viagem">' +
+          '<button class="btn-cancelar-form" onclick="App.irPara(\'viagens\')"><span class="ms">close</span> Cancelar</button>' +
+          '<button class="btn-novo-sec" onclick="Viagens.abrirNoMaps()"><span class="ms">navigation</span> Abrir no Maps</button>' +
+          '<button class="btn-novo btn-bloco-full" id="btnBuscarRotas" onclick="Viagens.buscarRotas()"><span class="ms">route</span> Buscar rotas</button>' +
+        '</div>';
+    }
+
     document.getElementById('formPlanoViagemContainer').innerHTML = html;
     Viagens.previewAutonomia();
   },
@@ -710,10 +793,16 @@ var Viagens = {
     if (!sel) return;
     var veic = Viagens.veiculos.filter(function (x) { return x.id === sel.value; })[0];
     if (!veic) return;
+    var corVeic = App._corVeiculo ? App._corVeiculo(veic) : '#3b82f6';
+    var icoVeic = App._iconeTipoVeiculo ? App._iconeTipoVeiculo(veic.tipo) : 'directions_car';
     var card = document.getElementById('cardVeicPlano');
     if (card) {
-      card.innerHTML = '<span class="ms">directions_car</span>' +
-        '<div><b>' + App.esc(veic.nome) + '</b><small>' + App.esc(veic.placa || 'sem placa') + '</small></div>';
+      card.style.setProperty('--c', corVeic);
+      card.style.borderColor = corVeic + '44';
+      card.innerHTML = '<span class="ms" style="color:' + corVeic + '">' + icoVeic + '</span>' +
+        '<div><b>' + App.esc(veic.nome) + '</b>' +
+        '<small style="display:block">' + App.esc(veic.placa || 'sem placa') + '</small>' +
+        '<small style="display:block;color:' + corVeic + '">' + App.esc(veic.combustivel || '') + '</small></div>';
     }
     var tanque = document.getElementById('plTanque');
     if (tanque && veic.tanque) tanque.value = veic.tanque;
@@ -885,7 +974,6 @@ var Viagens = {
       App.toast('Não foi possível obter a localização', 'erro');
     }, { enableHighAccuracy: true, timeout: 15000 });
   },
-
   /* =========================================================
      ABRIR NO MAPS (sem salvar)
      ========================================================= */
@@ -1007,6 +1095,91 @@ var Viagens = {
   nomeApp: function (app) {
     return ({ google: 'Google Maps', waze: 'Waze', apple: 'Apple Maps' })[app] || 'app';
   },
+
+  /* =========================================================
+     EDIÇÃO INTELIGENTE — decide se precisa refazer a busca paga
+     ========================================================= */
+  salvarEdicaoInteligente: function (viagemId) {
+    var origemInput = document.getElementById('plOrigem');
+    var destinoInput = document.getElementById('plDestino');
+    var textoOrigem = origemInput.value.trim();
+    var textoDestino = destinoInput.value.trim();
+    var idaVoltaAtual = Viagens.plano.idaVolta;
+
+    var mudouLocalizacao = (textoOrigem !== Viagens._origemOriginalTxt) ||
+      (textoDestino !== Viagens._destinoOriginalTxt) ||
+      (idaVoltaAtual !== Viagens._idaVoltaOriginal);
+
+    if (!mudouLocalizacao) {
+      /* NENHUMA chamada paga: so atualiza os campos que nao dependem
+         de rota (titulo, datas, km, orcamento, consumo/preco usados
+         para recalcular o valor previsto de combustivel a partir da
+         MESMA distancia ja salva). */
+      Viagens._salvarEdicaoSemNovaRota(viagemId);
+      return;
+    }
+
+    /* Mudou origem/destino/ida-volta: precisa de uma nova busca de
+       rota (chamada paga). Avisa o usuario antes, para ele confirmar
+       que quer gastar uma nova consulta. */
+    App.confirmar({
+      titulo: 'Refazer busca de rota?',
+      mensagem: 'Você alterou a origem, o destino ou o tipo de percurso. ' +
+        'Isso exige uma NOVA busca de rota (usa a API do Google Maps). ' +
+        'Deseja continuar?',
+      textoBotao: 'Buscar nova rota',
+      tipo: 'aviso',
+      icone: 'route',
+      aoConfirmar: function () {
+        Viagens.plano.rotas = null;
+        Viagens.plano.paradasPorRota = {};
+        Viagens.buscarRotas();
+      }
+    });
+  },
+  _salvarEdicaoSemNovaRota: function (viagemId) {
+    var v = Viagens.editando || {};
+    var kmL = Number(document.getElementById('plKmL').value) || 0;
+    var preco = Number(document.getElementById('plPreco').value) || 0;
+    var distancia = Number(v.distancia) || 0;
+    var novoCombPrev = (kmL > 0 && distancia > 0) ? Math.round((distancia / kmL) * preco * 100) / 100 : (v.combustivelPrev || 0);
+
+    var alim = document.getElementById('plAlim') ? Number(document.getElementById('plAlim').value) || 0 : (v.alimentacaoPrev || 0);
+    var hosp = document.getElementById('plHosp') ? Number(document.getElementById('plHosp').value) || 0 : (v.hospedagemPrev || 0);
+    var outros = document.getElementById('plOutros') ? Number(document.getElementById('plOutros').value) || 0 : (v.outrosPrev || 0);
+    var pedagio = Number(v.pedagioPrev) || 0;
+
+    var reg = {
+      veiculoId: document.getElementById('plVeiculo').value,
+      titulo: document.getElementById('plNomeViagem').value.trim() || v.titulo,
+      kmL: kmL,
+      precoLitro: preco,
+      combustivelPrev: novoCombPrev,
+      alimentacaoPrev: alim,
+      hospedagemPrev: hosp,
+      outrosPrev: outros,
+      totalPrev: Math.round((novoCombPrev + pedagio + alim + hosp + outros) * 100) / 100
+    };
+    var dataInicioEl = document.getElementById('plDataInicio');
+    var dataFimEl = document.getElementById('plDataFim');
+    var kmInicialEl = document.getElementById('plKmInicialEdicao');
+    if (dataInicioEl) reg.dataInicio = dataInicioEl.value;
+    if (dataFimEl) reg.dataFim = dataFimEl.value || null;
+    if (kmInicialEl) reg.kmInicial = Number(kmInicialEl.value) || 0;
+
+    var btn = document.getElementById('btnSalvarEdicao');
+    if (btn) { btn.disabled = true; btn.textContent = 'Salvando...'; }
+    sb.from('viagens').update(reg).eq('id', viagemId).then(function (r) {
+      if (r.error) {
+        if (btn) { btn.disabled = false; btn.innerHTML = '<span class="ms">check</span> Salvar alterações'; }
+        App.toast('Erro: ' + r.error.message, 'erro');
+        return;
+      }
+      App.toast('Alterações salvas! (sem custo de nova busca)', 'ok');
+      App.irParaDetalheViagem(viagemId);
+    });
+  },
+
   /* =========================================================
      BUSCAR ROTAS
      ========================================================= */
@@ -1033,10 +1206,6 @@ var Viagens = {
     var reserva = Number(document.getElementById('plReserva').value) || 15;
     var preco = Number(document.getElementById('plPreco').value) || 0;
 
-    /* CORRIGE O BUG DO ELÉTRICO: guarda o veiculo e os parametros de
-       autonomia em MEMORIA (nao no DOM), para funcionar em qualquer
-       tela seguinte (resultados, mapa cheio), mesmo depois que o
-       formulario for substituido e o #plVeiculo deixar de existir. */
     Viagens.plano.veiculoSelecionado = veic;
     Viagens.plano.parametrosAutonomia = { kmL: kmL, tanque: tanque, nivel: nivel, reserva: reserva, preco: preco };
 
@@ -1045,13 +1214,11 @@ var Viagens = {
     if (comb.indexOf('DIESEL') > -1) emissionType = 'DIESEL';
     else if (comb.indexOf('ELETR') > -1) emissionType = 'ELECTRIC';
     else if (comb.indexOf('HIBR') > -1) emissionType = 'HYBRID';
-    var btn = document.getElementById('btnBuscarRotas');
-    btn.disabled = true;
-    btn.innerHTML = '<span class="ms">hourglass_top</span> Buscando rotas...';
+    var btn = document.getElementById('btnBuscarRotas') || document.getElementById('btnSalvarEdicao');
+    if (btn) { btn.disabled = true; btn.innerHTML = '<span class="ms">hourglass_top</span> Buscando rotas...'; }
     Viagens.chamarRoutes(origem, destino, Viagens.plano.idaVolta, emissionType)
       .then(function (rotas) {
-        btn.disabled = false;
-        btn.innerHTML = '<span class="ms">route</span> Buscar rotas';
+        if (btn) { btn.disabled = false; btn.innerHTML = '<span class="ms">route</span> Buscar rotas'; }
         if (!rotas.length) { App.toast('Nenhuma rota encontrada', 'erro'); return; }
         var custoPorKm = 1 / kmL;
         rotas.forEach(function (r) {
@@ -1066,43 +1233,77 @@ var Viagens = {
           if (rotas[i].minutos < rotas[iMaisRapida].minutos) iMaisRapida = i;
           if (rotas[i].custoTotal < rotas[iMaisEconomica].custoTotal) iMaisEconomica = i;
         }
-        rotas[iMaisRapida].selo = 'Mais rápida';
-        if (iMaisEconomica !== iMaisRapida) rotas[iMaisEconomica].selo = 'Mais econômica';
+        /* Se a mesma rota for a mais rapida E a mais economica, os
+           DOIS selos aparecem juntos nela (antes, o selo economico
+           "sumia" quando coincidia com a rapida). */
+        rotas[iMaisRapida].seloRapida = true;
+        rotas[iMaisEconomica].seloEconomica = true;
         Viagens.plano.rotas = rotas;
         Viagens.plano.paradasPorRota = {};
         Viagens.calcularEMostrarRota(iMaisRapida);
       })
       .catch(function (e) {
-        btn.disabled = false;
-        btn.innerHTML = '<span class="ms">route</span> Buscar rotas';
+        if (btn) { btn.disabled = false; btn.innerHTML = '<span class="ms">route</span> Buscar rotas'; }
         App.toast(e.message || 'Erro ao buscar rotas', 'erro');
       });
   },
 
   /* Calcula (ou reaproveita do cache) as paradas + postos + alerta de
-     manutencao de UMA rota especifica, e re-renderiza a tela com ela
-     em destaque. Chamado tanto ao abrir os resultados quanto ao clicar
-     numa rota diferente (rotas agora sao CLICAVEIS). */
+     manutencao de UMA rota especifica. CORRIGIDO: agora protegido com
+     try/catch em toda a cadeia — se a busca de postos ou a checagem de
+     manutencao falhar, as ROTAS (que ja custaram uma chamada paga)
+     NAO SAO PERDIDAS. O app so mostra a rota sem paradas detalhadas
+     nesse caso, com um aviso, sem exigir nova busca. */
   calcularEMostrarRota: function (idx) {
     Viagens.plano.rotaAtiva = idx;
     if (Viagens.plano.paradasPorRota[idx]) {
       Viagens.mostrarRotas();
       return;
     }
-    Viagens.mostrarRotas(true); /* true = mostra "calculando..." no card ativo */
-    var rota = Viagens.plano.rotas[idx];
-    var p = Viagens.plano.parametrosAutonomia;
-    var paradas = Viagens.calcularParadas(rota.km, rota.kmIda, Viagens.plano.idaVolta, p.kmL, p.tanque, p.nivel, p.reserva);
-    Viagens.buscarPostosParaParadasDaRota(paradas, rota).then(function () {
-      return Viagens.verificarManutencao(Viagens.plano.veiculoSelecionado.id, rota.km);
-    }).then(function (manut) {
-      Viagens.plano.paradasPorRota[idx] = { paradas: paradas, manutencao: manut };
+    Viagens.mostrarRotas(true);
+    try {
+      var rota = Viagens.plano.rotas[idx];
+      if (!rota) { Viagens.mostrarRotas(); return; }
+      var p = Viagens.plano.parametrosAutonomia;
+      var paradas = Viagens.calcularParadas(rota.km, rota.kmIda, Viagens.plano.idaVolta, p.kmL, p.tanque, p.nivel, p.reserva);
+      Viagens.buscarPostosParaParadasDaRota(paradas, rota).then(function () {
+        Viagens._preencherFallbackPostoAnterior(paradas);
+        return Viagens.verificarManutencao(Viagens.plano.veiculoSelecionado.id, rota.km);
+      }).then(function (manut) {
+        Viagens.plano.paradasPorRota[idx] = { paradas: paradas, manutencao: manut };
+        Viagens.mostrarRotas();
+      }).catch(function (e) {
+        console.warn('Erro em paradas/manutenção (rota preservada):', e);
+        Viagens._preencherFallbackPostoAnterior(paradas);
+        Viagens.plano.paradasPorRota[idx] = { paradas: paradas, manutencao: null, erroParcial: true };
+        Viagens.mostrarRotas();
+        App.toast('Não foi possível localizar todos os postos. A rota foi mantida.', 'ok');
+      });
+    } catch (eSync) {
+      console.warn('Erro inesperado ao calcular rota (rotas preservadas):', eSync);
+      Viagens.plano.paradasPorRota[idx] = { paradas: [], manutencao: null, erroParcial: true };
       Viagens.mostrarRotas();
-    }).catch(function (e) {
-      console.warn('Erro em paradas/manutenção:', e);
-      Viagens.plano.paradasPorRota[idx] = { paradas: paradas, manutencao: null };
-      Viagens.mostrarRotas();
-    });
+      App.toast('Ocorreu um erro ao calcular as paradas. A rota foi mantida — tente novamente.', 'erro');
+    }
+  },
+
+  /* Para paradas sem posto mapeado (semPosto=1), copia o posto da
+     parada anterior (na ordem) como sugestao de seguranca, deixando
+     claro que e uma sugestao (usouAnterior=true) e a que distancia. */
+  _preencherFallbackPostoAnterior: function (paradas) {
+    for (var i = 0; i < paradas.length; i++) {
+      if (!paradas[i].semPosto) continue;
+      for (var j = i - 1; j >= 0; j--) {
+        if (paradas[j].postoNome && !paradas[j].semPosto) {
+          paradas[i].postoNome = paradas[j].postoNome;
+          paradas[i].postoEndereco = paradas[j].postoEndereco;
+          paradas[i].postoRating = paradas[j].postoRating;
+          paradas[i].usouAnterior = true;
+          paradas[i].distanciaAnteriorKm = Math.round((paradas[i].kmAcum - paradas[j].kmAcum) * 10) / 10;
+          break;
+        }
+      }
+    }
   },
 
   selecionarRotaPreview: function (idx) {
@@ -1147,14 +1348,12 @@ var Viagens = {
         ultimaParada: ultima,
         postoNome: '', postoEndereco: '', postoRating: 0,
         postoLat: 0, postoLon: 0, postoDesvioKm: 0, postoPlaceId: '',
-        semPosto: 0, lat: 0, lon: 0
+        semPosto: 0, lat: 0, lon: 0, usouAnterior: false
       });
       pos += autUtil;
     }
     return paradas;
   },
-  /* Recebe explicitamente a ROTA (em vez de sempre usar rotas[0]),
-     necessario agora que qualquer rota pode ser a "ativa". */
   buscarPostosParaParadasDaRota: function (paradas, rota) {
     if (!paradas || !paradas.length) return Promise.resolve();
     var coords = rota.polyline ? Viagens._decodificarPolyline(rota.polyline) : [];
@@ -1243,8 +1442,7 @@ var Viagens = {
       .catch(function (e) { App.toast(e.message || 'Erro ao buscar endereço', 'erro'); });
   },
   /* =========================================================
-     MOSTRAR ROTAS (resultados) — sem mapa embutido; rotas clicaveis;
-     autonomia + alertas de manutencao (vermelho, IDA/VOLTA separados)
+     MOSTRAR ROTAS (resultados)
      ========================================================= */
   mostrarRotas: function (carregando) {
     var rotas = Viagens.plano.rotas;
@@ -1261,9 +1459,12 @@ var Viagens = {
 
     if (veic) {
       var icoV = App._iconeTipoVeiculo ? App._iconeTipoVeiculo(veic.tipo) : 'directions_car';
-      html += '<div class="veic-unico" style="margin-bottom:14px"><span class="ms">' + icoV + '</span>' +
-        '<div><b>' + App.esc(veic.nome) + (veic.placa ? ' · ' + App.esc(veic.placa) : '') + '</b>' +
-        '<small>' + App.esc(veic.combustivel || '') + '</small></div></div>';
+      var corV = App._corVeiculo ? App._corVeiculo(veic) : '#3b82f6';
+      html += '<div class="veic-unico" style="margin-bottom:14px;border-color:' + corV + '44">' +
+        '<span class="ms" style="color:' + corV + '">' + icoV + '</span>' +
+        '<div><b>' + App.esc(veic.nome) + '</b>' +
+        '<small style="display:block">' + App.esc(veic.placa || 'sem placa') + '</small>' +
+        '<small style="display:block;color:' + corV + '">' + App.esc(veic.combustivel || '') + '</small></div></div>';
     }
 
     html += '<div class="aviso info" style="margin-bottom:14px">' +
@@ -1272,8 +1473,6 @@ var Viagens = {
       (idaVolta ? 'Ida e volta. Distância, combustível e pedágio já incluem o retorno.' : 'Somente ida') + '</div>' +
     '</div>';
 
-    /* Painel de autonomia — calculado uma unica vez a partir dos
-       parametros informados no planejador (independe da rota escolhida) */
     if (p) {
       var lReserva = p.tanque * (p.reserva / 100);
       var lUteis = p.tanque - lReserva;
@@ -1283,7 +1482,7 @@ var Viagens = {
       var autUtil = Math.round(p.kmL * lUteis);
       html += '<div class="resumo-autonomia" style="margin-bottom:16px">' +
         '<div style="font-size:11.5px;color:var(--txt2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">' +
-          '<span class="ms" style="font-size:15px;vertical-align:middle;margin-right:4px">local_gas_station</span>Autonomia e paradas' +
+          '<span class="ms" style="font-size:15px;vertical-align:middle;margin-right:4px;color:#ef4444">local_gas_station</span>Autonomia e paradas' +
         '</div>' +
         '<div class="grid3">' +
           '<div><b>' + autCheia + '</b><small>km tanque cheio</small></div>' +
@@ -1293,9 +1492,14 @@ var Viagens = {
       '</div>';
     }
 
-    /* Alertas de manutencao — vermelho, blocos separados JA VENCIDO / IDA / VOLTA */
     if (dadosAtiva && dadosAtiva.manutencao && dadosAtiva.manutencao.alertas && dadosAtiva.manutencao.alertas.length) {
       html += Viagens._htmlAlertasManutencao(dadosAtiva.manutencao.alertas);
+    }
+    if (dadosAtiva && dadosAtiva.erroParcial) {
+      html += '<div style="background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.4);border-radius:12px;padding:10px 12px;margin-bottom:14px;font-size:12.5px;color:#fcd34d">' +
+        '<span class="ms" style="vertical-align:middle;margin-right:4px">warning</span>' +
+        'Não conseguimos localizar todos os postos agora. A rota foi mantida — você pode tentar de novo depois, sem custo extra de busca de rota.' +
+      '</div>';
     }
 
     html += '<h3 style="margin:18px 0 14px;font-size:16px">Escolha uma rota:</h3>';
@@ -1308,12 +1512,17 @@ var Viagens = {
       else if (r.temPedagio) pedagioTxt = '<b>—</b><small>pedágio indisponível</small>';
       else pedagioTxt = '<b>—</b><small>sem pedágio</small>';
 
-      var seloHtml = '';
-      if (r.selo) {
-        var corSelo = r.selo === 'Mais econômica' ? '#22c55e' : '#3b82f6';
-        var iconeSelo = r.selo === 'Mais econômica' ? 'savings' : 'bolt';
-        seloHtml = '<div class="rota-selo" style="background:' + corSelo + '">' +
-          '<span class="ms">' + iconeSelo + '</span>' + App.esc(r.selo) + '</div>';
+      /* Selos empilhados: se a mesma rota for a mais rapida E a mais
+         economica, os DOIS aparecem juntos (nao mais so um). */
+      var selos = '';
+      if (r.seloRapida) {
+        selos += '<div class="rota-selo" style="background:#3b82f6;' + (r.seloEconomica ? 'top:-10px' : '') + '">' +
+          '<span class="ms">bolt</span>Mais rápida</div>';
+      }
+      if (r.seloEconomica) {
+        var topoOffset = r.seloRapida ? 'top:20px' : 'top:-10px';
+        selos += '<div class="rota-selo" style="background:#22c55e;' + topoOffset + '">' +
+          '<span class="ms">savings</span>Mais econômica</div>';
       }
 
       var paradasBlocoHtml = '';
@@ -1327,7 +1536,7 @@ var Viagens = {
           var idaP = dadosRota.paradas.filter(function (x) { return x.trecho === 'IDA'; });
           var voltaP = dadosRota.paradas.filter(function (x) { return x.trecho === 'VOLTA'; });
           if (idaP.length || voltaP.length) {
-            paradasBlocoHtml = '<div class="paradas-viagem" style="margin-top:14px">' +
+            paradasBlocoHtml = '<div class="paradas-viagem" style="margin-top:' + (r.seloRapida && r.seloEconomica ? '34px' : '14px') + '">' +
               '<h4><span class="ms" style="color:#a78bfa">pin_drop</span> Paradas sugeridas</h4>';
             if (idaP.length) {
               paradasBlocoHtml += '<div class="parada-grupo-titulo" style="color:#3b82f6">' +
@@ -1347,8 +1556,8 @@ var Viagens = {
       html +=
         '<div id="rotaCard' + r.indice + '" class="rota-card' + (ativa ? ' selecionado' : '') + '" ' +
           'onclick="Viagens._cliqueCardRota(event,' + r.indice + ')" style="cursor:pointer;position:relative">' +
-          seloHtml +
-          '<div class="rota-card-topo">' +
+          selos +
+          '<div class="rota-card-topo" style="' + (r.seloRapida && r.seloEconomica ? 'margin-top:20px' : '') + '">' +
             '<div><b style="display:block;font-size:16px">' + App.esc(r.nome) + '</b>' +
               '<small style="color:var(--txt2);font-size:12px">' + (idaVolta ? 'Ida e volta' : 'Só ida') + '</small></div>' +
             '<div style="text-align:right"><b style="display:block;font-size:22px;color:#fff">' + App.moeda(r.custoTotal) + '</b>' +
@@ -1368,17 +1577,14 @@ var Viagens = {
         '</div>';
     });
 
-    html += '<div class="acao-topo" style="margin-top:20px">' +
-      '<button class="btn-cancelar-form" onclick="Viagens.abrirPlanejador()"><span class="ms">arrow_back</span> Voltar</button>' +
+    html += '<div class="form-acoes-viagem" style="margin-top:20px">' +
+      '<button class="btn-cancelar-form" onclick="Viagens.abrirPlanejador(' + (Viagens._modoEdicao && Viagens.editando ? '\'' + Viagens.editando.id + '\'' : '') + ')"><span class="ms">arrow_back</span> Voltar</button>' +
     '</div>';
 
     document.getElementById('formPlanoViagemContainer').innerHTML = html;
     window.scrollTo({ top: 0, behavior: 'smooth' });
   },
 
-  /* Alertas de manutencao em VERMELHO, com blocos separados: ja vencido,
-     vence na IDA, vence na VOLTA — bem mais visivel que o aviso ambar
-     generico usado antes. */
   _htmlAlertasManutencao: function (alertas) {
     var venc = alertas.filter(function (a) { return a.jaVencido; });
     var ida = alertas.filter(function (a) { return a.venceNaIda && !a.jaVencido; });
@@ -1404,10 +1610,10 @@ var Viagens = {
       bloco(volta, volta.length + ' revisão(ões) vencem na VOLTA', 'west');
   },
 
-  /* Card de parada com nome do posto, endereco, desvio e AVALIACAO
-     (nota + estrela), igual a versao anterior em uso. */
+  /* Card de parada — agora com aviso claro quando o posto sugerido veio
+     da PARADA ANTERIOR (fallback de seguranca), explicando o motivo. */
   paradaHTML: function (p) {
-    var semPosto = !!p.semPosto;
+    var semPostoSemFallback = !!p.semPosto && !p.usouAnterior;
     var estrelas = (p.postoRating > 0)
       ? '<span style="color:#f59e0b;font-size:11.5px;font-weight:700;margin-left:6px">' +
           '<span class="ms" style="font-size:13px;vertical-align:middle">star</span>' + p.postoRating.toFixed(1) +
@@ -1415,13 +1621,18 @@ var Viagens = {
       : '';
     var titulo = p.postoNome || ('Parada ' + p.ordem);
     var linhaEndereco = '';
-    if (semPosto) {
-      linhaEndereco = '<small style="color:#f59e0b">Nenhum posto mapeado. Abasteça antes.</small>';
+    if (semPostoSemFallback) {
+      linhaEndereco = '<small style="color:#f59e0b"><span class="ms" style="font-size:13px;vertical-align:middle">warning</span> Nenhum posto mapeado nesta parada. Abasteça antes se possível.</small>';
+    } else if (p.usouAnterior) {
+      linhaEndereco = '<small style="color:#f59e0b">' +
+        '<span class="ms" style="font-size:13px;vertical-align:middle">warning</span> ' +
+        'Nenhum posto encontrado aqui — sugestão da parada anterior (' + p.distanciaAnteriorKm + ' km antes)</small>' +
+        (p.postoEndereco ? '<small>' + App.esc(p.postoEndereco) + '</small>' : '');
     } else if (p.postoEndereco) {
       linhaEndereco = '<small>' + App.esc(p.postoEndereco) +
         (p.postoDesvioKm > 0 ? ' · ' + p.postoDesvioKm + ' km de desvio' : '') + '</small>';
     }
-    var corNum = semPosto ? '#f59e0b' : '#3b82f6';
+    var corNum = semPostoSemFallback ? '#f59e0b' : (p.usouAnterior ? '#f59e0b' : '#3b82f6');
     return '<div class="parada-item" style="margin-top:8px">' +
       '<div class="parada-num" style="background:' + corNum + '22;color:' + corNum + '">' + p.ordem + '</div>' +
       '<div class="parada-info">' +
@@ -1435,7 +1646,7 @@ var Viagens = {
   },
 
   /* =========================================================
-     MAPA EM TELA CHEIA (substitui o antigo mapa embutido nos resultados)
+     MAPA EM TELA CHEIA
      ========================================================= */
   abrirMapaFullscreen: function (idx) {
     var dados = Viagens.plano.paradasPorRota[idx];
@@ -1451,13 +1662,13 @@ var Viagens = {
   _criarOverlayMapa: function (rota) {
     var existente = document.getElementById('viagensMapaFullscreen');
     if (existente) existente.remove();
+    Viagens._marcadoresExtras = [];
     var overlay = document.createElement('div');
     overlay.id = 'viagensMapaFullscreen';
     overlay.style.cssText = 'position:fixed;inset:0;z-index:2000;background:var(--bg,#0b1120);display:flex;flex-direction:column';
     overlay.innerHTML =
       '<div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--linha,#26365c)">' +
-        '<button onclick="Viagens.fecharMapaFullscreen()" style="background:var(--card,#16213b);border:1px solid var(--linha,#26365c);color:var(--txt,#e8eefc);' +
-          'border-radius:9px;padding:8px 12px;display:flex;align-items:center;gap:6px;cursor:pointer;font-family:inherit">' +
+        '<button onclick="Viagens.fecharMapaFullscreen()" class="btn-cancelar-form" style="padding:8px 14px">' +
           '<span class="ms">arrow_back</span> Voltar' +
         '</button>' +
         '<div id="mapaFullTitulo" style="font-size:13px;color:var(--txt2)">' + (rota ? App.esc(rota.nome + ' · ' + rota.km + ' km') : '') + '</div>' +
@@ -1473,6 +1684,22 @@ var Viagens = {
     var overlay = document.getElementById('viagensMapaFullscreen');
     if (overlay) overlay.remove();
     if (Viagens._mapaFull) { try { Viagens._mapaFull.remove(); } catch (e) {} Viagens._mapaFull = null; }
+    Viagens._marcadoresExtras = [];
+  },
+
+  /* Marcador estilo PIN do Google Maps (nao mais quadrado numerado),
+     com o NOME DO POSTO como rotulo permanente abaixo do pino. */
+  _iconePinPosto: function (cor, numero) {
+    return L.divIcon({
+      className: '',
+      html: '<div style="position:relative;width:34px;height:34px">' +
+        '<span class="ms" style="font-size:34px;color:' + cor + ';text-shadow:0 2px 5px rgba(0,0,0,.55);position:absolute;top:0;left:0">location_on</span>' +
+        (numero != null ? '<span style="position:absolute;top:3px;left:0;width:34px;text-align:center;color:#fff;font-size:11px;font-weight:700">' + numero + '</span>' : '') +
+      '</div>',
+      iconSize: [34, 34],
+      iconAnchor: [17, 32],
+      popupAnchor: [0, -30]
+    });
   },
   _desenharMapaFullscreen: function (rota, paradas) {
     var el = document.getElementById('mapaFullscreenLeaflet');
@@ -1485,48 +1712,84 @@ var Viagens = {
     var linha = L.polyline(coords, { color: '#3b82f6', weight: 5, opacity: 0.9 }).addTo(Viagens._mapaFull);
     var origem = Viagens.plano.origem, destino = Viagens.plano.destino;
     if (origem && origem.lat) {
-      L.marker([origem.lat, origem.lon], { icon: L.divIcon({ className: '', html: '<div class="marcador-ponto origem">A</div>', iconSize: [28, 28], iconAnchor: [14, 14] }) })
-        .addTo(Viagens._mapaFull).bindPopup('<b>Origem</b>');
+      L.marker([origem.lat, origem.lon], { icon: Viagens._iconePinPosto('#22c55e', null) })
+        .addTo(Viagens._mapaFull).bindTooltip('Origem', { permanent: true, direction: 'top', offset: [0, -30] });
     }
     if (destino && destino.lat) {
-      L.marker([destino.lat, destino.lon], { icon: L.divIcon({ className: '', html: '<div class="marcador-ponto destino">B</div>', iconSize: [28, 28], iconAnchor: [14, 14] }) })
-        .addTo(Viagens._mapaFull).bindPopup('<b>Destino</b>');
+      L.marker([destino.lat, destino.lon], { icon: Viagens._iconePinPosto('#ef4444', null) })
+        .addTo(Viagens._mapaFull).bindTooltip('Destino', { permanent: true, direction: 'top', offset: [0, -30] });
     }
     (paradas || []).forEach(function (p) {
       if (!p.lat || !p.lon) return;
-      var cor = p.trecho === 'VOLTA' ? '#a78bfa' : '#22c55e';
-      var m = L.marker([p.lat, p.lon], {
-        icon: L.divIcon({ className: '', html: '<div class="marcador-parada" style="background:' + cor + '">' + p.ordem + '</div>', iconSize: [28, 28], iconAnchor: [14, 14] })
-      }).addTo(Viagens._mapaFull);
-      var popup = '<b>' + App.esc(p.postoNome || ('Parada ' + p.ordem)) + '</b><br>' + p.trecho + ' · km ' + p.kmNoTrecho;
-      m.bindPopup(popup);
+      var cor = p.trecho === 'VOLTA' ? '#a78bfa' : '#3b82f6';
+      var nomeExibido = p.postoNome || ('Parada ' + p.ordem);
+      var m = L.marker([p.lat, p.lon], { icon: Viagens._iconePinPosto(cor, p.ordem) }).addTo(Viagens._mapaFull);
+      m.bindTooltip(nomeExibido, { permanent: true, direction: 'top', offset: [0, -30], className: 'tooltip-posto-carway' });
+      m.bindPopup('<b>' + App.esc(nomeExibido) + '</b><br>' + p.trecho + ' · km ' + p.kmNoTrecho);
     });
     setTimeout(function () {
       Viagens._mapaFull.invalidateSize();
       try { Viagens._mapaFull.fitBounds(linha.getBounds(), { padding: [30, 30] }); } catch (e) {}
     }, 150);
   },
+
+  /* "Postos nesta área": busca num raio de 20 km ao redor da PARADA
+     mais proxima do centro atual do mapa (nao do mapa inteiro), e
+     adiciona os resultados como marcadores EXTRAS no MESMO mapa aberto
+     — sem abrir modal novo e sem remover as paradas ja plotadas. */
   buscarPostosNaAreaDoMapa: function () {
     if (!Viagens._mapaFull) return;
+    var dados = Viagens.plano.paradasPorRota[Viagens.plano.rotaAtiva];
+    var paradas = dados ? dados.paradas : [];
+    if (!paradas.length) { App.toast('Nenhuma parada nesta rota', 'erro'); return; }
     var centro = Viagens._mapaFull.getCenter();
+    var maisProxima = null, menorDist = Infinity;
+    paradas.forEach(function (p) {
+      if (!p.lat || !p.lon) return;
+      var d = Viagens._haversine(centro.lat, centro.lng, p.lat, p.lon);
+      if (d < menorDist) { menorDist = d; maisProxima = p; }
+    });
+    if (!maisProxima) { App.toast('Não há paradas com localização definida nesta rota', 'erro'); return; }
+
     var veic = Viagens.plano.veiculoSelecionado;
     var categoria = veic ? Viagens._categoriaCombustivel(veic.combustivel) : 'combustivel';
-    Viagens.fecharMapaFullscreen();
-    Viagens._buscarPostosParaComCoords(categoria, centro.lat, centro.lng);
-  },
-  _buscarPostosParaComCoords: function (categoria, lat, lon) {
-    App.abrirModal(categoria === 'eletrico' ? 'Pontos de recarga próximos' : 'Postos próximos',
-      '<div style="text-align:center;padding:20px 0"><span class="ms" style="font-size:36px;opacity:.5">hourglass_top</span>' +
-      '<p style="color:var(--txt2);margin-top:10px">Buscando...</p></div>', null);
+    App.toast('Buscando num raio de 20 km da parada ' + maisProxima.ordem + '...', 'ok');
+
     var busca = categoria === 'eletrico'
-      ? Viagens._buscarPontosRecargaOCM(lat, lon)
-      : Viagens._buscarPostosOverpass(lat, lon);
+      ? Viagens._buscarPontosRecargaOCM(maisProxima.lat, maisProxima.lon)
+      : Viagens._buscarPostosOverpass(maisProxima.lat, maisProxima.lon, 20000);
+
     busca.then(function (locais) {
-      Viagens._mostrarListaPostos(categoria, locais, { lat: lat, lon: lon });
+      Viagens._adicionarMarcadoresExtras(locais, categoria);
     }).catch(function () {
-      App.toast('Erro ao buscar locais', 'erro');
-      App.fecharModal();
+      App.toast('Erro ao buscar postos nesta área', 'erro');
     });
+  },
+  /* Adiciona marcadores EXTRAS (postos encontrados na busca de 20km) ao
+     mapa em tela cheia, SEM remover os marcadores das paradas ja
+     plotadas — limpa apenas a camada extra anterior, se existir. */
+  _adicionarMarcadoresExtras: function (locais, categoria) {
+    if (!Viagens._mapaFull) return;
+    (Viagens._marcadoresExtras || []).forEach(function (m) { try { Viagens._mapaFull.removeLayer(m); } catch (e) {} });
+    Viagens._marcadoresExtras = [];
+    if (!locais || !locais.length) {
+      App.toast('Nenhum posto encontrado nesse raio', 'erro');
+      return;
+    }
+    var cor = categoria === 'eletrico' ? '#22c55e' : '#f59e0b';
+    locais.slice(0, 15).forEach(function (p) {
+      if (!p.lat || !p.lon) return;
+      var icone = L.divIcon({
+        className: '',
+        html: '<span class="ms" style="font-size:28px;color:' + cor + ';text-shadow:0 2px 5px rgba(0,0,0,.55)">location_on</span>',
+        iconSize: [28, 28], iconAnchor: [14, 26]
+      });
+      var m = L.marker([p.lat, p.lon], { icon: icone }).addTo(Viagens._mapaFull);
+      m.bindTooltip(p.nome, { permanent: false, direction: 'top', offset: [0, -24] });
+      m.bindPopup('<b>' + App.esc(p.nome) + '</b>' + (p.endereco ? '<br>' + App.esc(p.endereco) : '') + (p.distanciaKm != null ? '<br>' + p.distanciaKm + ' km' : ''));
+      Viagens._marcadoresExtras.push(m);
+    });
+    App.toast(locais.length + ' posto(s) encontrado(s) nesta área', 'ok');
   },
   _decodificarPolyline: function (encoded) {
     if (!encoded) return [];
@@ -1552,8 +1815,7 @@ var Viagens = {
   },
 
   /* =========================================================
-     CRIAR VIAGEM — agora com bloco "Orçamento previsto" (Alimentação/
-     Hospedagem/Outros) e botão de voltar no padrão do app.
+     CRIAR VIAGEM — botoes no padrao arredondado do app
      ========================================================= */
   criarViagemDaRota: function (idx) {
     var r = Viagens.plano.rotas[idx];
@@ -1567,11 +1829,13 @@ var Viagens = {
     var tituloPadrao = origemTxt + ' → ' + destinoTxt;
     var tituloInicial = document.getElementById('plNomeViagem') ? document.getElementById('plNomeViagem').value.trim() : '';
     var icoV = App._iconeTipoVeiculo ? App._iconeTipoVeiculo(veic.tipo) : 'directions_car';
+    var corV = App._corVeiculo ? App._corVeiculo(veic) : '#3b82f6';
 
     var html =
       '<h2 class="form-titulo">Criar viagem</h2>' +
-      '<div class="veic-unico" style="margin-bottom:14px"><span class="ms">' + icoV + '</span>' +
-        '<div><b>' + App.esc(veic.nome) + '</b><small>veículo da viagem</small></div></div>' +
+      '<div class="veic-unico" style="margin-bottom:14px;border-color:' + corV + '44">' +
+        '<span class="ms" style="color:' + corV + '">' + icoV + '</span>' +
+        '<div><b>' + App.esc(veic.nome) + '</b><small style="display:block">veículo da viagem</small></div></div>' +
       '<div style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.4);border-radius:12px;padding:12px 14px;margin-bottom:16px">' +
         '<div style="display:flex;align-items:center;gap:8px;color:#86efac;font-weight:700;font-size:13.5px">' +
           '<span class="ms">check_circle</span>' + App.esc(r.nome) + ' · ' + (idaVolta ? 'ida e volta' : 'só ida') +
@@ -1695,7 +1959,7 @@ var Viagens = {
             valorPrevisto: Math.round((p.litrosPrevisto || 0) * precoLitro * 100) / 100,
             litrosReal: 0,
             valorReal: 0,
-            status: p.semPosto ? 'SEM_POSTO' : 'PENDENTE',
+            status: (p.semPosto && !p.usouAnterior) ? 'SEM_POSTO' : 'PENDENTE',
             trecho: p.trecho || 'IDA',
             ordemTrecho: p.ordem,
             titulo: (p.trecho || 'IDA') + ' - Parada ' + p.ordem,
@@ -1721,18 +1985,6 @@ var Viagens = {
 
   /* =========================================================
      BUSCA DE POSTOS / PONTOS DE RECARGA (gratuito, sem custo de API)
-     - Elétrico -> Open Charge Map (API gratuita)
-     - GNV / combustiveis comuns -> Overpass API (OpenStreetMap,
-       gratuita, com 3 servidores espelho + timeout)
-     As chamadas PAGAS (Google Places/Routes/Geocode) continuam
-     reservadas exclusivamente para o planejador de viagens (buscarRotas).
-
-     CORRIGIDO: antes, esta funcao lia o veiculo pelo campo #plVeiculo,
-     que deixa de existir assim que a tela de resultados substitui o
-     HTML do formulario — por isso um veiculo Elétrico acabava caindo
-     no fallback (categoria "combustivel"). Agora usa PRIMEIRO
-     Viagens.plano.veiculoSelecionado (guardado em memoria desde que a
-     busca de rotas comecou), que funciona em QUALQUER tela.
      ========================================================= */
   _OVERPASS_MIRRORS: [
     'https://overpass-api.de/api/interpreter',
@@ -1776,8 +2028,11 @@ var Viagens = {
       }).sort(function (a, b) { return (a.distanciaKm == null ? 99 : a.distanciaKm) - (b.distanciaKm == null ? 99 : b.distanciaKm); });
     });
   },
-  _buscarPostosOverpass: function (lat, lon) {
-    var query = '[out:json][timeout:15];(node["amenity"="fuel"](around:5000,' + lat + ',' + lon + '););out center 15;';
+  /* Aceita raio customizado (metros) — usado com 20000 pelo botão
+     "Postos nesta área" e com o padrao de 5000 nas demais buscas. */
+  _buscarPostosOverpass: function (lat, lon, raioMetros) {
+    var raio = raioMetros || 5000;
+    var query = '[out:json][timeout:15];(node["amenity"="fuel"](around:' + raio + ',' + lat + ',' + lon + '););out center 15;';
     var tentar = function (idx) {
       if (idx >= Viagens._OVERPASS_MIRRORS.length) {
         return Promise.reject(new Error('Servidores de mapas indisponíveis no momento'));
@@ -1956,11 +2211,11 @@ var Viagens = {
     var html =
       '<div class="detalhe-cab">' +
         '<h2>' + App.esc(v.titulo || (v.origem + ' → ' + v.destino)) + '</h2>' +
-        '<div class="rota"><span class="ms">trip_origin</span>' + App.esc(v.origem) +
-          '<span class="ms">' + (String(v.idaVolta).toUpperCase() === 'SIM' ? 'sync_alt' : 'east') + '</span>' + App.esc(v.destino) + '</div>' +
-        '<div class="rota" style="margin-top:6px"><span class="ms">event</span>' + Viagens.fmtData(v.dataInicio) +
+        '<div class="rota"><span class="ms" style="color:#22c55e">trip_origin</span>' + App.esc(v.origem) +
+          '<span class="ms" style="color:#60a5fa">' + (String(v.idaVolta).toUpperCase() === 'SIM' ? 'sync_alt' : 'east') + '</span>' + App.esc(v.destino) + '</div>' +
+        '<div class="rota" style="margin-top:6px"><span class="ms" style="color:#f59e0b">event</span>' + Viagens.fmtData(v.dataInicio) +
           (v.dataFim ? ' → ' + Viagens.fmtData(v.dataFim) : '') + '</div>' +
-        (veiculo ? '<div class="rota" style="margin-top:6px;color:' + corVeic + '"><span class="ms">' + icoVeic + '</span>' + App.esc(veiculo.nome) + ' · ' + App.esc(veiculo.placa || 'sem placa') + '</div>' : '') +
+        (veiculo ? '<div class="rota" style="margin-top:6px;color:' + corVeic + '"><span class="ms" style="color:' + corVeic + '">' + icoVeic + '</span>' + App.esc(veiculo.nome) + ' · ' + App.esc(veiculo.placa || 'sem placa') + '</div>' : '') +
         '<div class="detalhe-nums">' +
           '<div class="detalhe-num"><b>' + App.fmtNum(kmReal) + '</b><small>KM</small></div>' +
           '<div class="detalhe-num"><b>' + App.moeda(total) + '</b><small>Gasto total</small></div>' +
@@ -1996,15 +2251,15 @@ var Viagens = {
 
     if (abs.length) html += '<h2 class="secao-titulo"><span class="ms" style="color:#ef4444">local_gas_station</span> Abastecimentos (' + abs.length + ')</h2>' +
       '<div class="lista-abastecimentos">' + abs.map(Viagens.itemAbastecimento).join('') + '</div>';
-    if (desp.length) html += '<h2 class="secao-titulo"><span class="ms">receipt_long</span> Despesas (' + desp.length + ')</h2>' +
+    if (desp.length) html += '<h2 class="secao-titulo"><span class="ms" style="color:#22c55e">receipt_long</span> Despesas (' + desp.length + ')</h2>' +
       '<div class="lista-abastecimentos">' + desp.map(Viagens.itemDespesa).join('') + '</div>';
     if (manut.length) html += '<h2 class="secao-titulo"><span class="ms" style="color:#f59e0b">build</span> Manutenções (' + manut.length + ')</h2>' +
       '<div class="lista-abastecimentos">' + manut.map(Viagens.itemManutencao).join('') + '</div>';
 
     html += '<div id="blocoMapaViagemDetalhe"></div>';
 
-    html += '<div class="acao-topo" style="margin-top:20px">' +
-      '<button class="btn-novo-sec" onclick="Viagens.exportarPDFViagem(\'' + v.id + '\')"><span class="ms">picture_as_pdf</span> Exportar viagem em PDF</button>' +
+    html += '<div class="form-acoes-viagem" style="margin-top:20px">' +
+      '<button class="btn-novo-sec btn-bloco-full" onclick="Viagens.exportarPDFViagem(\'' + v.id + '\')"><span class="ms" style="color:#a78bfa">picture_as_pdf</span> Exportar viagem em PDF</button>' +
     '</div>';
 
     el.innerHTML = html;
@@ -2012,7 +2267,7 @@ var Viagens = {
   },
 
   /* =========================================================
-     PARADAS PLANEJADAS — KPIs + grupos IDA/VOLTA recolhíveis
+     PARADAS PLANEJADAS
      ========================================================= */
   renderParadasPlanejadas: function (paradas) {
     var previsto = 0, realizado = 0, pendentes = 0;
@@ -2102,7 +2357,6 @@ var Viagens = {
     '</div>';
   },
 
-  /* ---- Ações das paradas ---- */
   formConcluirParada: function (paradaId) {
     var d = Viagens._detalheAtual;
     var p = d.paradas.filter(function (x) { return x.id === paradaId; })[0];
@@ -2260,7 +2514,6 @@ var Viagens = {
     window.CARWAY_VIAGEM_HINT = viagemId;
     App.irParaFormAbastecimento(null, veiculoId);
   },
-
   lancarDespesaViagem: function (viagemId, veiculoId, categoriaPre) {
     var icones = { 'Alimentação': 'restaurant', 'Hospedagem': 'hotel', 'Pedágio': 'toll', 'Combustível': 'local_gas_station', 'Estacionamento': 'local_parking', 'Lavagem': 'local_car_wash', 'Manutenção': 'build', 'Multa': 'gavel', 'Outros': 'receipt_long' };
     var cores = { 'Alimentação': '#22c55e', 'Hospedagem': '#a78bfa', 'Pedágio': '#f59e0b', 'Combustível': '#ef4444', 'Estacionamento': '#3b82f6', 'Lavagem': '#22d3ee', 'Manutenção': '#f59e0b', 'Multa': '#ef4444', 'Outros': '#94a3b8' };
@@ -2434,7 +2687,7 @@ var Viagens = {
   },
 
   /* =========================================================
-     MAPA DO DETALHE (diferente do mapa em tela cheia do planejador)
+     MAPA DO DETALHE
      ========================================================= */
   _mapaDetalhe: null,
   _montarMapaDetalhe: function (v) {
@@ -2448,7 +2701,7 @@ var Viagens = {
     container.innerHTML =
       '<h2 class="secao-titulo"><span class="ms">map</span> Mapa da rota</h2>' +
       '<div id="mapaDetalheViagem" style="height:260px;border-radius:16px;border:1px solid var(--linha,#26365c);overflow:hidden;margin-bottom:10px"></div>' +
-      '<div class="acao-topo">' +
+      '<div class="form-acoes-viagem">' +
         '<button class="btn-novo-sec" onclick="Viagens.mapaDetalheTelaCheia()"><span class="ms">fullscreen</span> Tela cheia</button>' +
         '<button class="btn-novo-sec" onclick="App.irParaFormViagem(\'' + v.id + '\')"><span class="ms">edit_road</span> Refazer</button>' +
         '<button class="btn-novo-sec" onclick="Viagens.abrirBuscaPostos()"><span class="ms" style="color:#ef4444">local_gas_station</span> Postos</button>' +
@@ -2462,16 +2715,15 @@ var Viagens = {
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(Viagens._mapaDetalhe);
       var coords = Viagens._decodificarPolyline(r.polyline || '');
       if (!coords.length) return;
-      var pts = coords.map(function (c) { return [c[0], c[1]]; });
-      var linha = L.polyline(pts, { color: '#3b82f6', weight: 5, opacity: 0.9 }).addTo(Viagens._mapaDetalhe);
-      if (r.origem) L.marker([r.origem.lat, r.origem.lon]).addTo(Viagens._mapaDetalhe).bindPopup('<b>Origem</b>');
-      if (r.destino) L.marker([r.destino.lat, r.destino.lon]).addTo(Viagens._mapaDetalhe).bindPopup('<b>Destino</b>');
+      var linha = L.polyline(coords, { color: '#3b82f6', weight: 5, opacity: 0.9 }).addTo(Viagens._mapaDetalhe);
+      if (r.origem) L.marker([r.origem.lat, r.origem.lon], { icon: Viagens._iconePinPosto('#22c55e', null) }).addTo(Viagens._mapaDetalhe).bindPopup('<b>Origem</b>');
+      if (r.destino) L.marker([r.destino.lat, r.destino.lon], { icon: Viagens._iconePinPosto('#ef4444', null) }).addTo(Viagens._mapaDetalhe).bindPopup('<b>Destino</b>');
       var d = Viagens._detalheAtual;
       (d.paradas || []).forEach(function (p) {
         if (!p.latitude || !p.longitude) return;
         var cor = String(p.status).toUpperCase() === 'CONCLUIDA' ? '#22c55e' : (p.trecho === 'VOLTA' ? '#a78bfa' : '#3b82f6');
-        var ico = L.divIcon({ className: '', html: '<div class="marcador-parada" style="background:' + cor + '">' + p.ordem + '</div>', iconSize: [26, 26], iconAnchor: [13, 13] });
-        L.marker([p.latitude, p.longitude], { icon: ico }).addTo(Viagens._mapaDetalhe).bindPopup('<b>' + App.esc(p.postoNome || ('Parada ' + p.ordem)) + '</b>');
+        L.marker([p.latitude, p.longitude], { icon: Viagens._iconePinPosto(cor, p.ordem) })
+          .addTo(Viagens._mapaDetalhe).bindPopup('<b>' + App.esc(p.postoNome || ('Parada ' + p.ordem)) + '</b>');
       });
       setTimeout(function () {
         Viagens._mapaDetalhe.invalidateSize();
@@ -2487,7 +2739,9 @@ var Viagens = {
   },
 
   /* =========================================================
-     EXPORTAR PDF DE UMA VIAGEM
+     EXPORTAR PDF DE UMA VIAGEM — layout completo (como a versão
+     anterior em uso): dados do veiculo, KPIs, Orcado x Realizado com
+     Previsto/Realizado/Diferenca, paradas planejadas com endereco.
      ========================================================= */
   exportarPDFViagem: function (viagemId) {
     if (!window.jspdf || !window.jspdf.jsPDF) {
@@ -2502,36 +2756,83 @@ var Viagens = {
     var totDesp = 0; d.despesas.forEach(function (x) { totDesp += Number(x.valor) || 0; });
     var totManut = 0; d.manutencoes.forEach(function (x) { totManut += Number(x.custo) || 0; });
     var total = totComb + totDesp + totManut;
+    var kmReal = v.kmFinal > 0 ? (Number(v.kmFinal) - Number(v.kmInicial)) : Number(v.distancia);
+    var custoKm = kmReal > 0 ? total / kmReal : 0;
+    var litros = 0; d.abastecimentos.forEach(function (a) { litros += Number(a.litros) || 0; });
+
+    /* Categorias de despesa avulsas por tipo, para exibir na coluna
+       "Realizado" do Orcado x Realizado (alimentacao/hospedagem/outros) */
+    var realAlim = 0, realHosp = 0, realOutros = 0;
+    d.despesas.forEach(function (x) {
+      var val = Number(x.valor) || 0;
+      if (x.categoria === 'Alimentação') realAlim += val;
+      else if (x.categoria === 'Hospedagem') realHosp += val;
+      else realOutros += val;
+    });
+    realOutros += totManut;
 
     var doc = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4' });
+    var tituloViagem = v.titulo || (v.origem + ' → ' + v.destino);
+    var subtitulo = v.origem + ' → ' + v.destino + ' - ' +
+      (String(v.idaVolta).toUpperCase() === 'SIM' ? 'ida e volta' : 'só ida') + ' - ' +
+      Viagens.fmtData(v.dataInicio) + (v.dataFim ? ' a ' + Viagens.fmtData(v.dataFim) : '') +
+      (veiculo ? ' - ' + veiculo.nome + (veiculo.placa ? ' ' + veiculo.placa : '') : '');
+
     doc.setFontSize(16);
-    doc.text('CarWay - Relatório de Viagem', 14, 16);
-    doc.setFontSize(10);
+    doc.text('Relatório de Viagem', 14, 16);
+    doc.setFontSize(9);
     doc.setTextColor(100);
-    doc.text(v.titulo || (v.origem + ' → ' + v.destino), 14, 23);
-    doc.text((veiculo ? veiculo.nome + (veiculo.placa ? ' - ' + veiculo.placa : '') : '') + ' · ' + Viagens.fmtData(v.dataInicio) + (v.dataFim ? ' a ' + Viagens.fmtData(v.dataFim) : ''), 14, 28);
+    doc.text(subtitulo, 14, 22);
     doc.setTextColor(0);
 
     doc.autoTable({
-      startY: 34,
+      startY: 28,
       theme: 'grid',
       styles: { fontSize: 9 },
-      head: [['Combustível', 'Despesas', 'Manutenção', 'Total']],
-      body: [[App.moeda(totComb), App.moeda(totDesp), App.moeda(totManut), App.moeda(total)]]
+      head: [['Distância', 'Combustível', 'Gasto total', 'Custo por km']],
+      body: [[App.fmtNum(kmReal) + ' km', App.fmtNum(litros, 1) + ' L', App.moeda(total), App.moeda(custoKm)]]
     });
     var y = doc.lastAutoTable.finalY + 10;
 
+    doc.setFontSize(12);
+    doc.text('Orçado x Realizado', 14, y);
+    var linhasOrc = [
+      ['Combustível', App.moeda(v.combustivelPrev || 0), App.moeda(totComb), App.moeda(totComb - (v.combustivelPrev || 0))],
+      ['Pedágio', App.moeda(v.pedagioPrev || 0), '-', App.moeda(-(v.pedagioPrev || 0))],
+      ['Alimentação', App.moeda(v.alimentacaoPrev || 0), App.moeda(realAlim), App.moeda(realAlim - (v.alimentacaoPrev || 0))],
+      ['Hospedagem', App.moeda(v.hospedagemPrev || 0), App.moeda(realHosp), App.moeda(realHosp - (v.hospedagemPrev || 0))],
+      ['Outros', App.moeda(v.outrosPrev || 0), App.moeda(realOutros), App.moeda(realOutros - (v.outrosPrev || 0))]
+    ];
+    var totalPrevGeral = (v.combustivelPrev||0)+(v.pedagioPrev||0)+(v.alimentacaoPrev||0)+(v.hospedagemPrev||0)+(v.outrosPrev||0);
+    linhasOrc.push(['TOTAL', App.moeda(totalPrevGeral), App.moeda(total), App.moeda(total - totalPrevGeral)]);
+    doc.autoTable({
+      startY: y + 3,
+      styles: { fontSize: 8.5 },
+      headStyles: { fillColor: [59, 130, 246] },
+      head: [['Categoria', 'Previsto', 'Realizado', 'Diferença']],
+      body: linhasOrc,
+      didParseCell: function (dataCell) {
+        if (dataCell.column.index === 3 && dataCell.row.section === 'body') {
+          var txt = String(dataCell.cell.raw || '');
+          if (txt.indexOf('-') === 0) dataCell.cell.styles.textColor = [34, 197, 94];
+          else if (txt !== 'R$ 0,00' && txt !== '-') dataCell.cell.styles.textColor = [239, 68, 68];
+        }
+        if (dataCell.row.index === linhasOrc.length - 1) dataCell.cell.styles.fontStyle = 'bold';
+      }
+    });
+    y = doc.lastAutoTable.finalY + 10;
+
     if (d.paradas && d.paradas.length) {
+      if (y > 240) { doc.addPage(); y = 16; }
       doc.setFontSize(12);
       doc.text('Paradas planejadas', 14, y);
       doc.autoTable({
         startY: y + 3,
         styles: { fontSize: 8 },
         headStyles: { fillColor: [167, 139, 250] },
-        head: [['Trecho', 'Ordem', 'Posto', 'Km', 'Status', 'Valor']],
+        head: [['#', 'KM', 'Posto sugerido', 'Endereço', 'Status']],
         body: d.paradas.map(function (p) {
-          return [p.trecho || 'IDA', String(p.ordem), p.postoNome || '—', App.fmtNum(p.kmPrevisto), p.status || 'PENDENTE',
-            App.moeda(String(p.status).toUpperCase() === 'CONCLUIDA' ? p.valorReal : p.valorPrevisto)];
+          return ['#' + p.ordem, App.fmtNum(p.kmPrevisto), p.postoNome || '—', p.postoEndereco || '—', p.status || 'PENDENTE'];
         })
       });
       y = doc.lastAutoTable.finalY + 10;
@@ -2571,14 +2872,76 @@ var Viagens = {
       doc.setPage(i);
       doc.setFontSize(8);
       doc.setTextColor(150);
+      doc.text('Gerado pelo CarWay em ' + new Date().toLocaleString('pt-BR'), 14, 290);
       doc.text('Página ' + i + ' de ' + totalPaginas, 196, 290, { align: 'right' });
     }
-    doc.save('carway-viagem-' + App.hojeISO() + '.pdf');
-    App.toast('PDF gerado!', 'ok');
+
+    var nomeArquivo = 'Viagem_' + tituloViagem.replace(/[^a-zA-Z0-9]/g, '') + '_' + App.hojeISO() + '.pdf';
+    Viagens._finalizarPDF(doc, nomeArquivo);
+  },
+
+  /* Finaliza qualquer PDF gerado (lista de viagens ou viagem
+     individual): em vez de so baixar direto, mostra um modal "PDF
+     pronto" perguntando o que fazer — Abrir e imprimir, Salvar no
+     aparelho, ou Compartilhar (Drive/outros apps via Web Share API). */
+  _finalizarPDF: function (doc, filename) {
+    var blob = doc.output('blob');
+    var url = URL.createObjectURL(blob);
+    Viagens._ultimoPdfBlob = blob;
+    Viagens._ultimoPdfNome = filename;
+    var tamanhoKB = Math.max(1, Math.round(blob.size / 1024));
+    var html =
+      '<div style="background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.4);border-radius:12px;padding:12px 14px;margin-bottom:16px;display:flex;align-items:center;gap:10px">' +
+        '<span class="ms" style="color:#22c55e;font-size:24px">check_circle</span>' +
+        '<div><b style="display:block;font-size:13px">' + App.esc(filename) + '</b>' +
+        '<small style="color:var(--txt2)">Documento gerado (' + tamanhoKB + ' KB).</small></div>' +
+      '</div>' +
+      '<div style="display:flex;flex-direction:column;gap:10px">' +
+        '<button class="btn-novo" style="justify-content:center" onclick="Viagens._abrirEImprimirPDF()"><span class="ms">visibility</span> Abrir e imprimir</button>' +
+        '<button class="btn-novo-sec" style="justify-content:center" onclick="Viagens._salvarPDFAparelho()"><span class="ms" style="color:#60a5fa">download</span> Salvar no aparelho</button>' +
+        '<button class="btn-novo-sec" style="justify-content:center" onclick="Viagens._compartilharPDF()"><span class="ms" style="color:#a78bfa">share</span> Compartilhar / Drive</button>' +
+      '</div>';
+    App.abrirModal('PDF pronto', html, null);
+    /* URL guardada em memoria (nao no HTML do botao) para evitar
+       problemas de escaping de aspas em blob URLs longas. */
+    Viagens._ultimoPdfUrl = url;
+  },
+  _abrirEImprimirPDF: function () {
+    if (!Viagens._ultimoPdfUrl) return;
+    var win = window.open(Viagens._ultimoPdfUrl, '_blank');
+    if (win) {
+      setTimeout(function () { try { win.focus(); win.print(); } catch (e) {} }, 600);
+    }
+  },
+  _salvarPDFAparelho: function () {
+    if (!Viagens._ultimoPdfUrl) return;
+    var a = document.createElement('a');
+    a.href = Viagens._ultimoPdfUrl;
+    a.download = Viagens._ultimoPdfNome || 'carway.pdf';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    App.toast('PDF salvo no aparelho', 'ok');
+  },
+  /* Compartilhamento honesto: usa a Web Share API (com arquivo) quando
+     o navegador suportar (a maioria dos Android/iOS modernos, incluindo
+     a opcao "Salvar no Drive" no menu de compartilhamento do sistema).
+     Sem suporte, abre o Google Drive e orienta o usuario a enviar
+     manualmente o arquivo ja baixado — nao ha como fazer upload direto
+     sem integracao OAuth com a API do Google Drive. */
+  _compartilharPDF: function () {
+    if (!Viagens._ultimoPdfBlob) return;
+    var file = new File([Viagens._ultimoPdfBlob], Viagens._ultimoPdfNome || 'carway.pdf', { type: 'application/pdf' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      navigator.share({ files: [file], title: 'CarWay', text: 'Relatório CarWay' }).catch(function () {});
+      return;
+    }
+    window.open('https://drive.google.com/drive/my-drive', '_blank', 'noopener');
+    App.toast('Compartilhamento direto não suportado neste navegador. Salve o PDF e envie manualmente ao Drive.', 'ok');
   },
 
   /* =========================================================
-     ENCERRAR / INICIAR
+     ENCERRAR / INICIAR — botoes no padrao arredondado do app
      ========================================================= */
   abrirEncerrar: function (id) {
     sb.from('viagens').select('*').eq('id', id).single().then(function (r) {
@@ -2610,9 +2973,9 @@ var Viagens = {
           '<span style="color:var(--txt2)">Distância</span><b id="encDist">—</b>' +
         '</div>' +
       '</div>' +
-      '<div class="acao-topo" style="margin-top:20px">' +
+      '<div class="form-acoes-viagem">' +
         '<button class="btn-cancelar-form" onclick="App.irPara(\'viagens\')"><span class="ms">close</span> Cancelar</button>' +
-        '<button class="btn-novo" onclick="Viagens.confirmarEncerrar(\'' + v.id + '\',' + ehIniciar + ')">' +
+        '<button class="btn-novo btn-bloco-full" onclick="Viagens.confirmarEncerrar(\'' + v.id + '\',' + ehIniciar + ')">' +
           '<span class="ms">' + (ehIniciar ? 'play_arrow' : 'flag') + '</span> ' + (ehIniciar ? 'Iniciar viagem' : 'Encerrar viagem') +
         '</button>' +
       '</div>';
