@@ -1,4 +1,4 @@
-/* APP_VERSION: v3.3 - fila offline */
+/* APP_VERSION: v3.4 - offline com formulários locais */
 /* =====================================================================
    CARWAY - DESPESAS v3.2
    - Conectado ao seletor global de veiculo (App.veiculoAtivoId).
@@ -206,89 +206,79 @@ var Despesas = {
     '</div>';
   },
 
-  abrirForm: function (id) {
+  abrirForm: async function (id) {
     Despesas._registrarListenerVeiculoGlobal();
 
-    var consultas = [
-      sb.from('veiculos')
-        .select('id, nome, placa')
-        .eq('organizacaoId', orgAtual.id)
-        .order('nome'),
+    var cacheVeiculos = Array.isArray(Despesas.veiculos) ? Despesas.veiculos.slice() : [];
+    var cacheViagens = Array.isArray(Despesas.viagens) ? Despesas.viagens.slice() : [];
 
-      sb.from('viagens')
-        .select('id, titulo, destino, status')
-        .eq('organizacaoId', orgAtual.id)
-        .neq('status', 'concluida')
-        .order('dataInicio', { ascending: false })
-    ];
+    function abrirComDados() {
+      if (!Despesas.veiculos.length) {
+        App.abrirModal(
+          'Veículo necessário',
+          '<div style="text-align:center;padding:10px 0">' +
+            '<span class="ms" style="font-size:56px;color:var(--txt2);opacity:.5">directions_car</span>' +
+            '<h3 style="margin:16px 0 10px">Cadastre um veículo primeiro</h3>' +
+            '<p style="color:var(--txt2);font-size:14px;line-height:1.6;margin:0 0 20px">' +
+              'Para lançar despesas, você precisa cadastrar pelo menos um veículo.' +
+            '</p>' +
+          '</div>',
+          function () { App.fecharModal(); App.irParaFormVeiculo(); },
+          'Cadastrar veículo'
+        );
+        return;
+      }
 
-    if (id) {
-      consultas.push(
-        sb.from('despesas')
-          .select('*')
-          .eq('id', id)
-          .eq('organizacaoId', orgAtual.id)
-          .single()
-      );
+      if (id) {
+        var local = (Despesas.lista || []).filter(function (x) { return x.id === id; })[0];
+        if (!local) { App.toast('Despesa não encontrada neste aparelho', 'erro'); return; }
+        Despesas.editando = local;
+        Despesas.categoriaSel = local.categoria || 'Alimentação';
+      } else {
+        Despesas.editando = null;
+        Despesas.categoriaSel = 'Alimentação';
+      }
+      Despesas.renderForm();
     }
 
-    Promise.all(consultas)
-      .then(function (resultados) {
-        var rVeiculos = resultados[0];
-        var rViagens = resultados[1];
-        var rDespesa = id ? resultados[2] : null;
+    if (!navigator.onLine) {
+      Despesas.veiculos = cacheVeiculos;
+      Despesas.viagens = cacheViagens;
+      abrirComDados();
+      return;
+    }
 
-        if (rVeiculos.error || !rVeiculos.data || rVeiculos.data.length === 0) {
-          App.abrirModal(
-            'Veículo necessário',
-            '<div style="text-align:center;padding:10px 0">' +
-              '<span class="ms" style="font-size:56px;color:var(--txt2);opacity:0.5">directions_car</span>' +
-              '<h3 style="margin:16px 0 10px">Cadastre um veículo primeiro</h3>' +
-              '<p style="color:var(--txt2);font-size:14px;line-height:1.6;margin:0 0 20px">' +
-                'Para lançar despesas, você precisa cadastrar pelo menos um veículo.' +
-              '</p>' +
-            '</div>',
-            function () {
-              App.fecharModal();
-              App.irParaFormVeiculo();
-            },
-            'Cadastrar veículo'
-          );
-          return;
-        }
+    try {
+      var consultas = [
+        sb.from('veiculos').select('id,nome,placa').eq('organizacaoId', orgAtual.id).order('nome'),
+        sb.from('viagens').select('id,titulo,destino,status').eq('organizacaoId', orgAtual.id).neq('status', 'concluida').order('dataInicio', { ascending: false })
+      ];
+      if (id) consultas.push(sb.from('despesas').select('*').eq('id', id).eq('organizacaoId', orgAtual.id).single());
+      var rs = await Promise.all(consultas);
 
-        Despesas.veiculos = rVeiculos.data || [];
+      Despesas.veiculos = (!rs[0].error && rs[0].data && rs[0].data.length) ? rs[0].data : cacheVeiculos;
+      Despesas.viagens = (!rs[1].error && rs[1].data) ? rs[1].data : cacheViagens;
 
-        if (rViagens.error) {
-          console.error('CarWay despesas - erro ao carregar viagens:', rViagens.error);
-          Despesas.viagens = [];
+      if (id) {
+        if (rs[2] && !rs[2].error && rs[2].data) {
+          Despesas.editando = rs[2].data;
+          Despesas.categoriaSel = rs[2].data.categoria || 'Alimentação';
         } else {
-          Despesas.viagens = rViagens.data || [];
+          Despesas.editando = (Despesas.lista || []).filter(function (x) { return x.id === id; })[0] || null;
         }
-
-        if (id) {
-          if (!rDespesa || rDespesa.error || !rDespesa.data) {
-            console.error('CarWay despesas - erro ao carregar despesa:', rDespesa && rDespesa.error);
-            App.toast('Despesa não encontrada', 'erro');
-            App.irPara('despesas');
-            return;
-          }
-
-          Despesas.editando = rDespesa.data;
-          Despesas.categoriaSel = rDespesa.data.categoria || 'Alimentação';
-        } else {
-          Despesas.editando = null;
-          Despesas.categoriaSel = 'Alimentação';
-        }
-
-        Despesas.renderForm();
-      })
-      .catch(function (erro) {
-        console.error('CarWay despesas - erro ao abrir formulário:', erro);
-        App.toast('Não foi possível abrir o cadastro de despesa', 'erro');
-        App.irPara('despesas');
-      });
+      } else {
+        Despesas.editando = null;
+        Despesas.categoriaSel = 'Alimentação';
+      }
+      abrirComDados();
+    } catch (erro) {
+      console.warn('CarWay despesas - usando dados locais:', erro);
+      Despesas.veiculos = cacheVeiculos;
+      Despesas.viagens = cacheViagens;
+      abrirComDados();
+    }
   },
+
 
   renderForm: function () {
     var d = Despesas.editando || {};
@@ -320,7 +310,7 @@ var Despesas = {
       var sel = c.id === Despesas.categoriaSel;
       return '<button type="button" class="cat-opcao' + (sel ? ' sel' : '') + '" ' +
         'data-cat="' + c.id + '" onclick="Despesas.selCat(this)" ' +
-        'style="' + (sel ? 'border-color:' + c.cor + ';background:' + c.cor + '1a' : '') + '">' +
+        'style="border-color:' + c.cor + '80;background:' + c.cor + (sel ? '26' : '12') + ';color:' + c.cor + '">' +
         '<span class="ms" style="color:' + c.cor + '">' + c.icone + '</span>' +
         '<span>' + c.id + '</span>' +
       '</button>';
@@ -379,8 +369,9 @@ var Despesas = {
 
     for (var i = 0; i < ops.length; i++) {
       ops[i].classList.remove('sel');
-      ops[i].style.borderColor = '';
-      ops[i].style.background = '';
+      var catAtual = Despesas.getCategoria(ops[i].getAttribute('data-cat'));
+      ops[i].style.borderColor = catAtual.cor + '80';
+      ops[i].style.background = catAtual.cor + '12';
     }
 
     el.classList.add('sel');
