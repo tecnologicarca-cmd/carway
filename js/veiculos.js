@@ -1,4 +1,4 @@
-/* APP_VERSION: v2.3 */
+/* APP_VERSION: v2.4 - multi-energeticos */
 /* =====================================================================
    CARWAY - VEICULOS
    v2.3 (esta versao)
@@ -73,6 +73,55 @@ var CORES_VEICULO = [
   { id: 'rosa',     hex: '#ec4899' },
   { id: 'cinza',    hex: '#94a3b8' }
 ];
+/* =====================================================================
+   ENERGETICOS DO VEICULO
+   "combustivel" preserva a classificacao visivel (Flex, Hibrido etc.).
+   "energeticos" informa o que realmente pode ser abastecido/recarregado.
+   ===================================================================== */
+var ENERGETICOS_VEICULO = [
+  { id: 'Gasolina', unidade: 'L',   icone: 'local_gas_station', cor: '#ef4444' },
+  { id: 'Etanol',   unidade: 'L',   icone: 'local_gas_station', cor: '#22c55e' },
+  { id: 'Diesel',   unidade: 'L',   icone: 'local_gas_station', cor: '#f59e0b' },
+  { id: 'GNV',      unidade: 'm³',  icone: 'propane_tank',      cor: '#22d3ee' },
+  { id: 'Elétrico', unidade: 'kWh', icone: 'ev_station',        cor: '#22c55e' }
+];
+
+var EnergeticosVeiculo = {
+  porId: function (id) {
+    for (var i = 0; i < ENERGETICOS_VEICULO.length; i++) {
+      if (ENERGETICOS_VEICULO[i].id === id) return ENERGETICOS_VEICULO[i];
+    }
+    return ENERGETICOS_VEICULO[0];
+  },
+
+  padraoDoTipo: function (tipo, plugIn) {
+    var c = String(tipo || '').toUpperCase();
+    if (c.indexOf('ELÉTR') > -1 || c.indexOf('ELETR') > -1) return ['Elétrico'];
+    if (c.indexOf('FLEX') > -1) return ['Gasolina', 'Etanol'];
+    if (c.indexOf('GNV') > -1) return ['Gasolina', 'GNV'];
+    if (c.indexOf('HÍBR') > -1 || c.indexOf('HIBR') > -1) {
+      return plugIn ? ['Gasolina', 'Elétrico'] : ['Gasolina'];
+    }
+    if (c.indexOf('DIESEL') > -1) return ['Diesel'];
+    if (c.indexOf('ETANOL') > -1) return ['Etanol'];
+    return ['Gasolina'];
+  },
+
+  doVeiculo: function (v) {
+    if (!v) return ['Gasolina'];
+    var txt = String(v.energeticos || '').trim();
+    if (txt) {
+      var lista = txt.split(',').map(function (x) { return x.trim(); }).filter(Boolean);
+      if (lista.length) return lista;
+    }
+    return EnergeticosVeiculo.padraoDoTipo(v.combustivel, !!v.plugIn);
+  },
+
+  unidade: function (id) {
+    return EnergeticosVeiculo.porId(id).unidade;
+  }
+};
+
 var Veiculos = {
   lista: [],
   editando: null,
@@ -283,132 +332,194 @@ var Veiculos = {
     }
     Veiculos.renderForm();
   },
-    renderForm: function () {
+  renderForm: function () {
     var v = Veiculos.editando || {};
     var tipoSel = v.tipo || 'carro';
     var corSel = v.cor || 'azul';
+    var combustivelSel = v.combustivel || 'Gasolina';
+    var energeticosSel = Veiculos.editando
+      ? EnergeticosVeiculo.doVeiculo(v)
+      : EnergeticosVeiculo.padraoDoTipo(combustivelSel, !!v.plugIn);
+
     var tiposHtml = TIPOS_VEICULO.map(function (t) {
       return '<button type="button" class="tipo-opcao' + (t.id === tipoSel ? ' sel' : '') + '" ' +
         'data-tipo="' + t.id + '" onclick="Veiculos.selTipo(this)">' +
         '<span class="ms">' + t.icone + '</span><span>' + t.nome + '</span>' +
       '</button>';
     }).join('');
+
     var coresHtml = CORES_VEICULO.map(function (c) {
       return '<button type="button" class="cor-opcao' + (c.id === corSel ? ' sel' : '') + '" ' +
         'data-cor="' + c.id + '" style="background:' + c.hex + ';color:' + c.hex + '" ' +
         'onclick="Veiculos.selCor(this)"></button>';
     }).join('');
+
+    var energeticosHtml = ENERGETICOS_VEICULO.map(function (e) {
+      var sel = energeticosSel.indexOf(e.id) > -1;
+      var fundo = sel ? e.cor + '26' : 'var(--bg2,#111c33)';
+      var borda = sel ? e.cor : 'var(--linha,#26365c)';
+      var texto = sel ? e.cor : 'var(--txt2,#93a4c8)';
+      return '<button type="button" class="energetico-opcao' + (sel ? ' sel' : '') + '" ' +
+        'data-energetico="' + e.id + '" data-cor="' + e.cor + '" onclick="Veiculos.toggleEnergetico(this)" ' +
+        'style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:82px;padding:11px 4px;border-radius:12px;cursor:pointer;font-family:inherit;text-align:center;transition:.15s;background:' + fundo + ';border:2px solid ' + borda + ';color:' + texto + '">' +
+        '<span class="ms" style="font-size:25px;line-height:1;color:' + e.cor + '">' + e.icone + '</span>' +
+        '<span style="font-size:11px;font-weight:700">' + e.id + '</span>' +
+        '<small style="font-size:9.5px;opacity:.75">' + e.unidade + '</small>' +
+      '</button>';
+    }).join('');
+
     var html =
       '<h2 class="form-titulo">' + (v.id ? 'Editar veículo' : 'Novo veículo') + '</h2>' +
-      '<div class="campo-form">' +
-        '<label>Tipo de veículo</label>' +
-        '<div class="seletor-tipo" id="seletorTipo">' + tiposHtml + '</div>' +
-      '</div>' +
-      '<div class="campo-form">' +
-        '<label>Cor de identificação</label>' +
-        '<div class="seletor-cor" id="seletorCor">' + coresHtml + '</div>' +
-      '</div>' +
+      '<div class="campo-form"><label>Tipo de veículo</label><div class="seletor-tipo" id="seletorTipo">' + tiposHtml + '</div></div>' +
+      '<div class="campo-form"><label>Cor de identificação</label><div class="seletor-cor" id="seletorCor">' + coresHtml + '</div></div>' +
       '<div class="fipe-compacto">' +
         '<div class="fipe-compacto-header" onclick="Veiculos.toggleFipe()">' +
           '<span class="ms fipe-compacto-icone">auto_awesome</span>' +
-          '<div class="fipe-compacto-txt">' +
-            '<b>Preencher pela tabela FIPE</b>' +
-            '<small>Escolha a marca, modelo e ano — preenche sozinho e já salva o valor de mercado</small>' +
-          '</div>' +
+          '<div class="fipe-compacto-txt"><b>Preencher pela tabela FIPE</b><small>Escolha a marca, modelo e ano — preenche sozinho e já salva o valor de mercado</small></div>' +
           '<span class="fipe-compacto-toggle" id="fipeToggleTxt">usar</span>' +
         '</div>' +
         '<div class="fipe-compacto-campos" id="fipeCampos">' +
-          '<div class="campo-form">' +
-            '<label>Marca</label>' +
-            '<select id="fipeMarca" onchange="Veiculos.fipeEscolherMarca()"><option value="">Carregando...</option></select>' +
-          '</div>' +
-          '<div class="campo-form">' +
-            '<label>Modelo</label>' +
-            '<select id="fipeModelo" onchange="Veiculos.fipeEscolherModelo()" disabled><option>Escolha a marca primeiro</option></select>' +
-          '</div>' +
-          '<div class="campo-form">' +
-            '<label>Ano</label>' +
-            '<select id="fipeAno" onchange="Veiculos.fipeEscolherAno()" disabled><option>Escolha o modelo primeiro</option></select>' +
-          '</div>' +
+          '<div class="campo-form"><label>Marca</label><select id="fipeMarca" onchange="Veiculos.fipeEscolherMarca()"><option value="">Carregando...</option></select></div>' +
+          '<div class="campo-form"><label>Modelo</label><select id="fipeModelo" onchange="Veiculos.fipeEscolherModelo()" disabled><option>Escolha a marca primeiro</option></select></div>' +
+          '<div class="campo-form"><label>Ano</label><select id="fipeAno" onchange="Veiculos.fipeEscolherAno()" disabled><option>Escolha o modelo primeiro</option></select></div>' +
           '<div id="fipeResultado"></div>' +
         '</div>' +
       '</div>' +
-      '<div class="campo-form">' +
-        '<label>Nome / Apelido</label>' +
-        '<input type="text" id="vNome" placeholder="Ex: Meu carro" value="' + App.esc(v.nome || '') + '" maxlength="50">' +
+      '<div class="campo-form"><label>Nome / Apelido</label><input type="text" id="vNome" placeholder="Ex: Meu carro" value="' + App.esc(v.nome || '') + '" maxlength="50"></div>' +
+      '<div class="linha-2">' +
+        '<div class="campo-form"><label>Placa</label><input type="text" id="vPlaca" placeholder="ABC1D23" value="' + App.esc(v.placa || '') + '" maxlength="8" style="text-transform:uppercase"></div>' +
+        '<div class="campo-form"><label>Ano</label><input type="number" id="vAno" placeholder="2020" value="' + (v.ano || '') + '" min="1900" max="2100"></div>' +
       '</div>' +
       '<div class="linha-2">' +
-        '<div class="campo-form"><label>Placa</label>' +
-          '<input type="text" id="vPlaca" placeholder="ABC1D23" value="' + App.esc(v.placa || '') + '" maxlength="8" style="text-transform:uppercase">' +
-        '</div>' +
-        '<div class="campo-form"><label>Ano</label>' +
-          '<input type="number" id="vAno" placeholder="2020" value="' + (v.ano || '') + '" min="1900" max="2100">' +
-        '</div>' +
+        '<div class="campo-form"><label>Marca</label><input type="text" id="vMarca" placeholder="Volkswagen" value="' + App.esc(v.marca || '') + '"></div>' +
+        '<div class="campo-form"><label>Modelo</label><input type="text" id="vModelo" placeholder="Gol" value="' + App.esc(v.modelo || '') + '"></div>' +
       '</div>' +
-      '<div class="linha-2">' +
-        '<div class="campo-form"><label>Marca</label>' +
-          '<input type="text" id="vMarca" placeholder="Volkswagen" value="' + App.esc(v.marca || '') + '">' +
-        '</div>' +
-        '<div class="campo-form"><label>Modelo</label>' +
-          '<input type="text" id="vModelo" placeholder="Gol" value="' + App.esc(v.modelo || '') + '">' +
-        '</div>' +
+      '<div class="campo-form"><label>Combustível / configuração do veículo</label>' +
+        '<select id="vCombustivel" onchange="Veiculos.aplicarTipoCombustivel(true)">' +
+          ['Gasolina','Etanol','Flex','Diesel','GNV','Elétrico','Híbrido'].map(function (c) {
+            return '<option value="' + c + '"' + (combustivelSel === c ? ' selected' : '') + '>' + c + '</option>';
+          }).join('') +
+        '</select>' +
+        '<small>Flex e Híbrido identificam corretamente o veículo. Os energéticos usados são definidos abaixo.</small>' +
       '</div>' +
-      '<div class="linha-2">' +
-        '<div class="campo-form"><label>Combustível</label>' +
-          '<select id="vCombustivel" onchange="Veiculos.atualizarRotuloTanque()">' +
-            ['Gasolina','Etanol','Flex','Diesel','GNV','Elétrico','Híbrido'].map(function (c) {
-              return '<option value="' + c + '"' + (v.combustivel === c ? ' selected' : '') + '>' + c + '</option>';
-            }).join('') +
-          '</select>' +
-        '</div>' +
-        '<div class="campo-form"><label id="vTanqueLabel">Tanque (litros)</label>' +
-          '<input type="number" id="vTanque" placeholder="50" value="' + (v.tanque || '') + '" min="0" step="0.5">' +
-        '</div>' +
+      '<div class="campo-form"><label>Energéticos aceitos</label>' +
+        '<div id="seletorEnergeticos" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">' + energeticosHtml + '</div>' +
+        '<small>Para veículo adaptado, marque todas as opções reais. Ex.: Flex com kit GNV = Gasolina, Etanol e GNV.</small>' +
       '</div>' +
-      '<div class="campo-form">' +
-        '<label>KM atual do painel</label>' +
-        '<input type="number" id="vKm" placeholder="0" value="' + (v.kmInicial || '') + '" min="0">' +
+      '<div id="blocoPlugIn" class="campo-form oculto">' +
+        '<label style="display:flex;align-items:center;gap:10px;cursor:pointer;text-transform:none;font-size:13px">' +
+          '<input type="checkbox" id="vPlugIn"' + (v.plugIn ? ' checked' : '') + ' onchange="Veiculos.alterarPlugIn()" style="width:auto;transform:scale(1.3)">' +
+          '<span>Híbrido plug-in (pode ser recarregado na tomada)</span>' +
+        '</label>' +
+        '<small>Híbrido convencional recarrega a bateria internamente. Plug-in aceita gasolina e recarga elétrica.</small>' +
       '</div>' +
+      '<div id="blocoCapacidades"></div>' +
+      '<div class="campo-form"><label>KM atual do painel</label><input type="number" id="vKm" placeholder="0" value="' + (v.kmInicial || '') + '" min="0"></div>' +
       '<div class="form-acoes">' +
         '<button class="btn-cancelar-form" onclick="App.irPara(\'veiculos\')">Cancelar</button>' +
-        '<button class="btn-salvar-form" id="btnSalvarForm" onclick="Veiculos.salvar()">' +
-          (v.id ? 'Salvar alterações' : 'Cadastrar veículo') +
-        '</button>' +
+        '<button class="btn-salvar-form" id="btnSalvarForm" onclick="Veiculos.salvar()">' + (v.id ? 'Salvar alterações' : 'Cadastrar veículo') + '</button>' +
       '</div>';
+
     document.getElementById('formVeiculoContainer').innerHTML = html;
-    Veiculos.atualizarRotuloTanque(); /* garante rotulo correto tambem ao EDITAR um veiculo ja eletrico/GNV */
+    Veiculos.atualizarCamposEnergeticos();
   },
 
-  /* O campo de "capacidade" muda de nome/unidade conforme o
-     combustivel: Eletrico usa kWh (capacidade da bateria), GNV usa
-     metros cubicos (m3), os demais continuam em litros. O campo no
-     banco continua sendo o mesmo (v.tanque) — so o ROTULO/placeholder
-     mudam, para o usuario nao ficar confuso digitando "50" litros
-     quando na verdade e uma bateria de 50 kWh. */
-  atualizarRotuloTanque: function () {
+  aplicarTipoCombustivel: function (redefinirEnergeticos) {
     var sel = document.getElementById('vCombustivel');
-    var label = document.getElementById('vTanqueLabel');
-    var input = document.getElementById('vTanque');
-    if (!sel || !label || !input) return;
-
-    var combustivel = sel.value;
-    if (combustivel === 'Elétrico') {
-      label.textContent = 'Capacidade da bateria (kWh)';
-      input.placeholder = 'Ex.: 60';
-      input.step = '0.1';
-    } else if (combustivel === 'GNV') {
-      label.textContent = 'Cilindro de GNV (m³)';
-      input.placeholder = 'Ex.: 10';
-      input.step = '0.1';
-    } else if (combustivel === 'Híbrido') {
-      label.textContent = 'Tanque (litros) + bateria';
-      input.placeholder = 'Ex.: 45';
-      input.step = '0.5';
-    } else {
-      label.textContent = 'Tanque (litros)';
-      input.placeholder = '50';
-      input.step = '0.5';
+    if (!sel) return;
+    var tipo = sel.value;
+    var plug = document.getElementById('vPlugIn');
+    if (tipo !== 'Híbrido' && plug) plug.checked = false;
+    if (redefinirEnergeticos) {
+      var lista = EnergeticosVeiculo.padraoDoTipo(tipo, tipo === 'Híbrido' && plug && plug.checked);
+      Veiculos._marcarEnergeticos(lista);
     }
+    Veiculos.atualizarCamposEnergeticos();
+  },
+
+  alterarPlugIn: function () {
+    var sel = document.getElementById('vCombustivel');
+    var plug = document.getElementById('vPlugIn');
+    if (!sel || sel.value !== 'Híbrido' || !plug) return;
+    var lista = plug.checked ? ['Gasolina', 'Elétrico'] : ['Gasolina'];
+    Veiculos._marcarEnergeticos(lista);
+    Veiculos.atualizarCamposEnergeticos();
+  },
+
+  toggleEnergetico: function (el) {
+    el.classList.toggle('sel');
+    var lista = Veiculos._energeticosMarcados();
+    if (!lista.length) {
+      el.classList.add('sel');
+      App.toast('Escolha pelo menos um energético', 'erro');
+      return;
+    }
+    Veiculos._atualizarVisualEnergeticos();
+    Veiculos.atualizarCamposEnergeticos();
+  },
+
+  _marcarEnergeticos: function (lista) {
+    var botoes = document.querySelectorAll('#seletorEnergeticos .energetico-opcao');
+    for (var i = 0; i < botoes.length; i++) {
+      var id = botoes[i].getAttribute('data-energetico');
+      botoes[i].classList.toggle('sel', lista.indexOf(id) > -1);
+    }
+    Veiculos._atualizarVisualEnergeticos();
+  },
+
+  _atualizarVisualEnergeticos: function () {
+    var botoes = document.querySelectorAll('#seletorEnergeticos .energetico-opcao');
+    for (var i = 0; i < botoes.length; i++) {
+      var cor = botoes[i].getAttribute('data-cor') || '#60a5fa';
+      var sel = botoes[i].classList.contains('sel');
+      botoes[i].style.background = sel ? cor + '26' : 'var(--bg2,#111c33)';
+      botoes[i].style.borderColor = sel ? cor : 'var(--linha,#26365c)';
+      botoes[i].style.color = sel ? cor : 'var(--txt2,#93a4c8)';
+    }
+  },
+
+  _energeticosMarcados: function () {
+    var botoes = document.querySelectorAll('#seletorEnergeticos .energetico-opcao.sel');
+    var lista = [];
+    for (var i = 0; i < botoes.length; i++) lista.push(botoes[i].getAttribute('data-energetico'));
+    return lista;
+  },
+
+  atualizarCamposEnergeticos: function () {
+    var container = document.getElementById('blocoCapacidades');
+    if (!container) return;
+    var v = Veiculos.editando || {};
+    var tipoEl = document.getElementById('vCombustivel');
+    var tipo = tipoEl ? tipoEl.value : (v.combustivel || 'Gasolina');
+    var marcados = Veiculos._energeticosMarcados();
+    var temLiquido = marcados.some(function (e) { return ['Gasolina','Etanol','Diesel'].indexOf(e) > -1; });
+    var temGnv = marcados.indexOf('GNV') > -1;
+    var temEletrico = marcados.indexOf('Elétrico') > -1;
+    var blocoPlug = document.getElementById('blocoPlugIn');
+    if (blocoPlug) blocoPlug.classList.toggle('oculto', tipo !== 'Híbrido');
+
+    var atualTanque = document.getElementById('vTanque');
+    var atualGnv = document.getElementById('vCapacidadeGnv');
+    var atualBateria = document.getElementById('vCapacidadeBateria');
+    var valorTanque = atualTanque ? atualTanque.value : (temLiquido ? (v.tanque || '') : '');
+    var valorGnv = atualGnv ? atualGnv.value : (v.capacidadeGnv || (!temLiquido && temGnv ? (v.tanque || '') : ''));
+    var valorBateria = atualBateria ? atualBateria.value : (v.capacidadeBateria || (!temLiquido && !temGnv && temEletrico ? (v.tanque || '') : ''));
+
+    var html = '';
+    if (temLiquido) {
+      html += '<div class="campo-form"><label><span class="ms" style="color:#ef4444;font-size:16px;vertical-align:middle">local_gas_station</span> Tanque de combustível (litros)</label>' +
+        '<input type="number" id="vTanque" placeholder="50" value="' + valorTanque + '" min="0" step="0.5"></div>';
+    }
+    if (temGnv) {
+      html += '<div class="campo-form"><label><span class="ms" style="color:#22d3ee;font-size:16px;vertical-align:middle">propane_tank</span> Capacidade do cilindro de GNV (m³)</label>' +
+        '<input type="number" id="vCapacidadeGnv" placeholder="15" value="' + valorGnv + '" min="0" step="0.1"></div>';
+    }
+    if (temEletrico) {
+      html += '<div class="campo-form"><label><span class="ms" style="color:#22c55e;font-size:16px;vertical-align:middle">ev_station</span> Capacidade da bateria (kWh)</label>' +
+        '<input type="number" id="vCapacidadeBateria" placeholder="60" value="' + valorBateria + '" min="0" step="0.1"></div>';
+    }
+    container.innerHTML = html;
+    Veiculos._atualizarVisualEnergeticos();
   },
 
   selTipo: function (el) {
@@ -448,9 +559,28 @@ var Veiculos = {
 
   salvar: function () {
     var nome = document.getElementById('vNome').value.trim();
-    if (!nome) { alert('Informe o nome'); return; }
+    if (!nome) { App.toast('Informe o nome', 'erro'); return; }
+
     var tipoEl = document.querySelector('#seletorTipo .tipo-opcao.sel');
     var corEl = document.querySelector('#seletorCor .cor-opcao.sel');
+    var combustivel = document.getElementById('vCombustivel').value;
+    var energeticos = Veiculos._energeticosMarcados();
+    if (!energeticos.length) { App.toast('Escolha pelo menos um energético', 'erro'); return; }
+
+    var plugEl = document.getElementById('vPlugIn');
+    var plugIn = combustivel === 'Híbrido' && !!(plugEl && plugEl.checked);
+    if (plugIn && energeticos.indexOf('Elétrico') === -1) {
+      App.toast('Híbrido plug-in precisa aceitar o energético Elétrico', 'erro'); return;
+    }
+
+    var elTanque = document.getElementById('vTanque');
+    var elGnv = document.getElementById('vCapacidadeGnv');
+    var elBateria = document.getElementById('vCapacidadeBateria');
+    var capacidadeTanque = elTanque ? (Number(elTanque.value) || 0) : 0;
+    var capacidadeGnv = elGnv ? (Number(elGnv.value) || 0) : 0;
+    var capacidadeBateria = elBateria ? (Number(elBateria.value) || 0) : 0;
+    var capacidadePrincipal = capacidadeTanque || capacidadeGnv || capacidadeBateria;
+
     var reg = {
       organizacaoId: orgAtual.id,
       responsavelId: usuarioAtual.id,
@@ -461,38 +591,43 @@ var Veiculos = {
       ano: Number(document.getElementById('vAno').value) || null,
       marca: document.getElementById('vMarca').value.trim(),
       modelo: document.getElementById('vModelo').value.trim(),
-      combustivel: document.getElementById('vCombustivel').value,
-      tanque: Number(document.getElementById('vTanque').value) || 0,
+      combustivel: combustivel,
+      energeticos: energeticos.join(','),
+      plugIn: plugIn,
+      tanque: capacidadePrincipal,
+      capacidadeGnv: capacidadeGnv,
+      capacidadeBateria: capacidadeBateria,
       kmInicial: Number(document.getElementById('vKm').value) || 0,
       ativo: 'SIM'
     };
-    /* So inclui fipeValor no envio se uma consulta FIPE foi feita
-       NESTA sessao do formulario. Se o campo ficar de fora, o Supabase
-       nao mexe no valor ja salvo anteriormente (nao apaga o que ja
-       existia so porque o usuario nao re-consultou desta vez). */
-    if (Veiculos._fipeConsultaFormValor !== null) {
-      reg.fipeValor = Veiculos._fipeConsultaFormValor;
-    }
+
+    if (Veiculos._fipeConsultaFormValor !== null) reg.fipeValor = Veiculos._fipeConsultaFormValor;
+
     var btn = document.getElementById('btnSalvarForm');
     btn.disabled = true;
     btn.textContent = 'Salvando...';
     var promise;
-    if (Veiculos.editando && Veiculos.editando.id) {
-      promise = sb.from('veiculos').update(reg).eq('id', Veiculos.editando.id);
-    } else {
-      reg.id = 'VEI_' + App.uid();
-      promise = sb.from('veiculos').insert(reg);
-    }
+    if (Veiculos.editando && Veiculos.editando.id) promise = sb.from('veiculos').update(reg).eq('id', Veiculos.editando.id);
+    else { reg.id = 'VEI_' + App.uid(); promise = sb.from('veiculos').insert(reg); }
+
     promise.then(function (r) {
       btn.disabled = false;
-      if (r.error) { alert('Erro: ' + r.error.message); btn.textContent = 'Salvar'; return; }
+      if (r.error) {
+        App.toast('Erro: ' + r.error.message, 'erro');
+        btn.textContent = Veiculos.editando ? 'Salvar alterações' : 'Cadastrar veículo';
+        return;
+      }
       App.toast(Veiculos.editando ? 'Atualizado!' : 'Cadastrado!', 'ok');
-      /* Atualiza o cache da barra global (nome/cor/icone/novo veiculo)
-         para o chip refletir a mudanca sem precisar recarregar a pagina. */
       if (App.atualizarBarraVeiculoGlobal) App.atualizarBarraVeiculoGlobal();
       App.irPara('veiculos');
+    }).catch(function (e) {
+      btn.disabled = false;
+      btn.textContent = Veiculos.editando ? 'Salvar alterações' : 'Cadastrar veículo';
+      console.error('CarWay - erro ao salvar veículo:', e);
+      App.toast('Erro ao salvar veículo', 'erro');
     });
   },
+
   excluir: function (id) {
     var veic = Veiculos.lista.filter(function (v) { return v.id === id; })[0] || {};
     var nome = veic.nome || 'este veículo';
@@ -598,15 +733,9 @@ var Veiculos = {
           if (sel.options[i].value === comb) { sel.selectedIndex = i; break; }
         }
         var cNome = document.getElementById('vNome');
-        if (cNome && !cNome.value) cNome.value = d.model.split(' ')[0];
-        Veiculos.atualizarRotuloTanque(); /* FIPE pode ter preenchido Eletrico/GNV automaticamente */
-
-        /* Guarda o valor numerico para ser salvo junto no submit do
-           formulario — antes disso, o valor consultado aqui nunca era
-           persistido (por isso o chip de FIPE nao aparecia ao lado de
-           "viagens" logo apos o cadastro). */
+        if (cNome && !cNome.value) cNome.value = String(d.model || '').split(' ')[0];
+        Veiculos.aplicarTipoCombustivel(true);
         Veiculos._fipeConsultaFormValor = Veiculos._parseFipePreco(d.price);
-
         div.innerHTML = '<div class="fipe-aviso">' +
           '✓ <b>' + App.esc(d.brand + ' ' + d.model) + '</b><br>' +
           d.modelYear + ' · ' + App.esc(d.fuel) + '<br>' +
@@ -616,6 +745,7 @@ var Veiculos = {
       })
       .catch(function () { div.innerHTML = '<div class="fipe-erro">Erro</div>'; });
   },
+
   fipeTraduzCombustivel: function (f) {
     if (!f) return 'Gasolina';
     var s = f.toLowerCase();
