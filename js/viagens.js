@@ -2728,77 +2728,149 @@ html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="b
   _grupoParadaHTML: function (trecho, lista) {
     var aberto = Viagens._paradasGrupoAberto[trecho];
     var cor = trecho === 'VOLTA' ? '#a78bfa' : '#3b82f6';
-    var concluidas = lista.filter(function (p) { return String(p.status).toUpperCase() === 'CONCLUIDA'; }).length;
-    var previstoGrupo = lista.reduce(function (s, p) { return s + (Number(p.valorPrevisto) || 0); }, 0);
+    var qtdAbastecida = 0;
+    var qtdVinculada = 0;
+    var qtdIgnorada = 0;
+    var qtdPendente = 0;
+    var previstoGrupo = 0;
+    var realizadoGrupo = 0;
+    lista.forEach(function (p) {
+      var st = String(p.status || 'PENDENTE').toUpperCase();
+      previstoGrupo += Number(p.valorPrevisto) || 0;
+      if (st === 'CONCLUIDA') {
+        realizadoGrupo += Number(p.valorReal) || 0;
+        if (p.abastecimentoVinculado) qtdVinculada++;
+        else qtdAbastecida++;
+      } else if (st === 'IGNORADA') {
+        qtdIgnorada++;
+      } else {
+        qtdPendente++;
+      }
+    });
+    var concluidas = qtdAbastecida + qtdVinculada;
+    var diferenca = previstoGrupo - realizadoGrupo;
+    var corDif = '#94a3b8';
+    var textoDif = 'sem gastos';
+    if (realizadoGrupo > 0) {
+      if (diferenca > 0) { corDif = '#22c55e'; textoDif = 'economia'; }
+      else if (diferenca < 0) { corDif = '#ef4444'; textoDif = 'acima'; }
+      else { corDif = '#60a5fa'; textoDif = 'no previsto'; }
+    }
+    var chips = '';
+    if (qtdAbastecida > 0) {
+      chips += '<span class="trecho-chip" style="color:#86efac;border-color:rgba(34,197,94,.4)"><span class="ms" style="color:#22c55e">local_gas_station</span>' + qtdAbastecida + ' abastecida(s)</span>';
+    }
+    if (qtdVinculada > 0) {
+      chips += '<span class="trecho-chip" style="color:#bfdbfe;border-color:rgba(96,165,250,.4)"><span class="ms" style="color:#60a5fa">link</span>' + qtdVinculada + ' vinculada(s)</span>';
+    }
+    if (qtdIgnorada > 0) {
+      chips += '<span class="trecho-chip"><span class="ms">block</span>' + qtdIgnorada + ' não parei</span>';
+    }
+    if (qtdPendente > 0) {
+      chips += '<span class="trecho-chip" style="color:#fcd34d;border-color:rgba(245,158,11,.4)"><span class="ms" style="color:#f59e0b">schedule</span>' + qtdPendente + ' pendente(s)</span>';
+    }
     return '<div style="background:var(--card,#16213b);border:1px solid var(--linha,#26365c);border-left:4px solid ' + cor + ';border-radius:14px;margin-bottom:12px;overflow:hidden">' +
-      '<button onclick="Viagens.toggleGrupoParada(\'' + trecho + '\')" style="width:100%;display:flex;align-items:center;gap:10px;padding:13px 14px;background:transparent;border:0;cursor:pointer;font-family:inherit;text-align:left;color:var(--txt,#e8eefc)">' +
-        '<span class="ms" style="font-size:20px;color:' + cor + '">' + (trecho === 'VOLTA' ? 'west' : 'east') + '</span>' +
-        '<div style="flex:1;min-width:0"><b style="display:block;font-size:14px">' + trecho + '</b>' +
-        '<small style="font-size:11.5px;color:var(--txt2)">' + concluidas + '/' + lista.length + ' concluída(s) · ' + App.moeda(previstoGrupo) + ' previstos</small></div>' +
-        '<span class="ms" style="color:var(--txt2)">' + (aberto ? 'expand_less' : 'expand_more') + '</span>' +
+      '<button onclick="Viagens.toggleGrupoParada(\'' + trecho + '\')" style="width:100%;display:flex;align-items:flex-start;gap:10px;padding:13px 14px;background:transparent;border:0;cursor:pointer;font-family:inherit;text-align:left;color:var(--txt,#e8eefc)">' +
+        '<span class="ms" style="font-size:20px;color:' + cor + ';margin-top:2px">' + (trecho === 'VOLTA' ? 'west' : 'east') + '</span>' +
+        '<div style="flex:1;min-width:0">' +
+          '<b style="display:block;font-size:14px">' + trecho + '</b>' +
+          '<small style="display:block;font-size:11.5px;color:var(--txt2);margin-top:2px">' + concluidas + ' de ' + lista.length + ' parada(s) realizada(s)</small>' +
+          (chips ? '<div class="trecho-contagem">' + chips + '</div>' : '') +
+          '<div class="trecho-resumo">' +
+            '<div><b>' + App.moeda(previstoGrupo) + '</b><small>previsto</small></div>' +
+            '<div><b style="color:' + (realizadoGrupo > 0 ? '#e8eefc' : 'var(--txt2)') + '">' + App.moeda(realizadoGrupo) + '</b><small>gasto</small></div>' +
+            '<div><b style="color:' + corDif + '">' + (realizadoGrupo > 0 ? App.moeda(Math.abs(diferenca)) : '—') + '</b><small>' + textoDif + '</small></div>' +
+          '</div>' +
+        '</div>' +
+        '<span class="ms" style="color:var(--txt2);margin-top:2px">' + (aberto ? 'expand_less' : 'expand_more') + '</span>' +
       '</button>' +
       (aberto ? '<div style="padding:0 12px 12px">' + lista.map(Viagens.paradaSalvaHTML).join('') + '</div>' : '') +
     '</div>';
-  },
-  toggleGrupoParada: function (trecho) {
-    Viagens._paradasGrupoAberto[trecho] = !Viagens._paradasGrupoAberto[trecho];
-    Viagens.renderDetalhe();
   },
 
   /* CORRIGIDO (print8): botões "Abasteci aqui" / "Já lancei" / "Não
      parei" agora seguem o padrão visual do app, com os 3 na mesma
      largura/estilo (btn-novo-sec), em vez de pilulas pequenas
      inconsistentes. */
-  paradaSalvaHTML: function (p) {
+   paradaSalvaHTML: function (p) {
     var status = String(p.status || 'PENDENTE').toUpperCase();
     var concluida = status === 'CONCLUIDA';
     var ignorada = status === 'IGNORADA';
     var semPosto = status === 'SEM_POSTO';
     var antecipada = !!p.antecipada;
-    var cor = concluida ? '#22c55e' : (ignorada ? '#94a3b8' : (semPosto ? '#ef4444' : (antecipada ? '#f59e0b' : '#3b82f6')));
-    var titulo = p.postoNome || ('Parada ' + p.ordem);
-
-    var estrelas = (p.postoRating > 0)
-      ? '<span style="color:#f59e0b;font-size:11.5px;font-weight:700;margin-left:6px">' +
-          '<span class="ms" style="font-size:13px;vertical-align:middle">star</span>' + Number(p.postoRating).toFixed(1) +
-        '</span>'
-      : '';
-
-    var avisoAntecipada = '';
-    if (semPosto) {
-      avisoAntecipada = '<small style="color:#fca5a5"><span class="ms" style="font-size:13px;vertical-align:middle">report</span> Nenhum posto mapeado nesta faixa segura.</small>';
+    var vinculada = concluida && !!p.abastecimentoVinculado;
+    var classeStatus = 'st-pendente';
+    var selo = '';
+    if (concluida && vinculada) {
+      classeStatus = 'st-vinculada';
+      selo = '<span class="parada-selo"><span class="ms">link</span>Abastecimento vinculado</span>';
+    } else if (concluida) {
+      classeStatus = 'st-concluida';
+      selo = '<span class="parada-selo"><span class="ms">check_circle</span>Abastecido</span>';
+    } else if (ignorada) {
+      classeStatus = 'st-ignorada';
+      selo = '<span class="parada-selo"><span class="ms">block</span>Não parei</span>';
+    } else if (semPosto) {
+      classeStatus = 'st-sem-posto';
+      selo = '<span class="parada-selo"><span class="ms">report</span>Sem posto</span>';
     } else if (antecipada) {
-      avisoAntecipada = '<small style="color:#fcd34d"><span class="ms" style="font-size:13px;vertical-align:middle">schedule</span> Antecipada em ' +
-        Math.round((p.kmOriginalPrevisto - p.kmPrevisto) * 10) / 10 + ' km (ideal seria no km ' + p.kmOriginalPrevisto + ')</small>';
+      selo = '<span class="parada-selo" style="--cor-parada:#f59e0b"><span class="ms">schedule</span>Antecipada</span>';
+    } else {
+      selo = '<span class="parada-selo"><span class="ms">schedule</span>Pendente</span>';
     }
-
-    var linhaValores = '<div class="parada-valores">' +
-      '<span>km ' + App.fmtNum(p.kmPrevisto) + '</span>' +
-      (concluida
-        ? '<span>' + App.fmtNum(p.litrosReal, 1) + ' L · ' + App.moeda(p.valorReal) + '</span>'
-        : '<span>' + App.fmtNum(p.litrosPrevisto, 1) + ' L · ' + App.moeda(p.valorPrevisto) + '</span>') +
-    '</div>';
-
-    var acoes = '';
+    var cor = concluida ? (vinculada ? '#60a5fa' : '#22c55e') : (ignorada ? '#94a3b8' : (semPosto ? '#ef4444' : (antecipada ? '#f59e0b' : '#3b82f6')));
+    var titulo = p.postoNome || ('Parada ' + p.ordem);
+    var estrelas = (p.postoRating > 0)
+      ? '<span style="color:#f59e0b;font-size:11.5px;font-weight:700;margin-left:6px"><span class="ms" style="font-size:13px;vertical-align:middle">star</span>' + Number(p.postoRating).toFixed(1) + '</span>'
+      : '';
+    var aviso = '';
+    if (semPosto) {
+      aviso = '<small style="color:#fca5a5"><span class="ms" style="font-size:13px;vertical-align:middle">report</span> Nenhum posto mapeado nesta faixa segura.</small>';
+    } else if (antecipada) {
+      aviso = '<small style="color:#fcd34d"><span class="ms" style="font-size:13px;vertical-align:middle">schedule</span> Antecipada em ' + Math.round((p.kmOriginalPrevisto - p.kmPrevisto) * 10) / 10 + ' km (ideal seria no km ' + p.kmOriginalPrevisto + ')</small>';
+    } else if (p.postoEndereco) {
+      aviso = '<small>' + App.esc(p.postoEndereco) + '</small>';
+    }
+    var linhaValores;
+    if (concluida) {
+      var previsto = Number(p.valorPrevisto) || 0;
+      var real = Number(p.valorReal) || 0;
+      var dif = previsto - real;
+      var corDif = dif > 0 ? '#86efac' : (dif < 0 ? '#fca5a5' : 'var(--txt2)');
+      var sinal = dif > 0 ? '−' : (dif < 0 ? '+' : '');
+      linhaValores = '<div class="parada-valores">' +
+        '<span>km ' + App.fmtNum(p.kmPrevisto) + '</span>' +
+        '<span><b style="color:#e8eefc">' + App.fmtNum(p.litrosReal, 1) + ' L · ' + App.moeda(real) + '</b></span>' +
+        (previsto > 0 && dif !== 0 ? '<span style="color:' + corDif + '">' + sinal + App.moeda(Math.abs(dif)) + '</span>' : '') +
+      '</div>';
+    } else {
+      linhaValores = '<div class="parada-valores">' +
+        '<span>km ' + App.fmtNum(p.kmPrevisto) + '</span>' +
+        '<span>' + App.fmtNum(p.litrosPrevisto, 1) + ' L · ' + App.moeda(p.valorPrevisto) + '</span>' +
+      '</div>';
+    }
+    var acoes;
     if (!concluida && !ignorada) {
-      acoes = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px">' +
+      acoes = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px">' +
         '<button class="btn-novo-sec" style="justify-content:center;padding:8px 4px;font-size:11px" onclick="Viagens.formConcluirParada(\'' + p.id + '\')"><span class="ms" style="color:#ef4444;font-size:16px">local_gas_station</span> Abasteci</button>' +
         '<button class="btn-novo-sec" style="justify-content:center;padding:8px 4px;font-size:11px" onclick="Viagens.vincularAbastParada(\'' + p.id + '\')"><span class="ms" style="color:#60a5fa;font-size:16px">link</span> Já lancei</button>' +
         '<button class="btn-novo-sec" style="justify-content:center;padding:8px 4px;font-size:11px" onclick="Viagens.ignorarParada(\'' + p.id + '\')"><span class="ms" style="color:#94a3b8;font-size:16px">block</span> Não parei</button>' +
       '</div>';
     } else {
-      acoes = '<div style="margin-top:8px">' +
-        '<button class="btn-novo-sec" style="width:100%;justify-content:center" onclick="Viagens.reabrirParada(\'' + p.id + '\')"><span class="ms">undo</span> ' + (concluida ? 'Desfazer' : 'Reativar') + '</button>' +
+      acoes = '<div style="margin-top:10px">' +
+        '<button class="btn-novo-sec" style="width:100%;justify-content:center" onclick="Viagens.reabrirParada(\'' + p.id + '\')"><span class="ms" style="color:#f59e0b">undo</span> ' + (concluida ? 'Desfazer' : 'Reativar') + '</button>' +
       '</div>';
     }
-
-    return '<div class="parada-item" style="border-top:1px solid var(--linha,#26365c);padding-top:10px;margin-top:10px">' +
-      '<div class="parada-num" style="background:' + cor + '22;color:' + cor + '">' + p.ordem + '</div>' +
-      '<div class="parada-info">' +
-        '<b>' + App.esc(titulo) + '</b>' + estrelas +
-        (avisoAntecipada || (p.postoEndereco ? '<small>' + App.esc(p.postoEndereco) + '</small>' : '')) +
-        linhaValores +
-        acoes +
+    return '<div class="parada-item ' + classeStatus + '" style="--cor-parada:' + cor + '">' +
+      '<div style="display:flex;align-items:flex-start;gap:10px">' +
+        '<div class="parada-num" style="background:' + cor + '22;color:' + cor + ';flex:none">' + p.ordem + '</div>' +
+        '<div class="parada-info" style="flex:1;min-width:0">' +
+          selo +
+          '<b style="display:block">' + App.esc(titulo) + '</b>' + estrelas +
+          aviso +
+          linhaValores +
+          acoes +
+        '</div>' +
       '</div>' +
     '</div>';
   },
