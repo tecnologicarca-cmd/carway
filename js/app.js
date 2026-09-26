@@ -343,53 +343,29 @@ var App = {
     Conta.abrirDetalhePlano();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   },
-  voltar: function () {
-    var pgAtiva = App.paginaAtiva();
-    if (pgAtiva === 'veiculo-form') {
-      App.irPara('veiculos');
-      return;
-    }
-    if (pgAtiva === 'abastecimento-form') {
-      App.irPara('abastecimentos');
-      return;
-    }
-    if (pgAtiva === 'manutencao-form' || pgAtiva === 'plano-form') {
-      App.irPara('manutencao');
-      return;
-    }
-    if (pgAtiva === 'despesa-form') {
-      App.irPara('despesas');
-      return;
-    }
-    if (pgAtiva === 'viagem-form' ||pgAtiva === 'viagem-plano') {
-      App.irPara('viagens');
-      return;
-    }
-    if (pgAtiva === 'viagem-detalhe') {
-      App.irPara('viagens');
-      return;
-    }
-    if (pgAtiva === 'viagem-encerrar') {
-      App.irPara('viagens');
-      return;
-    }
-    if (pgAtiva === 'documento-form') {
-      App.irPara('documentos');
-      return;
-    }
-    if (pgAtiva === 'convite-form') {
-      App.irPara('equipe');
-      return;
-    }
-    if (pgAtiva === 'perfil-form' || pgAtiva === 'plano-detalhe' || pgAtiva === 'painel-admin') {
-      App.irPara('configuracoes');
-      return;
-    }
-    if (pgAtiva !== 'menu') {
-      App.irParaMenu();
-      return;
-    }
-  },
+ voltar: function () {
+  var overlayMapa = document.getElementById('viagensMapaFullscreen');
+
+  if (overlayMapa) {
+    Viagens.fecharMapaFullscreen();
+    return;
+  }
+
+  var pgAtiva = App.paginaAtiva();
+
+  if (pgAtiva === 'veiculo-form') { App.irPara('veiculos'); return; }
+  if (pgAtiva === 'abastecimento-form') { App.irPara('abastecimentos'); return; }
+  if (pgAtiva === 'manutencao-form' || pgAtiva === 'plano-form') { App.irPara('manutencao'); return; }
+  if (pgAtiva === 'despesa-form') { App.irPara('despesas'); return; }
+  if (pgAtiva === 'viagem-form' || pgAtiva === 'viagem-plano') { App.irPara('viagens'); return; }
+  if (pgAtiva === 'viagem-detalhe') { App.irPara('viagens'); return; }
+  if (pgAtiva === 'viagem-encerrar') { App.irPara('viagens'); return; }
+  if (pgAtiva === 'documento-form') { App.irPara('documentos'); return; }
+  if (pgAtiva === 'convite-form') { App.irPara('equipe'); return; }
+  if (pgAtiva === 'perfil-form' || pgAtiva === 'plano-detalhe' || pgAtiva === 'painel-admin') { App.irPara('configuracoes'); return; }
+
+  if (pgAtiva !== 'menu') { App.irParaMenu(); return; }
+},
   paginaAtiva: function () {
     var pgs = document.querySelectorAll('.tela-pagina.ativa');
     for (var i = 0; i < pgs.length; i++) return pgs[i].id.replace('pg-', '');
@@ -1740,14 +1716,10 @@ renderBarraVeiculoGlobal: function () {
 },
 
 _renderConteudoBarraVeiculoGlobal: function () {
-  var el = document.getElementById(
-    'barraVeiculoGlobal'
-  );
-
+  var el = document.getElementById('barraVeiculoGlobal');
   if (!el) return;
 
-  var veiculos =
-    App._veiculosGlobalCache || [];
+  var veiculos = App._veiculosGlobalCache || [];
 
   if (veiculos.length <= 1) {
     el.classList.add('oculto');
@@ -1757,68 +1729,20 @@ _renderConteudoBarraVeiculoGlobal: function () {
 
   el.classList.remove('oculto');
 
-  el.style.cssText =
-    'background:rgba(11,17,32,.97);' +
-    'border-bottom:1px solid var(--linha,#26365c);' +
-    'padding:8px 14px;' +
-    'display:flex;' +
-    'gap:8px;' +
-    'overflow-x:auto;' +
-    '-webkit-overflow-scrolling:touch';
+  var topbar = document.getElementById('topbar');
+  var alturaTopo = topbar ? topbar.offsetHeight : 59;
 
-  var todosSel =
-    !App.veiculoAtivoId;
+  el.style.cssText = 'position:sticky;top:' + alturaTopo + 'px;z-index:55;background:rgba(11,17,32,.97);border-bottom:1px solid var(--linha,#26365c);padding:8px 14px;display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch';
 
-  var chips =
-    '<button ' +
-      'onclick="App.definirVeiculoAtivo(null)" ' +
-      'style="' +
-        App._estiloChipVeiculoGlobal(
-          todosSel,
-          '#60a5fa'
-        ) +
-      '">' +
+  var todosSel = !App.veiculoAtivoId;
 
-      '<span class="ms" ' +
-        'style="font-size:16px">' +
-        'apps' +
-      '</span>' +
-
-      'Todos' +
-    '</button>';
+  var chips = '<button onclick="App.definirVeiculoAtivo(null)" style="' + App._estiloChipVeiculoGlobal(todosSel, '#60a5fa') + '"><span class="ms" style="font-size:16px">apps</span>Todos</button>';
 
   chips += veiculos.map(function (v) {
-    var sel =
-      App.veiculoAtivoId === v.id;
+    var sel = App.veiculoAtivoId === v.id;
+    var cor = App._corVeiculo(v);
 
-    var cor =
-      App._corVeiculo(v);
-
-    return (
-      '<button ' +
-        'onclick="App.definirVeiculoAtivo(\'' +
-          v.id +
-        '\')" ' +
-
-        'style="' +
-          App._estiloChipVeiculoGlobal(
-            sel,
-            cor
-          ) +
-        '">' +
-
-        '<span class="ms" ' +
-          'style="font-size:16px;' +
-          'color:' + cor + '">' +
-
-          App._iconeTipoVeiculo(v.tipo) +
-
-        '</span>' +
-
-        App.esc(v.nome) +
-
-      '</button>'
-    );
+    return '<button onclick="App.definirVeiculoAtivo(\'' + v.id + '\')" style="' + App._estiloChipVeiculoGlobal(sel, cor) + '"><span class="ms" style="font-size:16px;color:' + cor + '">' + App._iconeTipoVeiculo(v.tipo) + '</span>' + App.esc(v.nome) + '</button>';
   }).join('');
 
   el.innerHTML = chips;
