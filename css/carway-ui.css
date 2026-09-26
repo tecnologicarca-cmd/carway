@@ -578,3 +578,27 @@ body.tema-claro button.excluir { color: #fff !important; }
     var(--bg2)
   ) !important;
 }
+
+/* Botão Voltar do cabeçalho */
+.btn-voltar-topo {
+  color: #ffffff !important;
+  background: linear-gradient(
+    135deg,
+    #dc2626,
+    var(--vermelho)
+  ) !important;
+  border-color: #dc2626 !important;
+}
+
+.btn-voltar-topo .ms {
+  color: #ffffff !important;
+}
+
+.btn-voltar-topo:hover {
+  background: linear-gradient(
+    135deg,
+    #b91c1c,
+    #dc2626
+  ) !important;
+  border-color: #b91c1c !important;
+}
