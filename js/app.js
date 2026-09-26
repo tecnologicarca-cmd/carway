@@ -1234,7 +1234,7 @@ var App = {
     /* Tela IDÊNTICA para todo mundo, inclusive o master — a única
        diferença é o card extra "Painel Administrativo", que só
        aparece se App.souMaster() for verdadeiro. */
-    var navAtual = usuarioAtual.appNavegacaoPreferido === 'waze' ? 'Waze' : 'Google Maps';
+    var navAtual = ({ google_maps: 'Google Maps', waze: 'Waze', uber: 'Uber' })[usuarioAtual.appNavegacaoPreferido] || 'Perguntar sempre';
     var cardMaster = App.souMaster()
       ? '<div class="config-secao">Administração</div>' +
         '<button class="config-item" onclick="App.irPara(\'painel-admin\')">' +
@@ -1263,33 +1263,46 @@ var App = {
       '</button>';
   },
   /** Modal simples para escolher Waze ou Google Maps (persistido em usuarios). */
-  abrirEscolhaNavegacao: function () {
-    var atual = usuarioAtual.appNavegacaoPreferido || 'google_maps';
-    var html = '<div style="display:flex;flex-direction:column;gap:10px">' +
-      ['google_maps', 'waze'].map(function (v) {
-        var nome = v === 'waze' ? 'Waze' : 'Google Maps';
-        var ico = v === 'waze' ? 'near_me' : 'map';
-        var sel = v === atual;
-        return '<button onclick="App.salvarNavegacaoPreferida(\'' + v + '\')" style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:11px;' +
-          'border:1px solid ' + (sel ? 'var(--azul,#3b82f6)' : 'var(--linha,#26365c)') + ';background:' + (sel ? 'rgba(59,130,246,.12)' : 'var(--bg2,#111c33)') + ';' +
-          'color:var(--txt,#e8eefc);cursor:pointer;font-family:inherit;font-size:14px;text-align:left">' +
-          '<span class="ms" style="color:var(--azul2,#60a5fa)">' + ico + '</span>' +
-          '<b style="flex:1">' + nome + '</b>' +
-          (sel ? '<span class="ms" style="color:#22c55e">check_circle</span>' : '') +
-        '</button>';
-      }).join('') +
-    '</div>';
-    App.abrirModal('App de navegação preferido', html, null);
-  },
-  salvarNavegacaoPreferida: function (valor) {
-    sb.from('usuarios').update({ appNavegacaoPreferido: valor }).eq('id', usuarioAtual.id).then(function (r) {
-      if (r.error) { App.toast('Erro: ' + r.error.message, 'erro'); return; }
-      usuarioAtual.appNavegacaoPreferido = valor;
-      App.fecharModal();
-      App.toast('Preferência salva!', 'ok');
-      App.renderConfiguracoes();
-    });
-  },
+abrirEscolhaNavegacao: function () {
+  var atual = usuarioAtual.appNavegacaoPreferido || 'perguntar';
+
+  var opcoes = [
+    { id: 'perguntar', nome: 'Perguntar sempre', ico: 'help', cor: '#f59e0b', sub: 'Mostra as opções a cada viagem' },
+    { id: 'google_maps', nome: 'Google Maps', ico: 'map', cor: '#4285F4', sub: 'Abre direto, sem perguntar' },
+    { id: 'waze', nome: 'Waze', ico: 'assistant_navigation', cor: '#33CCFF', sub: 'Abre direto, sem perguntar' },
+    { id: 'uber', nome: 'Uber', ico: 'local_taxi', cor: '#22c55e', sub: 'Abre direto, sem perguntar' }
+  ];
+
+  var html = '<div style="display:flex;flex-direction:column;gap:10px">' +
+    opcoes.map(function (o) {
+      var sel = o.id === atual;
+      return '<button onclick="App.salvarNavegacaoPreferida(\'' + o.id + '\')" ' +
+        'style="display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:12px;' +
+        'border:1.5px solid ' + (sel ? o.cor : 'var(--linha,#26365c)') + ';' +
+        'background:' + (sel ? o.cor + '1a' : 'var(--bg2,#111c33)') + ';' +
+        'color:var(--txt,#e8eefc);cursor:pointer;font-family:inherit;text-align:left;width:100%">' +
+        '<span class="ms" style="color:' + o.cor + ';font-size:24px;flex:none">' + o.ico + '</span>' +
+        '<div style="flex:1;min-width:0">' +
+          '<b style="display:block;font-size:14px">' + o.nome + '</b>' +
+          '<small style="display:block;color:var(--txt2);font-size:11.5px">' + o.sub + '</small>' +
+        '</div>' +
+        (sel ? '<span class="ms" style="color:#22c55e;flex:none">check_circle</span>' : '') +
+      '</button>';
+    }).join('') +
+  '</div>';
+
+  App.abrirModal('App de navegação', html, null);
+},
+salvarNavegacaoPreferida: function (valor) {
+  sb.from('usuarios').update({ appNavegacaoPreferido: valor }).eq('id', usuarioAtual.id).then(function (r) {
+    if (r.error) { App.toast('Erro: ' + r.error.message, 'erro'); return; }
+
+    usuarioAtual.appNavegacaoPreferido = valor;
+    App.fecharModal();
+    App.toast(valor === 'perguntar' ? 'Vou perguntar a cada viagem' : 'Preferência salva!', 'ok');
+    App.renderConfiguracoes();
+  });
+},
   /* ============ TELAS DE ENTRADA ============ */
   mostrarTela: function (nome) {
     var telas = document.querySelectorAll('.tela');
