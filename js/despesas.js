@@ -163,50 +163,121 @@ var Despesas = {
     '</div>';
   },
   abrirForm: function (id) {
-    sb.from('veiculos').select('id, nome, placa', { count: 'exact' })
+  var consultas = [
+    sb.from('veiculos')
+      .select('id, nome, placa')
       .eq('organizacaoId', orgAtual.id)
-      .order('nome')
-      .then(function (r) {
-        if (r.error || !r.data || r.data.length === 0) {
-          App.abrirModal('Veículo necessário',
-            '<div style="text-align:center;padding:10px 0">' +
-              '<span class="ms" style="font-size:56px;color:var(--txt2);opacity:0.5">directions_car</span>' +
-              '<h3 style="margin:16px 0 10px">Cadastre um veículo primeiro</h3>' +
-              '<p style="color:var(--txt2);font-size:14px;line-height:1.6;margin:0 0 20px">' +
-                'Para lançar despesas, você precisa cadastrar pelo menos um veículo.' +
-              '</p>' +
-            '</div>',
-            function () { App.fecharModal(); App.irParaFormVeiculo(); },
-            'Cadastrar veículo'
+      .order('nome'),
+
+    sb.from('viagens')
+      .select('id, titulo, destino, status')
+      .eq('organizacaoId', orgAtual.id)
+      .neq('status', 'concluida')
+      .order('dataInicio', { ascending: false })
+  ];
+
+  if (id) {
+    consultas.push(
+      sb.from('despesas')
+        .select('*')
+        .eq('id', id)
+        .eq('organizacaoId', orgAtual.id)
+        .single()
+    );
+  }
+
+  Promise.all(consultas)
+    .then(function (resultados) {
+      var resultadoVeiculos = resultados[0];
+      var resultadoViagens = resultados[1];
+      var resultadoDespesa = id ? resultados[2] : null;
+
+      if (
+        resultadoVeiculos.error ||
+        !resultadoVeiculos.data ||
+        resultadoVeiculos.data.length === 0
+      ) {
+        App.abrirModal(
+          'Veículo necessário',
+
+          '<div style="text-align:center;padding:10px 0">' +
+            '<span class="ms" style="font-size:56px;color:var(--txt2);opacity:0.5">' +
+              'directions_car' +
+            '</span>' +
+
+            '<h3 style="margin:16px 0 10px">' +
+              'Cadastre um veículo primeiro' +
+            '</h3>' +
+
+            '<p style="color:var(--txt2);font-size:14px;line-height:1.6;margin:0 0 20px">' +
+              'Para lançar despesas, você precisa cadastrar pelo menos um veículo.' +
+            '</p>' +
+          '</div>',
+
+          function () {
+            App.fecharModal();
+            App.irParaFormVeiculo();
+          },
+
+          'Cadastrar veículo'
+        );
+
+        return;
+      }
+
+      if (resultadoViagens.error) {
+        console.error(
+          'CarWay despesas - erro ao carregar viagens:',
+          resultadoViagens.error
+        );
+      }
+
+      Despesas.veiculos = resultadoVeiculos.data || [];
+      Despesas.viagens = resultadoViagens.error
+        ? []
+        : (resultadoViagens.data || []);
+
+      if (id) {
+        if (
+          !resultadoDespesa ||
+          resultadoDespesa.error ||
+          !resultadoDespesa.data
+        ) {
+          console.error(
+            'CarWay despesas - erro ao carregar despesa:',
+            resultadoDespesa && resultadoDespesa.error
           );
+
+          App.toast('Despesa não encontrada', 'erro');
+          App.irPara('despesas');
           return;
         }
-        Despesas.veiculos = r.data;
-        sb.from('viagens')
-          .select('id, titulo, destino, status')
-          .eq('organizacaoId', orgAtual.id)
-          .neq('status', 'concluida')
-          .order('dataInicio', { ascending: false })
-          .then(function (rv) {
-            Despesas.viagens = rv.data || [];
-            if (id) {
-              sb.from('despesas').select('*').eq('id', id).single().then(function (r2) {
-                if (r2.error || !r2.data) {
-                  App.toast('Despesa não encontrada', 'erro');
-                  return;
-                }
-                Despesas.editando = r2.data;
-                Despesas.categoriaSel = r2.data.categoria || 'Alimentação';
-                Despesas.renderForm();
-              });
-            } else {
-              Despesas.editando = null;
-              Despesas.categoriaSel = 'Alimentação';
-              Despesas.renderForm();
-            }
-          });
-      });
-  },
+
+        Despesas.editando = resultadoDespesa.data;
+
+        Despesas.categoriaSel =
+          resultadoDespesa.data.categoria || 'Alimentação';
+      } else {
+        Despesas.editando = null;
+        Despesas.categoriaSel = 'Alimentação';
+      }
+
+      Despesas.renderForm();
+    })
+    .catch(function (erro) {
+      console.error(
+        'CarWay despesas - erro ao abrir formulário:',
+        erro
+      );
+
+      App.toast(
+        'Não foi possível abrir o cadastro de despesa',
+        'erro'
+      );
+
+      App.irPara('despesas');
+    });
+},
   /* Categorias do formulário: cada botão de categoria ganha a cor
      própria (borda/ícone) mesmo quando não selecionado, para ficar
      visualmente consistente com o card da lista e com o restante do
