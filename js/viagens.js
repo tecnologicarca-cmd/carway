@@ -2914,91 +2914,83 @@ paradaSalvaHTML: function (p) {
     aviso = '<small>' + App.esc(p.postoEndereco) + '</small>';
   }
 
-  var linhaValores;
+var linhaValores;
 
-  if (concluida) {
+if (concluida) {
 
-    var previsto = Number(p.valorPrevisto) || 0;
-    var real = Number(p.valorReal) || 0;
+  var previsto = Number(p.valorPrevisto) || 0;
+  var real = Number(p.valorReal) || 0;
 
-    var diferenca = previsto - real;
+  var diferenca = previsto - real;
 
-    var textoDif = '';
+  var textoDif = '';
 
-    if (diferenca > 0) {
+  if (diferenca > 0) {
 
-      textoDif =
-        '<span style="color:#22c55e;font-weight:700">' +
-        '🟢 Economia ' + App.moeda(diferenca) +
-        '</span>';
+    textoDif =
+      '<div style="color:#22c55e;font-weight:700">' +
+        '🟢 Economia: ' +
+        App.moeda(diferenca) +
+      '</div>';
 
-    } else if (diferenca < 0) {
+  } else if (diferenca < 0) {
 
-      textoDif =
-        '<span style="color:#ef4444;font-weight:700">' +
-        '🔴 Acima do previsto ' +
+    textoDif =
+      '<div style="color:#ef4444;font-weight:700">' +
+        '🔴 Acima do previsto: ' +
         App.moeda(Math.abs(diferenca)) +
-        '</span>';
-
-    } else {
-
-      textoDif =
-        '<span style="color:#60a5fa;font-weight:700">' +
-        '🔵 Dentro do previsto' +
-        '</span>';
-    }
-
-linhaValores =
-  '<div class="parada-valores" style="display:flex;flex-direction:column;gap:4px;margin-top:8px">' +
-
-    '<div>📍 <b>KM:</b> ' +
-    App.fmtNum(p.kmPrevisto) +
-    '</div>' +
-
-    '<div>⛽ <b>Previsto:</b> ' +
-    App.fmtNum(p.litrosPrevisto,1) +
-    ' L • ' +
-    App.moeda(previsto) +
-    '</div>' +
-
-    '<div>⛽ <b>Realizado:</b> ' +
-    App.fmtNum(p.litrosReal,1) +
-    ' L</div>' +
-
-    '<div>💰 <b>Gasto:</b> ' +
-    App.moeda(real) +
-    '</div>' +
-
-    textoDif +
-
-  '</div>';
+      '</div>';
 
   } else {
 
-linhaValores =
-  '<div class="parada-valores" style="display:flex;flex-direction:column;gap:4px;margin-top:8px">' +
+    textoDif =
+      '<div style="color:#60a5fa;font-weight:700">' +
+        '🔵 Dentro do previsto' +
+      '</div>';
+  }
 
-    '<div>📍 <b>KM:</b> ' +
-    App.fmtNum(p.kmPrevisto) +
-    '</div>' +
+  linhaValores =
+    '<div class="parada-valores" style="display:flex;flex-direction:column;gap:6px;margin-top:10px">' +
 
-    '<div>⛽ <b>Previsto:</b> ' +
-    App.fmtNum(p.litrosPrevisto,1) +
-    ' L • ' +
-    App.moeda(previsto) +
-    '</div>' +
+      '<div>📍 <b>KM:</b> ' +
+      App.fmtNum(p.kmPrevisto) +
+      '</div>' +
 
-    '<div>⛽ <b>Realizado:</b> ' +
-    App.fmtNum(p.litrosReal,1) +
-    ' L</div>' +
+      '<div>⛽ <b>Previsto:</b> ' +
+      App.fmtNum(p.litrosPrevisto,1) +
+      ' L • ' +
+      App.moeda(previsto) +
+      '</div>' +
 
-    '<div>💰 <b>Gasto:</b> ' +
-    App.moeda(real) +
-    '</div>' +
+      '<div>⛽ <b>Realizado:</b> ' +
+      App.fmtNum(p.litrosReal,1) +
+      ' L</div>' +
 
-    textoDif +
+      '<div>💰 <b>Gasto:</b> ' +
+      App.moeda(real) +
+      '</div>' +
 
-  '</div>';
+      textoDif +
+
+    '</div>';
+
+} else {
+
+  linhaValores =
+    '<div class="parada-valores" style="display:flex;flex-direction:column;gap:6px;margin-top:10px">' +
+
+      '<div>📍 <b>KM:</b> ' +
+      App.fmtNum(p.kmPrevisto) +
+      '</div>' +
+
+      '<div>⛽ <b>Previsto:</b> ' +
+      App.fmtNum(p.litrosPrevisto,1) +
+      ' L • ' +
+      App.moeda(p.valorPrevisto) +
+      '</div>' +
+
+    '</div>';
+}
 
   var acoes;
 
