@@ -1,4 +1,4 @@
-/* APP_VERSION: v2.4 - multi-energeticos */
+/* APP_VERSION: v2.5 - energeticos inteligentes */
 /* =====================================================================
    CARWAY - VEICULOS
    v2.3 (esta versao)
@@ -94,27 +94,46 @@ var EnergeticosVeiculo = {
     return ENERGETICOS_VEICULO[0];
   },
 
-  padraoDoTipo: function (tipo, plugIn) {
+  /* Energéticos originais de fábrica conforme a classificação escolhida. */
+  baseDoTipo: function (tipo, plugIn) {
     var c = String(tipo || '').toUpperCase();
     if (c.indexOf('ELÉTR') > -1 || c.indexOf('ELETR') > -1) return ['Elétrico'];
     if (c.indexOf('FLEX') > -1) return ['Gasolina', 'Etanol'];
     if (c.indexOf('GNV') > -1) return ['Gasolina', 'GNV'];
-    if (c.indexOf('HÍBR') > -1 || c.indexOf('HIBR') > -1) {
-      return plugIn ? ['Gasolina', 'Elétrico'] : ['Gasolina'];
-    }
+    if (c.indexOf('HÍBR') > -1 || c.indexOf('HIBR') > -1) return plugIn ? ['Gasolina', 'Elétrico'] : ['Gasolina'];
     if (c.indexOf('DIESEL') > -1) return ['Diesel'];
     if (c.indexOf('ETANOL') > -1) return ['Etanol'];
     return ['Gasolina'];
   },
 
+  /* Únicas adaptações permitidas no formulário.
+     Gasolina, Etanol e Flex podem receber kit GNV.
+     Diesel, Elétrico, GNV e Híbrido não exibem adaptações incompatíveis. */
+  adaptaveisDoTipo: function (tipo) {
+    var c = String(tipo || '').toUpperCase();
+    if (c === 'GASOLINA' || c === 'ETANOL' || c === 'FLEX') return ['GNV'];
+    return [];
+  },
+
+  permitidosDoTipo: function (tipo, plugIn) {
+    return EnergeticosVeiculo.baseDoTipo(tipo, plugIn).concat(EnergeticosVeiculo.adaptaveisDoTipo(tipo));
+  },
+
+  normalizar: function (tipo, plugIn, listaAnterior) {
+    var base = EnergeticosVeiculo.baseDoTipo(tipo, plugIn);
+    var opcionais = EnergeticosVeiculo.adaptaveisDoTipo(tipo);
+    var resultado = base.slice();
+    (listaAnterior || []).forEach(function (e) {
+      if (opcionais.indexOf(e) > -1 && resultado.indexOf(e) === -1) resultado.push(e);
+    });
+    return resultado;
+  },
+
   doVeiculo: function (v) {
     if (!v) return ['Gasolina'];
     var txt = String(v.energeticos || '').trim();
-    if (txt) {
-      var lista = txt.split(',').map(function (x) { return x.trim(); }).filter(Boolean);
-      if (lista.length) return lista;
-    }
-    return EnergeticosVeiculo.padraoDoTipo(v.combustivel, !!v.plugIn);
+    var lista = txt ? txt.split(',').map(function (x) { return x.trim(); }).filter(Boolean) : [];
+    return EnergeticosVeiculo.normalizar(v.combustivel, !!v.plugIn, lista);
   },
 
   unidade: function (id) {
@@ -339,7 +358,8 @@ var Veiculos = {
     var combustivelSel = v.combustivel || 'Gasolina';
     var energeticosSel = Veiculos.editando
       ? EnergeticosVeiculo.doVeiculo(v)
-      : EnergeticosVeiculo.padraoDoTipo(combustivelSel, !!v.plugIn);
+      : EnergeticosVeiculo.baseDoTipo(combustivelSel, !!v.plugIn);
+    Veiculos._energeticosForm = energeticosSel.slice();
 
     var tiposHtml = TIPOS_VEICULO.map(function (t) {
       return '<button type="button" class="tipo-opcao' + (t.id === tipoSel ? ' sel' : '') + '" ' +
@@ -352,20 +372,6 @@ var Veiculos = {
       return '<button type="button" class="cor-opcao' + (c.id === corSel ? ' sel' : '') + '" ' +
         'data-cor="' + c.id + '" style="background:' + c.hex + ';color:' + c.hex + '" ' +
         'onclick="Veiculos.selCor(this)"></button>';
-    }).join('');
-
-    var energeticosHtml = ENERGETICOS_VEICULO.map(function (e) {
-      var sel = energeticosSel.indexOf(e.id) > -1;
-      var fundo = sel ? e.cor + '26' : 'var(--bg2,#111c33)';
-      var borda = sel ? e.cor : 'var(--linha,#26365c)';
-      var texto = sel ? e.cor : 'var(--txt2,#93a4c8)';
-      return '<button type="button" class="energetico-opcao' + (sel ? ' sel' : '') + '" ' +
-        'data-energetico="' + e.id + '" data-cor="' + e.cor + '" onclick="Veiculos.toggleEnergetico(this)" ' +
-        'style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:82px;padding:11px 4px;border-radius:12px;cursor:pointer;font-family:inherit;text-align:center;transition:.15s;background:' + fundo + ';border:2px solid ' + borda + ';color:' + texto + '">' +
-        '<span class="ms" style="font-size:25px;line-height:1;color:' + e.cor + '">' + e.icone + '</span>' +
-        '<span style="font-size:11px;font-weight:700">' + e.id + '</span>' +
-        '<small style="font-size:9.5px;opacity:.75">' + e.unidade + '</small>' +
-      '</button>';
     }).join('');
 
     var html =
@@ -403,8 +409,8 @@ var Veiculos = {
         '<small>Flex e Híbrido identificam corretamente o veículo. Os energéticos usados são definidos abaixo.</small>' +
       '</div>' +
       '<div class="campo-form"><label>Energéticos aceitos</label>' +
-        '<div id="seletorEnergeticos" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">' + energeticosHtml + '</div>' +
-        '<small>Para veículo adaptado, marque todas as opções reais. Ex.: Flex com kit GNV = Gasolina, Etanol e GNV.</small>' +
+        '<div id="seletorEnergeticos"></div>' +
+        '<small id="ajudaEnergeticos"></small>' +
       '</div>' +
       '<div id="blocoPlugIn" class="campo-form oculto">' +
         '<label style="display:flex;align-items:center;gap:10px;cursor:pointer;text-transform:none;font-size:13px">' +
@@ -421,6 +427,7 @@ var Veiculos = {
       '</div>';
 
     document.getElementById('formVeiculoContainer').innerHTML = html;
+    Veiculos.renderSeletorEnergeticos();
     Veiculos.atualizarCamposEnergeticos();
   },
 
@@ -430,10 +437,10 @@ var Veiculos = {
     var tipo = sel.value;
     var plug = document.getElementById('vPlugIn');
     if (tipo !== 'Híbrido' && plug) plug.checked = false;
-    if (redefinirEnergeticos) {
-      var lista = EnergeticosVeiculo.padraoDoTipo(tipo, tipo === 'Híbrido' && plug && plug.checked);
-      Veiculos._marcarEnergeticos(lista);
-    }
+    var plugIn = tipo === 'Híbrido' && !!(plug && plug.checked);
+    var anterior = redefinirEnergeticos ? [] : (Veiculos._energeticosForm || []);
+    Veiculos._energeticosForm = EnergeticosVeiculo.normalizar(tipo, plugIn, anterior);
+    Veiculos.renderSeletorEnergeticos();
     Veiculos.atualizarCamposEnergeticos();
   },
 
@@ -441,48 +448,66 @@ var Veiculos = {
     var sel = document.getElementById('vCombustivel');
     var plug = document.getElementById('vPlugIn');
     if (!sel || sel.value !== 'Híbrido' || !plug) return;
-    var lista = plug.checked ? ['Gasolina', 'Elétrico'] : ['Gasolina'];
-    Veiculos._marcarEnergeticos(lista);
+    Veiculos._energeticosForm = EnergeticosVeiculo.baseDoTipo('Híbrido', plug.checked);
+    Veiculos.renderSeletorEnergeticos();
     Veiculos.atualizarCamposEnergeticos();
+  },
+
+  renderSeletorEnergeticos: function () {
+    var container = document.getElementById('seletorEnergeticos');
+    if (!container) return;
+    var tipoEl = document.getElementById('vCombustivel');
+    var tipo = tipoEl ? tipoEl.value : 'Gasolina';
+    var plugEl = document.getElementById('vPlugIn');
+    var plugIn = tipo === 'Híbrido' && !!(plugEl && plugEl.checked);
+    Veiculos._energeticosForm = EnergeticosVeiculo.normalizar(tipo, plugIn, Veiculos._energeticosForm || []);
+    var base = EnergeticosVeiculo.baseDoTipo(tipo, plugIn);
+    var opcionais = EnergeticosVeiculo.adaptaveisDoTipo(tipo);
+
+    function card(e, fixo, selecionado) {
+      var fundo = selecionado ? e.cor + '26' : 'var(--bg2,#111c33)';
+      var borda = selecionado ? e.cor : 'var(--linha,#26365c)';
+      var texto = selecionado ? e.cor : 'var(--txt2,#93a4c8)';
+      var click = fixo ? '' : ' onclick="Veiculos.toggleEnergetico(this)"';
+      var cursor = fixo ? 'default' : 'pointer';
+      return '<button type="button" class="energetico-opcao' + (selecionado ? ' sel' : '') + (fixo ? ' fixo' : '') + '"' + click +
+        ' data-energetico="' + e.id + '" data-cor="' + e.cor + '" data-fixo="' + (fixo ? '1' : '0') + '" ' +
+        'style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:82px;padding:11px 4px;border-radius:12px;cursor:' + cursor + ';font-family:inherit;text-align:center;transition:.15s;background:' + fundo + ';border:2px solid ' + borda + ';color:' + texto + '">' +
+        '<span class="ms" style="font-size:25px;line-height:1;color:' + e.cor + '">' + e.icone + '</span>' +
+        '<span style="font-size:11px;font-weight:700">' + e.id + '</span>' +
+        '<small style="font-size:9.5px;opacity:.75">' + e.unidade + (fixo ? ' · original' : ' · adaptação') + '</small>' +
+      '</button>';
+    }
+
+    var html = '<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">';
+    base.forEach(function (id) { html += card(EnergeticosVeiculo.porId(id), true, true); });
+    opcionais.forEach(function (id) {
+      html += card(EnergeticosVeiculo.porId(id), false, Veiculos._energeticosForm.indexOf(id) > -1);
+    });
+    html += '</div>';
+    container.innerHTML = html;
+
+    var ajuda = document.getElementById('ajudaEnergeticos');
+    if (ajuda) {
+      if (opcionais.length) ajuda.textContent = 'Os energéticos originais ficam fixos. Marque GNV somente se o veículo possuir kit instalado.';
+      else if (tipo === 'Híbrido') ajuda.textContent = plugIn ? 'Híbrido plug-in: gasolina e recarga elétrica.' : 'Híbrido convencional: abastece gasolina e recarrega a bateria internamente.';
+      else ajuda.textContent = 'Este tipo não possui adaptação de energético compatível no CarWay.';
+    }
   },
 
   toggleEnergetico: function (el) {
-    el.classList.toggle('sel');
-    var lista = Veiculos._energeticosMarcados();
-    if (!lista.length) {
-      el.classList.add('sel');
-      App.toast('Escolha pelo menos um energético', 'erro');
-      return;
-    }
-    Veiculos._atualizarVisualEnergeticos();
+    if (el.getAttribute('data-fixo') === '1') return;
+    var id = el.getAttribute('data-energetico');
+    var lista = (Veiculos._energeticosForm || []).slice();
+    var pos = lista.indexOf(id);
+    if (pos > -1) lista.splice(pos, 1); else lista.push(id);
+    Veiculos._energeticosForm = lista;
+    Veiculos.renderSeletorEnergeticos();
     Veiculos.atualizarCamposEnergeticos();
   },
 
-  _marcarEnergeticos: function (lista) {
-    var botoes = document.querySelectorAll('#seletorEnergeticos .energetico-opcao');
-    for (var i = 0; i < botoes.length; i++) {
-      var id = botoes[i].getAttribute('data-energetico');
-      botoes[i].classList.toggle('sel', lista.indexOf(id) > -1);
-    }
-    Veiculos._atualizarVisualEnergeticos();
-  },
-
-  _atualizarVisualEnergeticos: function () {
-    var botoes = document.querySelectorAll('#seletorEnergeticos .energetico-opcao');
-    for (var i = 0; i < botoes.length; i++) {
-      var cor = botoes[i].getAttribute('data-cor') || '#60a5fa';
-      var sel = botoes[i].classList.contains('sel');
-      botoes[i].style.background = sel ? cor + '26' : 'var(--bg2,#111c33)';
-      botoes[i].style.borderColor = sel ? cor : 'var(--linha,#26365c)';
-      botoes[i].style.color = sel ? cor : 'var(--txt2,#93a4c8)';
-    }
-  },
-
   _energeticosMarcados: function () {
-    var botoes = document.querySelectorAll('#seletorEnergeticos .energetico-opcao.sel');
-    var lista = [];
-    for (var i = 0; i < botoes.length; i++) lista.push(botoes[i].getAttribute('data-energetico'));
-    return lista;
+    return (Veiculos._energeticosForm || []).slice();
   },
 
   atualizarCamposEnergeticos: function () {
@@ -506,20 +531,10 @@ var Veiculos = {
     var valorBateria = atualBateria ? atualBateria.value : (v.capacidadeBateria || (!temLiquido && !temGnv && temEletrico ? (v.tanque || '') : ''));
 
     var html = '';
-    if (temLiquido) {
-      html += '<div class="campo-form"><label><span class="ms" style="color:#ef4444;font-size:16px;vertical-align:middle">local_gas_station</span> Tanque de combustível (litros)</label>' +
-        '<input type="number" id="vTanque" placeholder="50" value="' + valorTanque + '" min="0" step="0.5"></div>';
-    }
-    if (temGnv) {
-      html += '<div class="campo-form"><label><span class="ms" style="color:#22d3ee;font-size:16px;vertical-align:middle">propane_tank</span> Capacidade do cilindro de GNV (m³)</label>' +
-        '<input type="number" id="vCapacidadeGnv" placeholder="15" value="' + valorGnv + '" min="0" step="0.1"></div>';
-    }
-    if (temEletrico) {
-      html += '<div class="campo-form"><label><span class="ms" style="color:#22c55e;font-size:16px;vertical-align:middle">ev_station</span> Capacidade da bateria (kWh)</label>' +
-        '<input type="number" id="vCapacidadeBateria" placeholder="60" value="' + valorBateria + '" min="0" step="0.1"></div>';
-    }
+    if (temLiquido) html += '<div class="campo-form"><label><span class="ms" style="color:#ef4444;font-size:16px;vertical-align:middle">local_gas_station</span> Tanque de combustível (litros)</label><input type="number" id="vTanque" placeholder="50" value="' + valorTanque + '" min="0" step="0.5"></div>';
+    if (temGnv) html += '<div class="campo-form"><label><span class="ms" style="color:#22d3ee;font-size:16px;vertical-align:middle">propane_tank</span> Capacidade do cilindro de GNV (m³)</label><input type="number" id="vCapacidadeGnv" placeholder="15" value="' + valorGnv + '" min="0" step="0.1"></div>';
+    if (temEletrico) html += '<div class="campo-form"><label><span class="ms" style="color:#22c55e;font-size:16px;vertical-align:middle">ev_station</span> Capacidade da bateria (kWh)</label><input type="number" id="vCapacidadeBateria" placeholder="60" value="' + valorBateria + '" min="0" step="0.1"></div>';
     container.innerHTML = html;
-    Veiculos._atualizarVisualEnergeticos();
   },
 
   selTipo: function (el) {
