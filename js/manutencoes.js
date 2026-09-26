@@ -1,4 +1,4 @@
-/* APP_VERSION: v2.9 - offline com formulário local */
+/* APP_VERSION: v3.0 - offline com formulário local */
 /* =====================================================================
    CARWAY - MANUTENCOES
    Historico de mudancas relevantes:
@@ -1293,6 +1293,16 @@ var Manutencoes = {
      FORM DE MANUTENCAO
      ========================================================= */
   abrirForm: async function (id, planoIdPre, veiculoIdPre) {
+    /* Sincroniza o formulário com a fonte central já carregada pelo módulo Veiculos. */
+    if (
+      (!Array.isArray(Manutencoes.veiculos) || !Manutencoes.veiculos.length) &&
+      typeof Veiculos !== 'undefined' &&
+      Array.isArray(Veiculos.lista) &&
+      Veiculos.lista.length
+    ) {
+      Manutencoes.veiculos = Veiculos.lista.slice();
+    }
+
     var cacheVeiculos = Array.isArray(Manutencoes.veiculos) ? Manutencoes.veiculos.slice() : [];
     var cachePlanos = Array.isArray(Manutencoes.planos) ? Manutencoes.planos.slice() : [];
 
