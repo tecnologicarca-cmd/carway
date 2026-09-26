@@ -636,8 +636,10 @@ var Viagens = {
   /* =========================================================
      FORMULÁRIO PLANEJADOR
      ========================================================= */
-  abrirPlanejador: function (idExistente) {
-    App.fecharModal();
+abrirPlanejador: function (idExistente) {
+  App.fecharModal();
+
+  Viagens._registrarListenerVeiculoGlobal();
     var precisaCarregar = Viagens.veiculos.length === 0;
     var carregar = precisaCarregar
       ? Promise.all([
