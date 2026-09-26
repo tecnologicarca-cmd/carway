@@ -2948,29 +2948,57 @@ paradaSalvaHTML: function (p) {
         '</span>';
     }
 
-    linhaValores =
-      '<div class="parada-valores">' +
-        '<span>km ' + App.fmtNum(p.kmPrevisto) + '</span>' +
-        '<span><b>' +
-        App.fmtNum(p.litrosReal, 1) +
-        ' L · ' +
-        App.moeda(real) +
-        '</b></span>' +
-        textoDif +
-      '</div>';
+linhaValores =
+  '<div class="parada-valores" style="display:flex;flex-direction:column;gap:4px;margin-top:8px">' +
+
+    '<div>📍 <b>KM:</b> ' +
+    App.fmtNum(p.kmPrevisto) +
+    '</div>' +
+
+    '<div>⛽ <b>Previsto:</b> ' +
+    App.fmtNum(p.litrosPrevisto,1) +
+    ' L • ' +
+    App.moeda(previsto) +
+    '</div>' +
+
+    '<div>⛽ <b>Realizado:</b> ' +
+    App.fmtNum(p.litrosReal,1) +
+    ' L</div>' +
+
+    '<div>💰 <b>Gasto:</b> ' +
+    App.moeda(real) +
+    '</div>' +
+
+    textoDif +
+
+  '</div>';
 
   } else {
 
-    linhaValores =
-      '<div class="parada-valores">' +
-        '<span>km ' + App.fmtNum(p.kmPrevisto) + '</span>' +
-        '<span>' +
-        App.fmtNum(p.litrosPrevisto, 1) +
-        ' L · ' +
-        App.moeda(p.valorPrevisto) +
-        '</span>' +
-      '</div>';
-  }
+linhaValores =
+  '<div class="parada-valores" style="display:flex;flex-direction:column;gap:4px;margin-top:8px">' +
+
+    '<div>📍 <b>KM:</b> ' +
+    App.fmtNum(p.kmPrevisto) +
+    '</div>' +
+
+    '<div>⛽ <b>Previsto:</b> ' +
+    App.fmtNum(p.litrosPrevisto,1) +
+    ' L • ' +
+    App.moeda(previsto) +
+    '</div>' +
+
+    '<div>⛽ <b>Realizado:</b> ' +
+    App.fmtNum(p.litrosReal,1) +
+    ' L</div>' +
+
+    '<div>💰 <b>Gasto:</b> ' +
+    App.moeda(real) +
+    '</div>' +
+
+    textoDif +
+
+  '</div>';
 
   var acoes;
 
