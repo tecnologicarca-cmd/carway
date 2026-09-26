@@ -602,3 +602,100 @@ body.tema-claro button.excluir { color: #fff !important; }
   ) !important;
   border-color: #b91c1c !important;
 }
+/* Selos das rotas lado a lado */
+.rota-selos {
+  position: absolute;
+  top: -12px;
+  right: 14px;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  z-index: 5;
+  max-width: calc(100% - 28px);
+}
+
+.rota-selos .rota-selo {
+  position: static;
+  top: auto;
+  right: auto;
+}
+
+/* Cabeçalho da rota */
+.rota-cabecalho {
+  background: linear-gradient(150deg, var(--card, #16213b), var(--card2, #1c2946));
+  border: 1px solid var(--linha, #26365c);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.rc-ponto {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.rc-ponto > .ms {
+  font-size: 20px;
+  flex: none;
+  margin-top: 2px;
+}
+
+.rc-ponto small {
+  display: block;
+  font-size: 10.5px;
+  color: var(--txt2, #93a4c8);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  margin-bottom: 3px;
+}
+
+.rc-ponto b {
+  display: block;
+  font-size: 14.5px;
+  line-height: 1.35;
+}
+
+.rc-traco {
+  width: 2px;
+  height: 16px;
+  background: var(--linha, #26365c);
+  margin: 5px 0 5px 9px;
+}
+
+.rc-rodape {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--linha, #26365c);
+  font-size: 12px;
+  color: var(--txt2, #93a4c8);
+  line-height: 1.5;
+}
+
+.rc-rodape .ms {
+  font-size: 16px;
+  flex: none;
+  color: var(--azul2, #60a5fa);
+}
+
+/* Espaço entre Lançar agora e o orçamento */
+#pg-viagem-detalhe .bloco {
+  margin-bottom: 18px;
+}
+
+/* Nota explicativa do orçamento */
+.orc-nota {
+  display: block;
+  margin-top: 8px;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--txt2, #93a4c8);
+}
+
+.orc-nota.bom { color: #86efac; }
+.orc-nota.ruim { color: #fca5a5; }
+.orc-linha.destaque.neutro b { color: var(--azul2, #60a5fa); }
