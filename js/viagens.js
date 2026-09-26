@@ -1054,136 +1054,114 @@ abrirPlanejador: function (idExistente) {
   var origem = Viagens.plano.origem;
   var destino = Viagens.plano.destino;
 
-  if (
-    !origem || !origem.lat ||
-    !destino || !destino.lat
-  ) {
-    App.toast(
-      'Não foi possível localizar os endereços',
-      'erro'
-    );
-    return;
-  }
-
-  if (!Viagens.ehDispositivoMovel()) {
-    Viagens.abrirAppNavegacao(
-      'google',
-      origem,
-      destino,
-      false
-    );
+  if (!origem || !origem.lat || !destino || !destino.lat) {
+    App.toast('Não foi possível localizar os endereços', 'erro');
     return;
   }
 
   var preferido = '';
 
   if (usuarioAtual) {
-    preferido = String(
-      usuarioAtual.appNavegacaoPreferido ||
-      usuarioAtual.appNavegacaoPadrao ||
-      ''
-    ).trim();
+    preferido = String(usuarioAtual.appNavegacaoPreferido || usuarioAtual.appNavegacaoPadrao || '').trim();
   }
 
-  if (preferido === 'google_maps') {
-    preferido = 'google';
-  }
+  if (preferido === 'google_maps') preferido = 'google';
 
-  if (preferido) {
-    Viagens.abrirAppNavegacao(
-      preferido,
-      origem,
-      destino,
-      false
-    );
+  if (preferido && preferido !== 'perguntar') {
+    Viagens.abrirAppNavegacao(preferido, origem, destino, false);
     return;
   }
 
   Viagens.mostrarModalNavegacao();
 },
   mostrarModalNavegacao: function () {
-    var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-    var html =
-      '<div class="aviso info" style="margin-bottom:16px">' +
-        '<span class="ms">navigation</span>' +
-        '<div><b>Qual app de navegação?</b>Escolha o app que você costuma usar.</div>' +
-      '</div>' +
-      '<div class="apps-nav">' +
-        '<button class="app-nav-item" onclick="Viagens.escolherAppNavegacao(\'google\')">' +
-          '<span class="ms" style="color:#4285F4">map</span>' +
-          '<b>Google Maps</b>' +
-          '<small>Trajeto e trânsito em tempo real</small>' +
-        '</button>' +
-        '<button class="app-nav-item" onclick="Viagens.escolherAppNavegacao(\'waze\')">' +
-          '<span class="ms" style="color:#33CCFF">assistant_navigation</span>' +
-          '<b>Waze</b>' +
-          '<small>Alertas de trânsito e radares</small>' +
-        '</button>' +
-        (isIOS ? '<button class="app-nav-item" onclick="Viagens.escolherAppNavegacao(\'apple\')">' +
-          '<span class="ms" style="color:#007AFF">map</span>' +
-          '<b>Apple Maps</b>' +
-          '<small>Integrado ao iPhone</small>' +
-        '</button>' : '') +
-      '</div>' +
-      '<label class="switch" style="margin-top:16px">' +
-        '<span>Lembrar esta escolha</span>' +
-        '<input type="checkbox" id="lembrarApp" checked>' +
-      '</label>';
-    App.abrirModal('Abrir no Maps', html, null);
-  },
+  var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
+  var apps = [
+    { id: 'google', nome: 'Google Maps', ico: 'map', cor: '#4285F4', sub: 'Rota completa com origem e destino' },
+    { id: 'waze', nome: 'Waze', ico: 'assistant_navigation', cor: '#33CCFF', sub: 'Navegação a partir de onde você está' },
+    { id: 'uber', nome: 'Uber', ico: 'local_taxi', cor: '#22c55e', sub: 'Pedir corrida até o destino' }
+  ];
+
+  if (isIOS) {
+    apps.splice(2, 0, { id: 'apple', nome: 'Apple Maps', ico: 'map', cor: '#007AFF', sub: 'Integrado ao iPhone' });
+  }
+
+  var html =
+    '<div class="aviso info" style="margin-bottom:16px">' +
+      '<span class="ms">navigation</span>' +
+      '<div><b>Como você quer ir?</b>Escolha o aplicativo desta vez.</div>' +
+    '</div>' +
+    '<div class="apps-nav">' +
+      apps.map(function (a) {
+        return '<button class="app-nav-item" onclick="Viagens.escolherAppNavegacao(\'' + a.id + '\')">' +
+          '<span class="ms" style="color:' + a.cor + '">' + a.ico + '</span>' +
+          '<b>' + a.nome + '</b>' +
+          '<small>' + a.sub + '</small>' +
+        '</button>';
+      }).join('') +
+    '</div>' +
+    '<label class="switch" style="margin-top:16px">' +
+      '<span>Usar sempre este app</span>' +
+      '<input type="checkbox" id="lembrarApp">' +
+    '</label>' +
+    '<small style="display:block;margin-top:8px;color:var(--txt2);font-size:11.5px;line-height:1.5">' +
+      'Se marcar, a escolha fica salva em Configurações e o app abre direto nas próximas viagens.' +
+    '</small>';
+
+  App.abrirModal('Abrir no Maps', html, null);
+},
 escolherAppNavegacao: function (app) {
   var lembrar = document.getElementById('lembrarApp');
-  var salvar = lembrar ? lembrar.checked : true;
+  var salvar = lembrar ? lembrar.checked : false;
 
   App.fecharModal();
 
   if (salvar && usuarioAtual && usuarioAtual.id) {
-    var valorSalvo =
-      app === 'google' ? 'google_maps' : app;
+    var valorSalvo = app === 'google' ? 'google_maps' : app;
 
-    sb.from('usuarios')
-      .update({
-        appNavegacaoPreferido: valorSalvo
-      })
-      .eq('id', usuarioAtual.id)
-      .then(function () {
-        usuarioAtual.appNavegacaoPreferido =
-          valorSalvo;
-      })
-      .catch(function () {});
+    sb.from('usuarios').update({ appNavegacaoPreferido: valorSalvo }).eq('id', usuarioAtual.id).then(function () {
+      usuarioAtual.appNavegacaoPreferido = valorSalvo;
+      App.toast('Preferência salva em Configurações', 'ok');
+    }).catch(function () {});
   }
 
-  Viagens.abrirAppNavegacao(
-    app,
-    Viagens.plano.origem,
-    Viagens.plano.destino,
-    false
-  );
+  Viagens.abrirAppNavegacao(app, Viagens.plano.origem, Viagens.plano.destino, false);
 },
   abrirAppNavegacao: function (app, origem, destino, silencioso) {
-    if (!origem || !destino) return;
-    var lat = destino.lat, lon = destino.lon;
-    var url = '';
-    if (app === 'google') {
-      url = 'https://www.google.com/maps/dir/?api=1' +
-        '&origin=' + encodeURIComponent(origem.lat + ',' + origem.lon) +
-        '&destination=' + encodeURIComponent(lat + ',' + lon) +
-        '&travelmode=driving';
-    } else if (app === 'waze') {
-      url = 'https://waze.com/ul?ll=' + lat + ',' + lon + '&navigate=yes';
-    } else if (app === 'apple') {
-      url = 'https://maps.apple.com/?saddr=' + origem.lat + ',' + origem.lon + '&daddr=' + lat + ',' + lon + '&dirflg=d';
-    } else {
-      url = 'https://www.google.com/maps/dir/?api=1' +
-        '&origin=' + encodeURIComponent(origem.lat + ',' + origem.lon) +
-        '&destination=' + encodeURIComponent(lat + ',' + lon);
-    }
-    if (!silencioso) App.toast('Abrindo ' + Viagens.nomeApp(app) + '...', 'ok');
-    window.open(url, '_blank', 'noopener');
-  },
-  nomeApp: function (app) {
-    return ({ google: 'Google Maps', waze: 'Waze', apple: 'Apple Maps' })[app] || 'app';
-  },
+  if (!origem || !destino) return;
+
+  var lat = destino.lat;
+  var lon = destino.lon;
+
+  if (!silencioso) {
+    App.toast('Abrindo ' + Viagens.nomeApp(app) + '...', 'ok');
+  }
+
+  if (app === 'waze') {
+    window.location.href = 'https://www.waze.com/ul?ll=' + lat + '%2C' + lon + '&navigate=yes&zoom=17';
+    return;
+  }
+
+  if (app === 'uber') {
+    window.location.href = 'https://m.uber.com/ul/?action=setPickup&pickup=my_location&dropoff[latitude]=' + lat + '&dropoff[longitude]=' + lon;
+    return;
+  }
+
+  var url = '';
+
+  if (app === 'apple') {
+    url = 'https://maps.apple.com/?saddr=' + origem.lat + ',' + origem.lon + '&daddr=' + lat + ',' + lon + '&dirflg=d';
+  } else {
+    url = 'https://www.google.com/maps/dir/?api=1&origin=' + encodeURIComponent(origem.lat + ',' + origem.lon) + '&destination=' + encodeURIComponent(lat + ',' + lon) + '&travelmode=driving';
+  }
+
+  window.open(url, '_blank', 'noopener');
+},
+
+nomeApp: function (app) {
+  return ({ google: 'Google Maps', google_maps: 'Google Maps', waze: 'Waze', apple: 'Apple Maps', uber: 'Uber' })[app] || 'app';
+},
 
   /* =========================================================
      EDIÇÃO INTELIGENTE — decide se precisa refazer a busca paga
