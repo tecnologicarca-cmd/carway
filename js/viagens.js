@@ -379,7 +379,7 @@ chamarRoutes: function (origem, destino, idaVolta, emissionType) {
      (sem editar index.html), com verificações defensivas em cada
      passo — se algum elemento não for encontrado, simplesmente não
      mexe naquela parte, sem quebrar o resto da página. */
-  _organizarTopoViagens: function () {
+    _organizarTopoViagens: function () {
     if (Viagens._topoOrganizado) return;
     var pg = document.getElementById('pg-viagens');
     if (!pg) return;
@@ -393,15 +393,15 @@ chamarRoutes: function (origem, destino, idaVolta, emissionType) {
       if (botaoNovo) {
         var icone = botaoNovo.querySelector('.ms');
         botaoNovo.innerHTML = (icone ? icone.outerHTML : '<span class="ms">add</span>') + ' Criar nova viagem';
-
-        var wrapperBotao = botaoNovo.closest('.acao-topo') || botaoNovo;
+        botaoNovo.classList.add('bloco-full');
+        var wrapperBotao = botaoNovo.closest('.acoes-topo') || botaoNovo.parentNode;
+        if (!wrapperBotao || wrapperBotao === pg) wrapperBotao = botaoNovo;
         var kpisEl = document.getElementById('kpisViagens');
         var containerPrincipal = kpisEl && kpisEl.parentNode ? kpisEl.parentNode : wrapperBotao.parentNode;
-        if (containerPrincipal && containerPrincipal.firstChild) {
+        if (containerPrincipal && containerPrincipal.firstChild && wrapperBotao !== containerPrincipal) {
           containerPrincipal.insertBefore(wrapperBotao, containerPrincipal.firstChild);
         }
       }
-
       var chips = document.getElementById('chipsStatusViagens');
       var lista = document.getElementById('blocoEmAndamento');
       if (chips && lista && lista.parentNode) {
@@ -2238,7 +2238,7 @@ html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="b
     document.getElementById('formPlanoViagemContainer').innerHTML = html;
     window.scrollTo({ top: 0, behavior: 'smooth' });
   },
-  confirmarCriarViagem: function (idx) {
+    confirmarCriarViagem: function (idx) {
     var r = Viagens.plano.rotas[idx];
     if (!r) return;
     if (Viagens._salvando) return;
@@ -2259,7 +2259,6 @@ html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="b
     var outros = Number(document.getElementById('crOutros').value) || 0;
     var obs = document.getElementById('crObs').value.trim();
     var totalPrev = Math.round((r.custoCombustivel + r.custoPedagio + alim + hosp + outros) * 100) / 100;
-
     var reg = {
       id: 'VIA_' + App.uid(),
       organizacaoId: orgAtual.id,
@@ -2277,81 +2276,126 @@ html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="b
       status: 'planejada',
       combustivelPrev: r.custoCombustivel,
       pedagioPrev: r.custoPedagio,
-      alimentacaoPrev: alim, hospedagemPrev: hosp, outrosPrev: outros,
+      alimentacaoPrev: alim,
+      hospedagemPrev: hosp,
+      outrosPrev: outros,
       totalPrev: totalPrev,
       rota: JSON.stringify({
         origem: Viagens.plano.origem,
         destino: Viagens.plano.destino,
-        km: r.km, kmIda: r.kmIda, minutos: r.minutos,
-        polyline: r.polyline, idaVolta: idaVolta,
+        km: r.km,
+        kmIda: r.kmIda,
+        minutos: r.minutos,
+        polyline: r.polyline,
+        idaVolta: idaVolta,
         custoCombustivel: r.custoCombustivel,
         custoPedagio: r.custoPedagio,
         temPedagio: r.temPedagio
       }),
       obs: obs
     };
+    var paradas = dados ? dados.paradas : [];
+    var precoLitro = (Viagens.plano.parametrosAutonomia && Viagens.plano.parametrosAutonomia.preco) || 0;
+    var paradasReg = paradas.map(function (p) {
+      return {
+        id: 'PAR_' + App.uid(),
+        organizacaoId: orgAtual.id,
+        viagemId: reg.id,
+        veiculoId: veicId,
+        ordem: p.ordem,
+        kmPrevisto: p.kmAcum,
+        latitude: p.lat || 0,
+        longitude: p.lon || 0,
+        postoNome: p.postoNome || '',
+        postoEndereco: p.postoEndereco || '',
+        postoRating: p.postoRating || 0,
+        postoPlaceId: p.postoPlaceId || '',
+        postoLat: p.postoLat || 0,
+        postoLon: p.postoLon || 0,
+        postoDesvioKm: p.postoDesvioKm || 0,
+        litrosPrevisto: p.litrosPrevisto || 0,
+        precoLitroPrevisto: precoLitro,
+        valorPrevisto: Math.round((p.litrosPrevisto || 0) * precoLitro * 100) / 100,
+        litrosReal: 0,
+        valorReal: 0,
+        status: p.semPosto ? 'SEM_POSTO' : 'PENDENTE',
+        trecho: p.trecho || 'IDA',
+        ordemTrecho: p.ordem,
+        titulo: (p.trecho || 'IDA') + ' - Parada ' + p.ordem,
+        kmAteFim: 0,
+        ultimaParada: !!p.ultimaParada,
+        energetico: veic.combustivel || 'Gasolina',
+        unidadeQuantidade: 'L',
+        antecipada: !!p.antecipada,
+        kmOriginalPrevisto: p.kmOriginalPrevisto || 0
+      };
+    });
     var btn = document.getElementById('btnCriarViagem');
     btn.disabled = true;
     btn.textContent = 'Criando...';
-    sb.from('viagens').insert(reg).then(function (res) {
+    sb.rpc('criar_viagem_com_paradas', {
+      p_viagem: reg,
+      p_paradas: paradasReg
+    }).then(function (res) {
+      Viagens._salvando = false;
       if (res.error) {
-        Viagens._salvando = false;
-        App.toast('Erro: ' + res.error.message, 'erro');
-        btn.disabled = false;
-        btn.textContent = 'Criar viagem';
-        return;
+        console.error('CarWay - erro na RPC de criação:', res.error);
+        return Viagens._criarViagemModoAntigo(reg, paradasReg, btn);
       }
-      var paradas = dados ? dados.paradas : [];
-      if (paradas.length) {
-        var precoLitro = (Viagens.plano.parametrosAutonomia && Viagens.plano.parametrosAutonomia.preco) || 0;
-        var paradasReg = paradas.map(function (p) {
-          return {
-            id: 'PAR_' + App.uid(),
-            organizacaoId: orgAtual.id,
-            viagemId: reg.id,
-            veiculoId: veicId,
-            ordem: p.ordem,
-            kmPrevisto: p.kmAcum,
-            latitude: p.lat || 0,
-            longitude: p.lon || 0,
-            postoNome: p.postoNome || '',
-            postoEndereco: p.postoEndereco || '',
-            postoRating: p.postoRating || 0,
-            postoPlaceId: p.postoPlaceId || '',
-            postoLat: p.postoLat || 0,
-            postoLon: p.postoLon || 0,
-            postoDesvioKm: p.postoDesvioKm || 0,
-            litrosPrevisto: p.litrosPrevisto || 0,
-            precoLitroPrevisto: precoLitro,
-            valorPrevisto: Math.round((p.litrosPrevisto || 0) * precoLitro * 100) / 100,
-            litrosReal: 0,
-            valorReal: 0,
-            status: p.semPosto ? 'SEM_POSTO' : 'PENDENTE',
-            trecho: p.trecho || 'IDA',
-            ordemTrecho: p.ordem,
-            titulo: (p.trecho || 'IDA') + ' - Parada ' + p.ordem,
-            kmAteFim: 0,
-            ultimaParada: !!p.ultimaParada,
-            energetico: veic.combustivel || 'Gasolina',
-            unidadeQuantidade: 'L',
-            antecipada: !!p.antecipada,
-            kmOriginalPrevisto: p.kmOriginalPrevisto || 0
-          };
-        });
-        sb.from('paradas_viagem').insert(paradasReg).then(function (rp) {
-          Viagens._salvando = false;
-          if (rp.error) console.warn('Erro paradas:', rp.error);
-          App.toast('Viagem criada com ' + paradas.length + ' parada(s)!', 'ok');
-          App.irPara('viagens');
-        });
-      } else {
-        Viagens._salvando = false;
-        App.toast('Viagem criada!', 'ok');
-        App.irPara('viagens');
-      }
+      if (App._painelRaw) App._painelRaw = null;
+      App.toast(paradasReg.length ? 'Viagem criada com ' + paradasReg.length + ' parada(s)!' : 'Viagem criada!', 'ok');
+      App.irPara('viagens');
+    }).catch(function (e) {
+      Viagens._salvando = false;
+      console.error('CarWay - falha na RPC de criação:', e);
+      return Viagens._criarViagemModoAntigo(reg, paradasReg, btn);
     });
   },
 
+  _criarViagemModoAntigo: function (reg, paradasReg, btn) {
+    return sb.from('viagens').insert(reg).then(function (res) {
+      if (res.error) {
+        Viagens._salvando = false;
+        App.toast('Erro: ' + res.error.message, 'erro');
+        if (btn) { btn.disabled = false; btn.textContent = 'Criar viagem'; }
+        return;
+      }
+      if (!paradasReg.length) {
+        Viagens._salvando = false;
+        if (App._painelRaw) App._painelRaw = null;
+        App.toast('Viagem criada!', 'ok');
+        App.irPara('viagens');
+        return;
+      }
+      return sb.from('paradas_viagem').insert(paradasReg).then(function (rp) {
+        Viagens._salvando = false;
+        if (rp.error) {
+          console.error('CarWay - erro ao salvar paradas:', rp.error);
+          App.abrirModal(
+            'Viagem criada sem paradas',
+            '<div style="background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.4);border-radius:12px;padding:12px 14px;font-size:13px;color:#fcd34d;line-height:1.6">' +
+              '<b><span class="ms" style="vertical-align:middle;font-size:17px">warning</span> A viagem foi salva, mas as paradas não.</b><br>' +
+              'Motivo: ' + App.esc(rp.error.message || 'erro desconhecido') +
+            '</div>' +
+            '<p style="font-size:12.5px;color:var(--txt2);line-height:1.6;margin-top:12px">' +
+              'Exclua esta viagem e crie novamente após resolver o problema.' +
+            '</p>',
+            function () { App.fecharModal(); App.irPara('viagens'); },
+            'Entendi'
+          );
+          return;
+        }
+        if (App._painelRaw) App._painelRaw = null;
+        App.toast('Viagem criada com ' + paradasReg.length + ' parada(s)!', 'ok');
+        App.irPara('viagens');
+      });
+    }).catch(function (e) {
+      Viagens._salvando = false;
+      console.error('CarWay - falha ao criar viagem:', e);
+      App.toast('Erro ao criar viagem: ' + (e.message || 'desconhecido'), 'erro');
+      if (btn) { btn.disabled = false; btn.textContent = 'Criar viagem'; }
+    });
+  },
   /* =========================================================
      BUSCA DE POSTOS / PONTOS DE RECARGA (gratuito, sem custo de API)
      ========================================================= */
@@ -2549,6 +2593,9 @@ html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="b
         paradas: r[4].data || [],
         veiculos: r[5].data || []
       };
+      Viagens._detalheAtual.paradas.forEach(function (p) {
+        p.abastecimentoVinculado = String(p.origemConclusao || '').toUpperCase() === 'VINCULADO';
+      });
       Viagens.renderDetalhe();
     });
   },
@@ -2756,16 +2803,17 @@ html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="b
     '</div>';
   },
 
-  formConcluirParada: function (paradaId) {
+    formConcluirParada: function (paradaId) {
     var d = Viagens._detalheAtual;
     var p = d.paradas.filter(function (x) { return x.id === paradaId; })[0];
     if (!p) return;
     var veiculo = d.veiculos.filter(function (x) { return x.id === d.viagem.veiculoId; })[0] || {};
-    var eletrico = String(veiculo.combustivel || '').toUpperCase().indexOf('ELÉTR') > -1 || String(veiculo.combustivel || '').toUpperCase().indexOf('ELETR') > -1;
-    var unidade = eletrico ? 'kWh' : (String(veiculo.combustivel || '').toUpperCase().indexOf('GNV') > -1 ? 'm³' : 'L');
+    var combUpper = String(veiculo.combustivel || '').toUpperCase();
+    var eletrico = combUpper.indexOf('ELÉTR') > -1 || combUpper.indexOf('ELETR') > -1;
+    var unidade = eletrico ? 'kWh' : (combUpper.indexOf('GNV') > -1 ? 'm³' : 'L');
     var html =
       '<div class="aviso info" style="margin-bottom:16px">' +
-        '<span class="ms">local_gas_station</span>' +
+        '<span class="ms" style="color:#ef4444">local_gas_station</span>' +
         '<div><b>' + App.esc(p.postoNome || ('Parada ' + p.ordem)) + '</b>' +
         'Previsto: ' + App.fmtNum(p.litrosPrevisto, 1) + ' ' + unidade + ' · ' + App.moeda(p.valorPrevisto) + '</div>' +
       '</div>' +
@@ -2801,15 +2849,25 @@ html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="b
       App.fecharModal();
       sb.from('abastecimentos').insert(reg).then(function (r1) {
         if (r1.error) { App.toast('Erro: ' + r1.error.message, 'erro'); return; }
-        sb.from('paradas_viagem').update({
-          status: 'CONCLUIDA', litrosReal: litros, valorReal: reg.valorTotal, abastecimentoId: reg.id
-        }).eq('id', p.id).then(function () {
-          App.toast('Parada ' + p.ordem + ' concluída', 'ok');
-          Viagens.abrirDetalhe(d.viagem.id);
-        });
+        return sb.from('paradas_viagem').update({
+          status: 'CONCLUIDA',
+          litrosReal: litros,
+          valorReal: reg.valorTotal,
+          abastecimentoId: reg.id,
+          origemConclusao: 'ABASTECI'
+        }).eq('id', p.id);
+      }).then(function (r2) {
+        if (r2 && r2.error) { App.toast('Erro: ' + r2.error.message, 'erro'); return; }
+        if (App._painelRaw) App._painelRaw = null;
+        App.toast('Parada ' + p.ordem + ' concluída', 'ok');
+        Viagens.abrirDetalhe(d.viagem.id);
+      }).catch(function (e) {
+        console.error('CarWay - erro ao concluir parada:', e);
+        App.toast('Erro ao registrar abastecimento', 'erro');
       });
     }, 'Registrar');
   },
+   
   _calcParadaConclusao: function () {
     var l = Number(document.getElementById('cpLitros').value) || 0;
     var p = Number(document.getElementById('cpPreco').value) || 0;
@@ -2848,22 +2906,31 @@ html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="b
       App.abrirModal('Vincular abastecimento', html, null);
     });
   },
+   
   confirmarVinculoParada: function (paradaId, abastecimentoId) {
     App.fecharModal();
     var d = Viagens._detalheAtual;
     var a = d.abastecimentos.filter(function (x) { return x.id === abastecimentoId; })[0];
-    sb.from('abastecimentos').update({ paradaId: paradaId }).eq('id', abastecimentoId).then(function () {
+    sb.from('abastecimentos').update({ paradaId: paradaId }).eq('id', abastecimentoId).then(function (r1) {
+      if (r1.error) { App.toast('Erro: ' + r1.error.message, 'erro'); return; }
       return sb.from('paradas_viagem').update({
         status: 'CONCLUIDA',
         litrosReal: a ? a.litros : 0,
         valorReal: a ? a.valorTotal : 0,
-        abastecimentoId: abastecimentoId
+        abastecimentoId: abastecimentoId,
+        origemConclusao: 'VINCULADO'
       }).eq('id', paradaId);
-    }).then(function () {
+    }).then(function (r2) {
+      if (r2 && r2.error) { App.toast('Erro: ' + r2.error.message, 'erro'); return; }
+      if (App._painelRaw) App._painelRaw = null;
       App.toast('Abastecimento vinculado', 'ok');
       Viagens.abrirDetalhe(d.viagem.id);
+    }).catch(function (e) {
+      console.error('CarWay - erro ao vincular abastecimento:', e);
+      App.toast('Erro ao vincular abastecimento', 'erro');
     });
   },
+   
   ignorarParada: function (paradaId) {
     var d = Viagens._detalheAtual;
     App.confirmar({
@@ -2880,6 +2947,7 @@ html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="b
       }
     });
   },
+   
   reabrirParada: function (paradaId) {
     var d = Viagens._detalheAtual;
     var p = d.paradas.filter(function (x) { return x.id === paradaId; })[0];
@@ -2898,11 +2966,19 @@ html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="b
         : sb.from('abastecimentos').update({ paradaId: null }).eq('id', p.abastecimentoId || '');
       (temAbastecimento ? promessa : Promise.resolve()).then(function () {
         return sb.from('paradas_viagem').update({
-          status: 'PENDENTE', litrosReal: 0, valorReal: 0, abastecimentoId: null
+          status: 'PENDENTE',
+          litrosReal: 0,
+          valorReal: 0,
+          abastecimentoId: null,
+          origemConclusao: null
         }).eq('id', paradaId);
       }).then(function () {
+        if (App._painelRaw) App._painelRaw = null;
         App.toast('Parada reaberta', 'ok');
         Viagens.abrirDetalhe(d.viagem.id);
+      }).catch(function (e) {
+        console.error('CarWay - erro ao reabrir parada:', e);
+        App.toast('Erro ao reabrir parada', 'erro');
       });
     }, 'Desfazer');
   },
