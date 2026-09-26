@@ -1163,6 +1163,65 @@ nomeApp: function (app) {
   return ({ google: 'Google Maps', google_maps: 'Google Maps', waze: 'Waze', apple: 'Apple Maps', uber: 'Uber' })[app] || 'app';
 },
 
+   voltarParaFormularioMantendoRotas: function () {
+  var v = (Viagens._modoEdicao && Viagens.editando) ? Viagens.editando : {};
+
+  if (!Viagens.veiculos.length) {
+    Viagens.abrirPlanejador(v.id || null);
+    return;
+  }
+
+  Viagens.renderPlanejador(Viagens._modoEdicao ? Viagens.editando : null);
+
+  var inpOrigem = document.getElementById('plOrigem');
+  var inpDestino = document.getElementById('plDestino');
+
+  if (inpOrigem && Viagens.plano.origem) inpOrigem.value = Viagens.plano.origem.endereco || '';
+  if (inpDestino && Viagens.plano.destino) inpDestino.value = Viagens.plano.destino.endereco || '';
+
+  Viagens.setIdaVolta(Viagens.plano.idaVolta);
+
+  var p = Viagens.plano.parametrosAutonomia;
+
+  if (p) {
+    var elKmL = document.getElementById('plKmL');
+    var elTanque = document.getElementById('plTanque');
+    var elNivel = document.getElementById('plNivel');
+    var elReserva = document.getElementById('plReserva');
+    var elPreco = document.getElementById('plPreco');
+
+    if (elKmL) elKmL.value = p.kmL;
+    if (elTanque) elTanque.value = p.tanque;
+    if (elNivel) elNivel.value = p.nivel;
+    if (elReserva) elReserva.value = p.reserva;
+    if (elPreco) elPreco.value = p.preco;
+  }
+
+  if (Viagens.plano.veiculoSelecionado) {
+    var selVeic = document.getElementById('plVeiculo');
+    if (selVeic) selVeic.value = Viagens.plano.veiculoSelecionado.id;
+  }
+
+  Viagens.previewAutonomia();
+
+  if (Viagens.plano.rotas && Viagens.plano.rotas.length) {
+    var container = document.getElementById('formPlanoViagemContainer');
+
+    if (container) {
+      var aviso = document.createElement('div');
+
+      aviso.style.cssText = 'background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.4);border-radius:12px;padding:11px 13px;margin-bottom:14px;font-size:12.5px;color:#86efac;display:flex;align-items:center;gap:10px';
+
+      aviso.innerHTML = '<span class="ms" style="font-size:18px">route</span>' +
+        '<div style="flex:1;min-width:0"><b>Busca anterior preservada</b><br>' +
+        Viagens.plano.rotas.length + ' rota(s) já encontrada(s). Você não paga nova consulta.</div>' +
+        '<button class="btn-novo-sec" style="flex:none;padding:8px 12px;font-size:12px" onclick="Viagens.mostrarRotas()">Ver rotas</button>';
+
+      container.insertBefore(aviso, container.firstChild);
+    }
+  }
+},
+   
   /* =========================================================
      EDIÇÃO INTELIGENTE — decide se precisa refazer a busca paga
      ========================================================= */
@@ -1685,9 +1744,7 @@ nomeApp: function (app) {
         '</div>';
     });
 
-    html += '<div class="form-acoes-viagem" style="margin-top:20px">' +
-      '<button class="btn-cancelar-form" onclick="Viagens.abrirPlanejador(' + (Viagens._modoEdicao && Viagens.editando ? '\'' + Viagens.editando.id + '\'' : '') + ')"><span class="ms">arrow_back</span> Voltar</button>' +
-    '</div>';
+html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="btn-cancelar-form" onclick="Viagens.voltarParaFormularioMantendoRotas()"><span class="ms">arrow_back</span> Voltar</button></div>';
 
     document.getElementById('formPlanoViagemContainer').innerHTML = html;
     window.scrollTo({ top: 0, behavior: 'smooth' });
