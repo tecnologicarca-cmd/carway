@@ -975,75 +975,298 @@ var Abastecimentos = {
     el.innerHTML = html;
   },
 
-  /* =========================================================
-     SALVAR (com alerta especial para KM ausente)
-     ========================================================= */
-  validarESalvar: function () {
-    var l = Number(document.getElementById('abLitros').value) || 0;
-    if (l <= 0) { App.toast('Informe a quantidade abastecida', 'erro'); return; }
-    var km = Number(document.getElementById('abKm').value) || 0;
+/* =========================================================
+   SALVAR (com alerta especial para KM ausente)
+   ========================================================= */
+validarESalvar: function () {
 
-    if (km <= 0) {
-      App.confirmar({
-        titulo: 'Salvar sem o KM do painel?',
-        mensagem: 'Você não informou o <b>KM do painel</b>. Esse dado é importante para calcular ' +
-          'corretamente as próximas revisões de manutenção baseadas em quilometragem. ' +
-          'Você pode voltar e preencher, ou salvar mesmo assim.',
-        textoBotao: 'Salvar mesmo assim',
-        tipo: 'aviso',
-        icone: 'speed',
-        aoConfirmar: function () { Abastecimentos._executarSalvar(); }
-      });
+  var l = Number(document.getElementById('abLitros').value) || 0;
+
+  if (l <= 0) {
+    App.toast('Informe a quantidade abastecida', 'erro');
+    return;
+  }
+
+  var km = Number(document.getElementById('abKm').value) || 0;
+
+  if (km <= 0) {
+
+    App.confirmar({
+      titulo: 'Salvar sem o KM do painel?',
+      mensagem:
+        'Você não informou o <b>KM do painel</b>. ' +
+        'Esse dado é importante para calcular corretamente as próximas revisões ' +
+        'de manutenção baseadas em quilometragem. Você pode voltar e preencher, ' +
+        'ou salvar mesmo assim.',
+      textoBotao: 'Salvar mesmo assim',
+      tipo: 'aviso',
+      icone: 'speed',
+
+      aoConfirmar: function () {
+        Abastecimentos._executarSalvar();
+      }
+    });
+
+    return;
+  }
+
+  Abastecimentos._executarSalvar();
+},
+
+/* =========================================================
+   EXECUTAR SALVAMENTO
+   ========================================================= */
+_executarSalvar: async function () {
+
+  var nivelTanque =
+    Abastecimentos._form.nivelTanque || 100;
+
+  var tipoLancamento =
+    Abastecimentos._form.tipoLancamento || 'diaadia';
+
+  var viagemSel =
+    document.getElementById('abViagem');
+
+  var viagemId =
+    (
+      tipoLancamento === 'viagem' &&
+      viagemSel &&
+      viagemSel.value
+    )
+      ? viagemSel.value
+      : null;
+
+  var veiculoId =
+    document.getElementById('abVeiculo').value;
+
+  var kmInformado =
+    Number(document.getElementById('abKm').value) || 0;
+
+  /* =====================================================
+     VALIDAÇÃO DE KM REGRESSIVO
+     ===================================================== */
+
+  try {
+
+    var ultimoKm =
+      await Abastecimentos.buscarUltimoKmVeiculo(
+        veiculoId,
+        (
+          Abastecimentos.editando &&
+          Abastecimentos.editando.id
+        )
+          ? Abastecimentos.editando.id
+          : null
+      );
+
+    if (
+      ultimoKm !== null &&
+      kmInformado > 0 &&
+      kmInformado <= ultimoKm
+    ) {
+
+      App.toast(
+        'KM informado (' +
+        App.fmtNum(kmInformado) +
+        ') deve ser maior que o último abastecimento registrado (' +
+        App.fmtNum(ultimoKm) +
+        ' km).',
+        'erro'
+      );
+
       return;
     }
-    Abastecimentos._executarSalvar();
-  },
 
-  _executarSalvar: function () {
-    var nivelTanque = Abastecimentos._form.nivelTanque || 100;
-    var tipoLancamento = Abastecimentos._form.tipoLancamento || 'diaadia';
-    var viagemSel = document.getElementById('abViagem');
-    var viagemId = (tipoLancamento === 'viagem' && viagemSel && viagemSel.value) ? viagemSel.value : null;
+  } catch (e) {
 
-    var reg = {
-      organizacaoId: orgAtual.id,
-      usuarioId: usuarioAtual.id,
-      veiculoId: document.getElementById('abVeiculo').value,
-      data: document.getElementById('abData').value,
-      km: Number(document.getElementById('abKm').value) || 0,
-      litros: Number(document.getElementById('abLitros').value) || 0,
-      precoLitro: Number(document.getElementById('abPreco').value) || 0,
-      valorTotal: Number(document.getElementById('abTotal').value) || 0,
-      posto: document.getElementById('abPosto').value.trim(),
-      combustivel: Abastecimentos._energeticoFormAtual(),
-      unidade: Abastecimentos._unidadePorCombustivel(Abastecimentos._energeticoFormAtual()).sigla,
-      tanqueCheio: nivelTanque === 100 ? 'SIM' : 'NAO',
-      nivelTanque: nivelTanque,
-      viagemId: viagemId,
-      obs: document.getElementById('abObs').value.trim()
-    };
-    var btn = document.getElementById('btnSalvarAb');
-    btn.disabled = true;
-    btn.textContent = 'Salvando...';
-    var promise;
-    if (Abastecimentos.editando && Abastecimentos.editando.id) {
-      promise = sb.from('abastecimentos').update(reg).eq('id', Abastecimentos.editando.id);
-    } else {
-      reg.id = 'ABS_' + App.uid();
-      promise = sb.from('abastecimentos').insert(reg);
-    }
-    promise.then(function (r) {
+    console.error(
+      'Erro ao validar KM do abastecimento:',
+      e
+    );
+
+    App.toast(
+      'Não foi possível validar o KM informado.',
+      'erro'
+    );
+
+    return;
+  }
+
+  /* =====================================================
+     REGISTRO
+     ===================================================== */
+
+  var reg = {
+
+    organizacaoId: orgAtual.id,
+    usuarioId: usuarioAtual.id,
+
+    veiculoId: veiculoId,
+
+    data:
+      document.getElementById('abData').value,
+
+    km: kmInformado,
+
+    litros:
+      Number(
+        document.getElementById('abLitros').value
+      ) || 0,
+
+    precoLitro:
+      Number(
+        document.getElementById('abPreco').value
+      ) || 0,
+
+    valorTotal:
+      Number(
+        document.getElementById('abTotal').value
+      ) || 0,
+
+    posto:
+      document.getElementById('abPosto')
+        .value
+        .trim(),
+
+    combustivel:
+      Abastecimentos._energeticoFormAtual(),
+
+    unidade:
+      Abastecimentos
+        ._unidadePorCombustivel(
+          Abastecimentos._energeticoFormAtual()
+        )
+        .sigla,
+
+    tanqueCheio:
+      nivelTanque === 100
+        ? 'SIM'
+        : 'NAO',
+
+    nivelTanque: nivelTanque,
+
+    viagemId: viagemId,
+
+    obs:
+      document.getElementById('abObs')
+        .value
+        .trim()
+  };
+
+  var btn =
+    document.getElementById('btnSalvarAb');
+
+  btn.disabled = true;
+  btn.textContent = 'Salvando...';
+
+  var promise;
+
+  if (
+    Abastecimentos.editando &&
+    Abastecimentos.editando.id
+  ) {
+
+    promise = sb
+      .from('abastecimentos')
+      .update(reg)
+      .eq(
+        'id',
+        Abastecimentos.editando.id
+      );
+
+  } else {
+
+    reg.id =
+      'ABS_' + App.uid();
+
+    promise = sb
+      .from('abastecimentos')
+      .insert(reg);
+  }
+
+  promise
+    .then(function (r) {
+
       btn.disabled = false;
+
       if (r.error) {
-        App.toast('Erro: ' + r.error.message, 'erro');
-        btn.textContent = Abastecimentos.editando ? 'Salvar alterações' : 'Registrar abastecimento';
+
+        App.toast(
+          'Erro: ' + r.error.message,
+          'erro'
+        );
+
+        btn.textContent =
+          Abastecimentos.editando
+            ? 'Salvar alterações'
+            : 'Registrar abastecimento';
+
         return;
       }
-      App.toast(Abastecimentos.editando ? 'Atualizado!' : 'Abastecimento registrado!', 'ok');
-      App.irPara('abastecimentos');
-    });
-  },
 
+      App.toast(
+        Abastecimentos.editando
+          ? 'Atualizado!'
+          : 'Abastecimento registrado!',
+        'ok'
+      );
+
+      App.irPara('abastecimentos');
+
+    })
+    .catch(function (e) {
+
+      btn.disabled = false;
+
+      btn.textContent =
+        Abastecimentos.editando
+          ? 'Salvar alterações'
+          : 'Registrar abastecimento';
+
+      console.error(e);
+
+      App.toast(
+        'Erro ao salvar abastecimento.',
+        'erro'
+      );
+    });
+},
+
+/* =========================================================
+   BUSCAR ÚLTIMO KM DO VEÍCULO
+   ========================================================= */
+buscarUltimoKmVeiculo: async function (
+  veiculoId,
+  ignorarId
+) {
+
+  var consulta = sb
+    .from('abastecimentos')
+    .select('id, km')
+    .eq('veiculoId', veiculoId)
+    .order('km', { ascending: false })
+    .limit(1);
+
+  if (ignorarId) {
+    consulta = consulta.neq(
+      'id',
+      ignorarId
+    );
+  }
+
+  var r = await consulta;
+
+  if (
+    r.error ||
+    !r.data ||
+    !r.data.length
+  ) {
+    return null;
+  }
+
+  return Number(r.data[0].km) || 0;
+},
+   
   excluir: function (id) {
     var ab = Abastecimentos.lista.filter(function (a) { return a.id === id; })[0] || {};
     var litros = Abastecimentos.fmtNum(ab.litros, 2);
