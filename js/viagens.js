@@ -2832,7 +2832,19 @@ html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="b
     } else {
       selo = '<span class="parada-selo"><span class="ms">schedule</span>Pendente</span>';
     }
-    var cor = concluida ? (vinculada ? '#60a5fa' : '#22c55e') : (ignorada ? '#94a3b8' : (semPosto ? '#ef4444' : (antecipada ? '#f59e0b' : '#3b82f6')));
+   var cor = '#3b82f6';
+
+if (concluida && vinculada) {
+  cor = '#60a5fa';
+} else if (concluida) {
+  cor = '#22c55e';
+} else if (ignorada) {
+  cor = '#94a3b8';
+} else if (semPosto) {
+  cor = '#ef4444';
+} else if (antecipada) {
+  cor = '#f59e0b';
+}
     var titulo = p.postoNome || ('Parada ' + p.ordem);
     var estrelas = (p.postoRating > 0)
       ? '<span style="color:#f59e0b;font-size:11.5px;font-weight:700;margin-left:6px"><span class="ms" style="font-size:13px;vertical-align:middle">star</span>' + Number(p.postoRating).toFixed(1) + '</span>'
@@ -2850,8 +2862,8 @@ html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="b
       var previsto = Number(p.valorPrevisto) || 0;
       var real = Number(p.valorReal) || 0;
       var dif = previsto - real;
-      var corDif = dif > 0 ? '#86efac' : (dif < 0 ? '#fca5a5' : 'var(--txt2)');
-      var sinal = dif > 0 ? '−' : (dif < 0 ? '+' : '');
+     var corDif = dif > 0 ? '#22c55e' : (dif < 0 ? '#ef4444' : 'var(--txt2)');
+     var sinal = '';if (dif > 0) {  sinal = '▲ ';} else if (dif < 0) {  sinal = '▼ ';}
       linhaValores = '<div class="parada-valores">' +
         '<span>km ' + App.fmtNum(p.kmPrevisto) + '</span>' +
         '<span><b style="color:#e8eefc">' + App.fmtNum(p.litrosReal, 1) + ' L · ' + App.moeda(real) + '</b></span>' +
