@@ -2817,13 +2817,22 @@ html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="b
     var selo = '';
     if (concluida && vinculada) {
       classeStatus = 'st-vinculada';
-      selo = '<span class="parada-selo"><span class="ms">link</span>Abastecimento vinculado</span>';
+      selo = '<span class="parada-selo" style="color:#60a5fa;border-color:#60a5fa;background:rgba(96,165,250,.10)">' +
+       '<span class="ms" style="color:#60a5fa">link</span>' +
+       'Já lancei' +
+       '</span>';
     } else if (concluida) {
       classeStatus = 'st-concluida';
-      selo = '<span class="parada-selo"><span class="ms">check_circle</span>Abastecido</span>';
+     selo = '<span class="parada-selo" style="color:#22c55e;border-color:#22c55e;background:rgba(34,197,94,.10)">' +
+       '<span class="ms" style="color:#22c55e">check_circle</span>' +
+       'Abastecido' +
+       '</span>';
     } else if (ignorada) {
       classeStatus = 'st-ignorada';
-      selo = '<span class="parada-selo"><span class="ms">block</span>Não parei</span>';
+      selo = '<span class="parada-selo" style="color:#94a3b8;border-color:#94a3b8;background:rgba(148,163,184,.10)">' +
+       '<span class="ms" style="color:#94a3b8">block</span>' +
+       'Não parei' +
+       '</span>';
     } else if (semPosto) {
       classeStatus = 'st-sem-posto';
       selo = '<span class="parada-selo"><span class="ms">report</span>Sem posto</span>';
@@ -2862,12 +2871,25 @@ if (concluida && vinculada) {
       var previsto = Number(p.valorPrevisto) || 0;
       var real = Number(p.valorReal) || 0;
       var dif = previsto - real;
-     var corDif = dif > 0 ? '#22c55e' : (dif < 0 ? '#ef4444' : 'var(--txt2)');
+    var textoDif = '';
+
+if (dif > 0) {
+  textoDif =
+    '<span style="color:#22c55e;font-weight:700">' +
+    '🟢 Economia ' + App.moeda(Math.abs(dif)) +
+    '</span>';
+} else if (dif < 0) {
+  textoDif =
+    '<span style="color:#ef4444;font-weight:700">' +
+    '🔴 Acima ' + App.moeda(Math.abs(dif)) +
+    '</span>';
+}
+``
      var sinal = '';if (dif > 0) {  sinal = '▲ ';} else if (dif < 0) {  sinal = '▼ ';}
       linhaValores = '<div class="parada-valores">' +
         '<span>km ' + App.fmtNum(p.kmPrevisto) + '</span>' +
         '<span><b style="color:#e8eefc">' + App.fmtNum(p.litrosReal, 1) + ' L · ' + App.moeda(real) + '</b></span>' +
-        (previsto > 0 && dif !== 0 ? '<span style="color:' + corDif + '">' + sinal + App.moeda(Math.abs(dif)) + '</span>' : '') +
+        (previsto > 0 && dif !== 0 ? textoDif : '') +
       '</div>';
     } else {
       linhaValores = '<div class="parada-valores">' +
