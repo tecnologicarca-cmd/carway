@@ -1480,35 +1480,33 @@ nomeApp: function (app) {
       });
   },
 
-  calcularEMostrarRota: function (idx) {
+   calcularEMostrarRota: function (idx) {
     Viagens.plano.rotaAtiva = idx;
     if (Viagens.plano.paradasPorRota[idx]) {
       Viagens.mostrarRotas();
       return;
     }
     Viagens.mostrarRotas(true);
-    try {
-      var rota = Viagens.plano.rotas[idx];
-      if (!rota) { Viagens.mostrarRotas(); return; }
-      var p = Viagens.plano.parametrosAutonomia;
-      var paradas = Viagens.calcularParadas(rota.km, rota.kmIda, Viagens.plano.idaVolta, p.kmL, p.tanque, p.nivel, p.reserva);
-      Viagens.buscarPostosParaParadasDaRota(paradas, rota).then(function () {
-        return Viagens.verificarManutencao(Viagens.plano.veiculoSelecionado.id, rota.km);
-      }).then(function (manut) {
-        Viagens.plano.paradasPorRota[idx] = { paradas: paradas, manutencao: manut };
-        Viagens.mostrarRotas();
-      }).catch(function (e) {
-        console.warn('Erro em manutenção (rota e paradas preservadas):', e);
-        Viagens.plano.paradasPorRota[idx] = { paradas: paradas, manutencao: null, erroParcial: true };
-        Viagens.mostrarRotas();
-        App.toast('Não foi possível verificar as revisões. A rota foi mantida.', 'ok');
-      });
-    } catch (eSync) {
-      console.warn('Erro inesperado ao calcular rota (rotas preservadas):', eSync);
+    var rota = Viagens.plano.rotas[idx];
+    if (!rota) { Viagens.mostrarRotas(); return; }
+    Viagens.planejarParadasSequencial(rota).then(function (paradas) {
+      return Viagens.verificarManutencao(Viagens.plano.veiculoSelecionado.id, rota.km)
+        .then(function (manut) {
+          Viagens.plano.paradasPorRota[idx] = { paradas: paradas, manutencao: manut };
+          Viagens.mostrarRotas();
+        })
+        .catch(function (e) {
+          console.warn('Erro em manutenção (rota e paradas preservadas):', e);
+          Viagens.plano.paradasPorRota[idx] = { paradas: paradas, manutencao: null, erroParcial: true };
+          Viagens.mostrarRotas();
+          App.toast('Não foi possível verificar as revisões. A rota foi mantida.', 'ok');
+        });
+    }).catch(function (e) {
+      console.error('CarWay - erro ao planejar paradas:', e);
       Viagens.plano.paradasPorRota[idx] = { paradas: [], manutencao: null, erroParcial: true };
       Viagens.mostrarRotas();
-      App.toast('Ocorreu um erro ao calcular as paradas. A rota foi mantida — tente novamente.', 'erro');
-    }
+      App.toast('Ocorreu um erro ao calcular as paradas. A rota foi mantida.', 'erro');
+    });
   },
 
   selecionarRotaPreview: function (idx) {
