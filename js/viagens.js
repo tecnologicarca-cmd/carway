@@ -1455,7 +1455,30 @@ nomeApp: function (app) {
       .then(function (rotas) {
         if (btn) { btn.disabled = false; btn.innerHTML = '<span class="ms">check</span> Criar viagem'; }
         if (!rotas.length) { App.toast('Nenhuma rota encontrada', 'erro'); return; }
-        var custoPorKm = 1 / kmL;
+              var custoPorKm = 1 / kmL;
+        rotas.forEach(function (r) {
+          var litros = r.km * custoPorKm;
+          r.litros = Math.round(litros * 100) / 100;
+          r.custoCombustivel = Math.round(litros * preco * 100) / 100;
+          r.custoPedagio = r.custoPedagio || 0;
+          r.custoTotal = Math.round((r.custoCombustivel + r.custoPedagio) * 100) / 100;
+        });
+        var iMaisRapida = 0, iMaisEconomica = 0;
+        for (var i = 1; i < rotas.length; i++) {
+          if (rotas[i].minutos < rotas[iMaisRapida].minutos) iMaisRapida = i;
+          if (rotas[i].custoTotal < rotas[iMaisEconomica].custoTotal) iMaisEconomica = i;
+        }
+        rotas[iMaisRapida].seloRapida = true;
+        rotas[iMaisEconomica].seloEconomica = true;
+        Viagens.plano.rotas = rotas;
+        Viagens.plano.paradasPorRota = {};
+        Viagens.calcularEMostrarRota(iMaisRapida);
+      })
+      .catch(function (e) {
+        if (btn) { btn.disabled = false; btn.innerHTML = '<span class="ms">check</span> Criar viagem'; }
+        App.toast(e.message || 'Erro ao buscar rotas', 'erro');
+      });
+  },
 
   calcularEMostrarRota: function (idx) {
     Viagens.plano.rotaAtiva = idx;
@@ -1538,6 +1561,101 @@ nomeApp: function (app) {
     return paradas;
   },
 
+     planejarParadasSequencial: function (rota) {
+    var p = Viagens.plano.parametrosAutonomia;
+    var idaVolta = Viagens.plano.idaVolta;
+    var kmTotal = Number(rota.km) || 0;
+    var kmSo = Number(rota.kmIda) || kmTotal;
+    var lReserva = p.tanque * (p.reserva / 100);
+    var lUteis = p.tanque - lReserva;
+    var lAgora = p.tanque * (p.nivel / 100);
+    var autInicial = p.kmL * Math.max(0, lAgora - lReserva);
+    var autUtil = p.kmL * lUteis;
+    if (kmTotal <= autInicial) return Promise.resolve([]);
+    var coords = rota.polyline ? Viagens._decodificarPolyline(rota.polyline) : [];
+    if (!coords.length || autUtil <= 0) {
+      return Promise.resolve(Viagens.calcularParadas(kmTotal, kmSo, idaVolta, p.kmL, p.tanque, p.nivel, p.reserva));
+    }
+    var paradas = [];
+    var posAnterior = 0;
+    var alcance = autInicial;
+    var guarda = 0;
+    function proxima() {
+      guarda++;
+      if (guarda > 40) return Promise.resolve(paradas);
+      var kmIdeal = posAnterior + alcance;
+      if (kmIdeal >= kmTotal - 1) return Promise.resolve(paradas);
+      return Viagens._encontrarPostoParaPosicao(kmIdeal, posAnterior + 1, coords, kmSo, idaVolta).then(function (res) {
+        var kmReal = Math.round(res.km * 10) / 10;
+        var kmPercorrido = kmReal - posAnterior;
+        var kmAteFim = kmTotal - kmReal;
+        var litrosEncher = (paradas.length === 0)
+          ? p.tanque - Math.max(0, lAgora - (kmPercorrido / p.kmL))
+          : kmPercorrido / p.kmL;
+        var litrosAteFim = kmAteFim / p.kmL;
+        var ultima = litrosAteFim <= litrosEncher;
+        var litros = ultima ? litrosAteFim : litrosEncher;
+        var trecho = 'IDA';
+        var kmNoTrecho = kmReal;
+        if (idaVolta && kmReal > kmSo) { trecho = 'VOLTA'; kmNoTrecho = kmReal - kmSo; }
+        var parada = {
+          ordem: paradas.length + 1,
+          kmAcum: kmReal,
+          kmNoTrecho: Math.round(kmNoTrecho * 10) / 10,
+          trecho: trecho,
+          litrosPrevisto: Math.round(Math.max(0, litros) * 10) / 10,
+          ultimaParada: ultima ? 1 : 0,
+          postoNome: '', postoEndereco: '', postoRating: 0,
+          postoLat: 0, postoLon: 0, postoDesvioKm: 0, postoPlaceId: '',
+          semPosto: res.semPosto ? 1 : 0,
+          lat: res.pos ? res.pos[0] : 0,
+          lon: res.pos ? res.pos[1] : 0,
+          antecipada: !!res.antecipada,
+          kmOriginalPrevisto: res.antecipada ? Math.round(res.kmOriginal * 10) / 10 : 0,
+          kmAntecipadoEm: res.antecipada ? Math.round((res.kmOriginal - res.km) * 10) / 10 : 0
+        };
+        if (res.locais && res.locais.length) Viagens._aplicarPostoEncontrado(parada, res.locais);
+        paradas.push(parada);
+        if (ultima) return paradas;
+        posAnterior = kmReal;
+        alcance = autUtil;
+        return proxima();
+      });
+    }
+    return proxima();
+  },
+
+  _encontrarPostoParaPosicao: function (kmIdeal, limiteInferior, coords, kmSo, idaVolta) {
+    var PASSO_KM = 20;
+    var MAX_TENTATIVAS = 8;
+    var tentativa = 0;
+    function buscar(km, raio) {
+      var pos = Viagens._posicaoNaLinha(coords, km, kmSo, idaVolta);
+      if (!pos) return Promise.resolve(null);
+      return Viagens.chamarPlaces(pos[0], pos[1], raio, 5, 'gas_station').then(function (locais) {
+        if (locais && locais.length) return { km: km, pos: pos, locais: locais };
+        return null;
+      }).catch(function () { return null; });
+    }
+    function recuar() {
+      tentativa++;
+      var novoKm = kmIdeal - (PASSO_KM * tentativa);
+      if (novoKm < limiteInferior || tentativa > MAX_TENTATIVAS) {
+        return Promise.resolve({ km: kmIdeal, pos: Viagens._posicaoNaLinha(coords, kmIdeal, kmSo, idaVolta), locais: [], antecipada: false, semPosto: true });
+      }
+      return buscar(novoKm, 12000).then(function (r) {
+        if (r) return { km: r.km, pos: r.pos, locais: r.locais, antecipada: true, kmOriginal: kmIdeal, semPosto: false };
+        return recuar();
+      });
+    }
+    return buscar(kmIdeal, 8000).then(function (r1) {
+      if (r1) return { km: r1.km, pos: r1.pos, locais: r1.locais, antecipada: false, semPosto: false };
+      return buscar(kmIdeal, 25000).then(function (r2) {
+        if (r2) return { km: r2.km, pos: r2.pos, locais: r2.locais, antecipada: false, semPosto: false };
+        return recuar();
+      });
+    });
+  },
   buscarPostosParaParadasDaRota: function (paradas, rota) {
     if (!paradas || !paradas.length) return Promise.resolve();
     var coords = rota.polyline ? Viagens._decodificarPolyline(rota.polyline) : [];
