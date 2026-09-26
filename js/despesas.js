@@ -48,8 +48,9 @@ var Despesas = {
   categoriaSel: 'Alimentação',
   _salvando: false,
   _listenerVeiculoRegistrado: false,
-  carregarLista: function () {
-    var el = document.getElementById('listaDespesas');
+carregarLista: function () {
+  var el = document.getElementById('listaDespesas');
+  Despesas._registrarListenerVeiculoGlobal();
     el.innerHTML = '<div class="vazio-veiculo"><span class="ms">hourglass_top</span><p>Carregando...</p></div>';
     sb.from('despesas')
       .select('*')
@@ -130,7 +131,7 @@ _listaDoVeiculoAtivo: function () {
      roxo, Dia a dia em verde, contagem em âmbar. */
   renderKpis: function () {
     var total = 0, totalViagem = 0, totalRotina = 0;
-    var lista = Despesas.lista;
+    var lista = Despesas._listaDoVeiculoAtivo();
     lista.forEach(function (d) {
       var val = Number(d.valor) || 0;
       total += val;
@@ -170,7 +171,7 @@ _listaDoVeiculoAtivo: function () {
   },
   renderLista: function () {
     var el = document.getElementById('listaDespesas');
-    var lista = Despesas.lista;
+    var lista = Despesas._listaDoVeiculoAtivo();
     if (Despesas.filtro === 'viagem') lista = lista.filter(function (d) { return !!d.viagemId; });
     else if (Despesas.filtro === 'rotina') lista = lista.filter(function (d) { return !d.viagemId; });
     if (lista.length === 0) {
@@ -347,7 +348,17 @@ _listaDoVeiculoAtivo: function () {
   renderForm: function () {
     var d = Despesas.editando || {};
     var veiculos = Despesas.veiculos;
-    var vSel = d.veiculoId || veiculos[0].id;
+    var veiculoGlobalValido =
+  App.veiculoAtivoId &&
+  veiculos.some(function (v) {
+    return v.id === App.veiculoAtivoId;
+  });
+
+var vSel =
+  d.veiculoId ||
+  (veiculoGlobalValido
+    ? App.veiculoAtivoId
+    : veiculos[0].id);
     var dataHoje = App.hojeISO();
     var veicOpts = veiculos.map(function (v) {
       return '<option value="' + v.id + '"' + (v.id === vSel ? ' selected' : '') + '>' +
