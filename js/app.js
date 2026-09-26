@@ -1701,53 +1701,115 @@ var App = {
   /** Cria (se ainda nao existir) o container da barra logo apos a
       topbar, e desenha o conteudo. Chamado uma vez apos o login
       (dentro de entrarNoApp). */
-  renderBarraVeiculoGlobal: function () {
-    var el = document.getElementById('barraVeiculoGlobal');
-    if (!el) {
-      var topbar = document.getElementById('topbar');
-      if (!topbar || !topbar.parentNode) return;
-      el = document.createElement('div');
-      el.id = 'barraVeiculoGlobal';
-      el.className = 'oculto';
-      topbar.parentNode.insertBefore(el, topbar.nextSibling);
-    }
-    App._carregarVeiculoAtivoSalvo();
-    App.carregarVeiculosGlobais().then(function () {
-      App._renderConteudoBarraVeiculoGlobal();
-    });
-  },
+renderBarraVeiculoGlobal: function () {
+  var el = document.getElementById('barraVeiculoGlobal');
 
-  _renderConteudoBarraVeiculoGlobal: function () {
-    var el = document.getElementById('barraVeiculoGlobal');
-    if (!el) return;
-    var veiculos = App._veiculosGlobalCache || [];
+  if (!el) {
+    var topbar = document.getElementById('topbar');
 
-    if (veiculos.length <= 1) {
-      el.classList.add('oculto');
-      el.innerHTML = '';
-      return;
-    }
+    if (!topbar || !topbar.parentNode) return;
 
-    el.classList.remove('oculto');
-    el.style.cssText = 'background:rgba(11,17,32,.97);border-bottom:1px solid var(--linha,#26365c);' +
-      'padding:8px 14px;display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch';
+    el = document.createElement('div');
+    el.id = 'barraVeiculoGlobal';
+    el.className = 'oculto';
 
-    var todosSel = !App.veiculoAtivoId;
-    var chips = '<button onclick="App.definirVeiculoAtivo(null)" style="' + App._estiloChipVeiculoGlobal(todosSel, '#60a5fa') + '">' +
-      '<span class="ms" style="font-size:16px">apps</span>Todos</button>';
+    topbar.parentNode.insertBefore(
+      el,
+      topbar.nextSibling
+    );
+  }
 
-    chips += veiculos.map(function (v) {
-      var sel = App.veiculoAtivoId === v.id;
-      var cor = App._corVeiculo(v);
-      return '<button onclick="App.definirVeiculoAtivo(\'' + v.id + '\')" style="' + App._estiloChipVeiculoGlobal(sel, cor) + '">' +
-        '<span class="ms" style="font-size:16px;color:' + cor + '">' + App._iconeTipoVeiculo(v.tipo) + '</span>' +
+  App._carregarVeiculoAtivoSalvo();
+
+  App.carregarVeiculosGlobais().then(function () {
+    App._renderConteudoBarraVeiculoGlobal();
+  });
+},
+
+_renderConteudoBarraVeiculoGlobal: function () {
+  var el = document.getElementById(
+    'barraVeiculoGlobal'
+  );
+
+  if (!el) return;
+
+  var veiculos =
+    App._veiculosGlobalCache || [];
+
+  if (veiculos.length <= 1) {
+    el.classList.add('oculto');
+    el.innerHTML = '';
+    return;
+  }
+
+  el.classList.remove('oculto');
+
+  el.style.cssText =
+    'background:rgba(11,17,32,.97);' +
+    'border-bottom:1px solid var(--linha,#26365c);' +
+    'padding:8px 14px;' +
+    'display:flex;' +
+    'gap:8px;' +
+    'overflow-x:auto;' +
+    '-webkit-overflow-scrolling:touch';
+
+  var todosSel =
+    !App.veiculoAtivoId;
+
+  var chips =
+    '<button ' +
+      'onclick="App.definirVeiculoAtivo(null)" ' +
+      'style="' +
+        App._estiloChipVeiculoGlobal(
+          todosSel,
+          '#60a5fa'
+        ) +
+      '">' +
+
+      '<span class="ms" ' +
+        'style="font-size:16px">' +
+        'apps' +
+      '</span>' +
+
+      'Todos' +
+    '</button>';
+
+  chips += veiculos.map(function (v) {
+    var sel =
+      App.veiculoAtivoId === v.id;
+
+    var cor =
+      App._corVeiculo(v);
+
+    return (
+      '<button ' +
+        'onclick="App.definirVeiculoAtivo(\'' +
+          v.id +
+        '\')" ' +
+
+        'style="' +
+          App._estiloChipVeiculoGlobal(
+            sel,
+            cor
+          ) +
+        '">' +
+
+        '<span class="ms" ' +
+          'style="font-size:16px;' +
+          'color:' + cor + '">' +
+
+          App._iconeTipoVeiculo(v.tipo) +
+
+        '</span>' +
+
         App.esc(v.nome) +
-      '</button>';
-    }).join('');
 
-    el.innerHTML = chips;
-  },
+      '</button>'
+    );
+  }).join('');
 
+  el.innerHTML = chips;
+},
   _estiloChipVeiculoGlobal: function (selecionado, cor) {
     return 'flex:none;display:flex;align-items:center;gap:6px;padding:7px 13px;border-radius:99px;' +
       'font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;' +
