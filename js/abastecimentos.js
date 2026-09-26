@@ -1,4 +1,4 @@
-/* APP_VERSION: v3.2 */
+/* APP_VERSION: v3.3 - multi-energeticos inteligentes */
 /* =====================================================================
    CARWAY - ABASTECIMENTOS
    v3.2 (esta versao)
@@ -51,7 +51,8 @@ var Abastecimentos = {
   _form: {
     tipoLancamento: 'diaadia',
     nivelTanque: 100,
-    viagensDoVeiculo: []
+    viagensDoVeiculo: [],
+    energetico: 'Gasolina'
   },
 
   filtroPeriodo: { modo: 'mes', ano: 0, mes: 0 },
@@ -107,7 +108,7 @@ var Abastecimentos = {
 
     Promise.all([
       sb.from('abastecimentos').select('*').eq('organizacaoId', orgAtual.id).order('data', { ascending: false }),
-      sb.from('veiculos').select('id, nome, placa, tipo, cor, combustivel').eq('organizacaoId', orgAtual.id)
+      sb.from('veiculos').select('id, nome, placa, tipo, cor, combustivel, energeticos, plugIn, tanque, capacidadeGnv, capacidadeBateria').eq('organizacaoId', orgAtual.id)
     ]).then(function (r) {
       if (r[0].error) {
         el.innerHTML = '<div class="vazio-veiculo"><p>Erro ao carregar.</p></div>';
@@ -169,49 +170,53 @@ var Abastecimentos = {
   },
 
   renderKpis: function () {
-    var total = 0, totalViagem = 0, totalRotina = 0, litrosTotal = 0;
+    var total = 0;
+    var totalViagem = 0;
+    var totalRotina = 0;
+    var quantidades = {};
+    var eficiencias = {};
     var lista = Abastecimentos._listaBase();
+
     lista.forEach(function (a) {
-      var val = Number(a.valorTotal) || (Number(a.litros) || 0) * (Number(a.precoLitro) || 0);
-      total += val;
-      litrosTotal += Number(a.litros) || 0;
-      if (a.viagemId) totalViagem += val;
-      else totalRotina += val;
-    });
-    var somaEff = 0, contEff = 0;
-    lista.forEach(function (a) {
+      var valor = Number(a.valorTotal) || ((Number(a.litros) || 0) * (Number(a.precoLitro) || 0));
+      var qtd = Number(a.litros) || 0;
+      var unidade = a.unidade || Abastecimentos._unidadePorCombustivel(a.combustivel).sigla;
+      var energetico = a.combustivel || 'Gasolina';
+      total += valor;
+      if (a.viagemId) totalViagem += valor; else totalRotina += valor;
+      quantidades[unidade] = (quantidades[unidade] || 0) + qtd;
+
       var dist = Number(a.distanciaCombustivel) || 0;
-      var lit = Number(a.litros) || 0;
-      if (dist > 0 && lit > 0) {
-        somaEff += dist / lit;
-        contEff++;
+      if (dist > 0 && qtd > 0) {
+        if (!eficiencias[energetico]) eficiencias[energetico] = { soma: 0, qtd: 0, unidade: unidade };
+        eficiencias[energetico].soma += dist / qtd;
+        eficiencias[energetico].qtd++;
       }
     });
-    var media = contEff > 0 ? (somaEff / contEff) : 0;
-    var html =
-      '<div class="kpi-abast">' +
-        '<span class="ms" style="color:#3b82f6">payments</span>' +
-        '<b>' + App.moeda(total) + '</b>' +
-        '<span class="lbl">Total · ' + Abastecimentos.fmtLitros(litrosTotal) + ' L</span>' +
-      '</div>' +
-      '<div class="kpi-abast roxo">' +
-        '<span class="ms" style="color:#a78bfa">luggage</span>' +
-        '<b>' + App.moeda(totalViagem) + '</b>' +
-        '<span class="lbl">Em viagens</span>' +
-      '</div>' +
-      '<div class="kpi-abast verde">' +
-        '<span class="ms" style="color:#22c55e">home</span>' +
-        '<b>' + App.moeda(totalRotina) + '</b>' +
-        '<span class="lbl">Dia a dia</span>' +
-      '</div>' +
-      '<div class="kpi-abast amarelo">' +
-        '<span class="ms" style="color:#f59e0b">speed</span>' +
-        '<b>' + (media > 0 ? media.toFixed(2) : '—') +
-          ' <small>' + (media > 0 ? 'km/L' : '') + '</small></b>' +
-        '<span class="lbl">Média</span>' +
-      '</div>';
-    document.getElementById('kpisAbast').innerHTML = html;
+
+    var resumoQtd = Object.keys(quantidades).map(function (u) {
+      return Abastecimentos.fmtNum(quantidades[u], 1) + ' ' + u;
+    }).join(' · ') || 'Sem quantidade';
+
+    var chavesEff = Object.keys(eficiencias);
+    var mediaTxt = '—';
+    var mediaSub = 'Sem média';
+    if (chavesEff.length === 1) {
+      var e = eficiencias[chavesEff[0]];
+      mediaTxt = (e.soma / e.qtd).toFixed(2);
+      mediaSub = 'km/' + e.unidade + ' · ' + chavesEff[0];
+    } else if (chavesEff.length > 1) {
+      mediaTxt = chavesEff.length;
+      mediaSub = 'médias por energético';
+    }
+
+    document.getElementById('kpisAbast').innerHTML =
+      '<div class="kpi-abast"><span class="ms" style="color:#3b82f6">payments</span><b>' + App.moeda(total) + '</b><span class="lbl">Total · ' + App.esc(resumoQtd) + '</span></div>' +
+      '<div class="kpi-abast roxo"><span class="ms" style="color:#a78bfa">luggage</span><b>' + App.moeda(totalViagem) + '</b><span class="lbl">Em viagens</span></div>' +
+      '<div class="kpi-abast verde"><span class="ms" style="color:#22c55e">home</span><b>' + App.moeda(totalRotina) + '</b><span class="lbl">Dia a dia</span></div>' +
+      '<div class="kpi-abast amarelo"><span class="ms" style="color:#f59e0b">speed</span><b>' + mediaTxt + '</b><span class="lbl">' + App.esc(mediaSub) + '</span></div>';
   },
+
   fmtLitros: function (n) {
     n = Number(n) || 0;
     return n.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
@@ -337,6 +342,7 @@ var Abastecimentos = {
     var data = Abastecimentos.fmtData(a.data);
     var preco = Number(a.precoLitro) || 0;
     var unidade = Abastecimentos._unidadePorCombustivel(a.combustivel);
+    unidade.sigla = a.unidade || unidade.sigla;
     var cheio = String(a.tanqueCheio).toUpperCase() === 'SIM';
     var nivelTxt = Abastecimentos._rotuloNivel(a.nivelTanque);
     var tags = [];
@@ -383,39 +389,88 @@ var Abastecimentos = {
   _unidadePorCombustivel: function (combustivel) {
     var c = String(combustivel || '').toUpperCase();
     if (c.indexOf('ELÉTR') > -1 || c.indexOf('ELETR') > -1) {
-      return { sigla: 'kWh', labelQtd: 'Energia (kWh)', labelPreco: 'Preço / kWh', placeholder: '0,00' };
+      return { sigla: 'kWh', labelQtd: 'Energia (kWh)', labelPreco: 'Preço / kWh', placeholder: '0,00', cor: '#22c55e', icone: 'ev_station' };
     }
     if (c.indexOf('GNV') > -1) {
-      return { sigla: 'm³', labelQtd: 'Gás (m³)', labelPreco: 'Preço / m³', placeholder: '0,00' };
+      return { sigla: 'm³', labelQtd: 'Gás (m³)', labelPreco: 'Preço / m³', placeholder: '0,00', cor: '#22d3ee', icone: 'propane_tank' };
     }
-    return { sigla: 'L', labelQtd: 'Litros', labelPreco: 'Preço / litro', placeholder: '0,00' };
+    if (c.indexOf('ETANOL') > -1) {
+      return { sigla: 'L', labelQtd: 'Litros', labelPreco: 'Preço / litro', placeholder: '0,00', cor: '#22c55e', icone: 'local_gas_station' };
+    }
+    if (c.indexOf('DIESEL') > -1) {
+      return { sigla: 'L', labelQtd: 'Litros', labelPreco: 'Preço / litro', placeholder: '0,00', cor: '#f59e0b', icone: 'local_gas_station' };
+    }
+    return { sigla: 'L', labelQtd: 'Litros', labelPreco: 'Preço / litro', placeholder: '0,00', cor: '#ef4444', icone: 'local_gas_station' };
+  },
+
+  _energeticosDoVeiculo: function (veiculo) {
+    if (!veiculo) return ['Gasolina'];
+    var txt = String(veiculo.energeticos || '').trim();
+    if (txt) {
+      var lista = txt.split(',').map(function (x) { return x.trim(); }).filter(Boolean);
+      if (lista.length) return lista;
+    }
+    var c = String(veiculo.combustivel || '').toUpperCase();
+    if (c.indexOf('ELÉTR') > -1 || c.indexOf('ELETR') > -1) return ['Elétrico'];
+    if (c.indexOf('FLEX') > -1) return ['Gasolina', 'Etanol'];
+    if (c.indexOf('GNV') > -1) return ['Gasolina', 'GNV'];
+    if (c.indexOf('HÍBR') > -1 || c.indexOf('HIBR') > -1) return veiculo.plugIn ? ['Gasolina', 'Elétrico'] : ['Gasolina'];
+    if (c.indexOf('DIESEL') > -1) return ['Diesel'];
+    if (c.indexOf('ETANOL') > -1) return ['Etanol'];
+    return ['Gasolina'];
+  },
+
+  _veiculoFormAtual: function () {
+    var el = document.getElementById('abVeiculo');
+    var id = el ? el.value : null;
+    return Abastecimentos.veiculos.filter(function (v) { return v.id === id; })[0] || null;
+  },
+
+  _energeticoFormAtual: function () {
+    return Abastecimentos._form.energetico || 'Gasolina';
+  },
+
+  _selecionarEnergetico: function (energetico) {
+    var veiculo = Abastecimentos._veiculoFormAtual();
+    var permitidos = Abastecimentos._energeticosDoVeiculo(veiculo);
+    if (permitidos.indexOf(energetico) === -1) energetico = permitidos[0] || 'Gasolina';
+    Abastecimentos._form.energetico = energetico;
+    Abastecimentos._renderCardsEnergeticos();
+    Abastecimentos.atualizarUnidadesCombustivel();
+  },
+
+  _renderCardsEnergeticos: function () {
+    var container = document.getElementById('abEnergeticos');
+    if (!container) return;
+    var veiculo = Abastecimentos._veiculoFormAtual();
+    var lista = Abastecimentos._energeticosDoVeiculo(veiculo);
+    var atual = Abastecimentos._form.energetico;
+    if (lista.indexOf(atual) === -1) atual = lista[0] || 'Gasolina';
+    Abastecimentos._form.energetico = atual;
+
+    container.innerHTML = lista.map(function (e) {
+      var u = Abastecimentos._unidadePorCombustivel(e);
+      var sel = e === atual;
+      return '<button type="button" onclick="Abastecimentos._selecionarEnergetico(\'' + e + '\')" ' +
+        'style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-height:84px;padding:11px 5px;border-radius:12px;font-family:inherit;cursor:pointer;text-align:center;transition:.15s;' +
+        'background:' + (sel ? u.cor + '26' : 'var(--bg2,#111c33)') + ';border:2px solid ' + (sel ? u.cor : 'var(--linha,#26365c)') + ';color:' + (sel ? u.cor : 'var(--txt2,#93a4c8)') + '">' +
+        '<span class="ms" style="font-size:26px;color:' + u.cor + '">' + u.icone + '</span>' +
+        '<b style="font-size:11.5px">' + e + '</b><small style="font-size:9.5px;opacity:.75">' + u.sigla + '</small>' +
+      '</button>';
+    }).join('');
   },
 
   _rotuloNivel: function (nivel) {
     var n = Number(nivel);
-    if (n === 100 || !nivel) return '✓ Tanque cheio';
-    if (n === 75) return '3/4 do tanque';
-    if (n === 50) return 'Metade do tanque';
-    if (n === 25) return '1/4 do tanque';
+    if (n === 100 || !nivel) return '✓ Completo';
+    if (n === 75) return '3/4 disponível';
+    if (n === 50) return 'Metade disponível';
+    if (n === 25) return '1/4 disponível';
     return 'Parcial';
   },
 
-  _LISTA_COMBUSTIVEL_FORM: [
-    { valor: 'Gasolina', label: 'Gasolina' },
-    { valor: 'Etanol', label: 'Etanol' },
-    { valor: 'Flex', label: 'Flex' },
-    { valor: 'Diesel', label: 'Diesel' },
-    { valor: 'GNV', label: 'GNV' },
-    { valor: 'Elétrico', label: 'Elétrico (recarga da bateria)' }
-  ],
-
-  _resolverCombustivelForm: function (combustivelCadastro) {
-    if (combustivelCadastro === 'Híbrido') return 'Gasolina';
-    var valido = Abastecimentos._LISTA_COMBUSTIVEL_FORM.some(function (c) { return c.valor === combustivelCadastro; });
-    return valido ? combustivelCadastro : 'Gasolina';
-  },
-
   /* =========================================================
+     BUSCA DE POSTOS  /* =========================================================
      BUSCA DE POSTOS / PONTOS DE RECARGA (gratuito, sem custo de API)
      ========================================================= */
   _OVERPASS_MIRRORS: [
@@ -519,8 +574,11 @@ var Abastecimentos = {
   abrirBuscaPostos: function () {
     var veic = App.veiculoAtivoId ? Abastecimentos.veiculosPorId[App.veiculoAtivoId] : null;
     if (veic) {
-      Abastecimentos._buscarPostosPara(Abastecimentos._categoriaCombustivel(veic.combustivel));
-      return;
+      var energias = Abastecimentos._energeticosDoVeiculo(veic);
+      if (energias.length === 1) {
+        Abastecimentos._buscarPostosPara(Abastecimentos._categoriaCombustivel(energias[0]));
+        return;
+      }
     }
     var html = '<div style="display:flex;flex-direction:column;gap:10px">' +
       '<button class="app-nav-item" onclick="App.fecharModal();Abastecimentos._buscarPostosPara(\'combustivel\')">' +
@@ -607,7 +665,7 @@ var Abastecimentos = {
     var btn = document.getElementById('btnPinPosto');
     var input = document.getElementById('abPosto');
     if (!input) return;
-    var combustivel = document.getElementById('abCombustivel') ? document.getElementById('abCombustivel').value : 'Gasolina';
+    var combustivel = Abastecimentos._energeticoFormAtual();
     var categoria = Abastecimentos._categoriaCombustivel(combustivel);
 
     if (btn) { btn.disabled = true; var icoBtn = btn.querySelector('.ms'); if (icoBtn) icoBtn.textContent = 'hourglass_top'; }
@@ -638,7 +696,7 @@ var Abastecimentos = {
      FORMULARIO
      ========================================================= */
   abrirForm: function (id, veiculoIdPre) {
-    sb.from('veiculos').select('id, nome, placa, combustivel', { count: 'exact' })
+    sb.from('veiculos').select('id, nome, placa, tipo, cor, combustivel, energeticos, plugIn, tanque, capacidadeGnv, capacidadeBateria', { count: 'exact' })
       .eq('organizacaoId', orgAtual.id)
       .order('nome')
       .then(function (r) {
@@ -660,6 +718,7 @@ var Abastecimentos = {
         Abastecimentos._form.tipoLancamento = 'diaadia';
         Abastecimentos._form.nivelTanque = 100;
         Abastecimentos._form.viagensDoVeiculo = [];
+        Abastecimentos._form.energetico = 'Gasolina';
         Abastecimentos._registrarListenerVeiculoGlobal(); /* garante que o form tambem escute, mesmo se aberto direto */
 
         if (id) {
@@ -687,123 +746,72 @@ var Abastecimentos = {
     var veicSel = veiculos.filter(function (v) { return v.id === vSel; })[0] || veiculos[0];
     var dataHoje = App.hojeISO();
     var veicOpts = veiculos.map(function (v) {
-      return '<option value="' + v.id + '"' + (v.id === vSel ? ' selected' : '') + '>' +
-        App.esc(v.nome) + (v.placa ? ' · ' + App.esc(v.placa) : '') + '</option>';
+      return '<option value="' + v.id + '"' + (v.id === vSel ? ' selected' : '') + '>' + App.esc(v.nome) + (v.placa ? ' · ' + App.esc(v.placa) : '') + '</option>';
     }).join('');
-
-    var combustivelInicial = a.id
-      ? Abastecimentos._resolverCombustivelForm(a.combustivel || veicSel.combustivel)
-      : Abastecimentos._resolverCombustivelForm(veicSel.combustivel);
-
-    var combOpts = Abastecimentos._LISTA_COMBUSTIVEL_FORM.map(function (c) {
-      return '<option value="' + c.valor + '"' + (combustivelInicial === c.valor ? ' selected' : '') + '>' + c.label + '</option>';
-    }).join('');
-
-    var unidade = Abastecimentos._unidadePorCombustivel(combustivelInicial);
+    var permitidos = Abastecimentos._energeticosDoVeiculo(veicSel);
+    var inicial = a.id && permitidos.indexOf(a.combustivel) > -1 ? a.combustivel : permitidos[0];
+    Abastecimentos._form.energetico = inicial || 'Gasolina';
+    var unidade = Abastecimentos._unidadePorCombustivel(Abastecimentos._form.energetico);
 
     var html =
       '<h2 class="form-titulo">' + (a.id ? 'Editar abastecimento' : 'Novo abastecimento') + '</h2>' +
-      '<div class="campo-form">' +
-        '<label>Veículo</label>' +
-        '<select id="abVeiculo" onchange="Abastecimentos.trocarVeiculoForm()">' + veicOpts + '</select>' +
-      '</div>' +
-      '<div class="campo-form">' +
-        '<label>Combustível</label>' +
-        '<select id="abCombustivel" onchange="Abastecimentos.atualizarUnidadesCombustivel()">' + combOpts + '</select>' +
+      '<div class="campo-form"><label>Veículo</label><select id="abVeiculo" onchange="Abastecimentos.trocarVeiculoForm()">' + veicOpts + '</select></div>' +
+      '<div class="campo-form"><label>Energético utilizado</label>' +
+        '<div id="abEnergeticos" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px"></div>' +
+        '<small>São exibidos somente os energéticos aceitos pelo veículo selecionado.</small>' +
       '</div>' +
       '<div class="linha-2">' +
-        '<div class="campo-form"><label>Data</label>' +
-          '<input type="date" id="abData" value="' + (a.data || dataHoje) + '">' +
-        '</div>' +
-        '<div class="campo-form"><label>KM do painel</label>' +
-          '<input type="number" id="abKm" placeholder="0" value="' + (a.km || '') + '" oninput="Abastecimentos.previa()">' +
-        '</div>' +
+        '<div class="campo-form"><label>Data</label><input type="date" id="abData" value="' + (a.data || dataHoje) + '"></div>' +
+        '<div class="campo-form"><label>KM do painel</label><input type="number" id="abKm" placeholder="0" value="' + (a.km || '') + '" oninput="Abastecimentos.previa()"></div>' +
       '</div>' +
       '<div class="linha-2">' +
-        '<div class="campo-form"><label id="abLabelQtd">' + unidade.labelQtd + '</label>' +
-          '<input type="number" id="abLitros" step="0.01" placeholder="' + unidade.placeholder + '" value="' + (a.litros || '') + '" oninput="Abastecimentos.calcTotal()">' +
-        '</div>' +
-        '<div class="campo-form"><label id="abLabelPreco">' + unidade.labelPreco + '</label>' +
-          '<input type="number" id="abPreco" step="0.001" placeholder="0,000" value="' + (a.precoLitro || '') + '" oninput="Abastecimentos.calcTotal()">' +
-        '</div>' +
+        '<div class="campo-form"><label id="abLabelQtd">' + unidade.labelQtd + '</label><input type="number" id="abLitros" step="0.01" placeholder="' + unidade.placeholder + '" value="' + (a.litros || '') + '" oninput="Abastecimentos.calcTotal()"></div>' +
+        '<div class="campo-form"><label id="abLabelPreco">' + unidade.labelPreco + '</label><input type="number" id="abPreco" step="0.001" placeholder="0,000" value="' + (a.precoLitro || '') + '" oninput="Abastecimentos.calcTotal()"></div>' +
       '</div>' +
-      /* Layout mobile: Valor total sozinho na propria linha (campo largo,
-         mais facil de tocar no celular). Logo abaixo, a previa de calculo,
-         e logo abaixo dela o campo de Posto/ponto de recarga. Antes Valor
-         e Posto ficavam lado a lado, apertados em telas pequenas. */
-      '<div class="campo-form"><label>Valor total</label>' +
-        '<input type="number" id="abTotal" step="0.01" placeholder="0,00" value="' + (a.valorTotal || '') + '" oninput="Abastecimentos.calcInverso()">' +
-      '</div>' +
+      '<div class="campo-form"><label>Valor total</label><input type="number" id="abTotal" step="0.01" placeholder="0,00" value="' + (a.valorTotal || '') + '" oninput="Abastecimentos.calcInverso()"></div>' +
       '<div class="previa-abast" id="previaAbast" style="display:none"></div>' +
-      '<div class="campo-form">' +
-        '<label>Posto / ponto de recarga <small style="text-transform:none;color:var(--txt2);font-weight:400">(opcional)</small></label>' +
-        '<div style="display:flex;gap:8px">' +
-          '<input type="text" id="abPosto" placeholder="Shell, Ipiranga..." value="' + App.esc(a.posto || '') + '" style="flex:1;min-width:0">' +
-          '<button type="button" id="btnPinPosto" class="btn-icone-campo" onclick="Abastecimentos.usarLocalizacaoPosto()" title="Usar minha localização">' +
-            '<span class="ms" style="color:#22d3ee">my_location</span>' +
-          '</button>' +
-        '</div>' +
-        '<small style="display:block;margin-top:6px;color:var(--txt2);font-size:12px">' +
-          'Toque no alfinete para preencher automaticamente com o mais próximo, ou digite manualmente.' +
-        '</small>' +
+      '<div class="campo-form"><label>Posto / ponto de recarga <small style="text-transform:none;color:var(--txt2);font-weight:400">(opcional)</small></label>' +
+        '<div style="display:flex;gap:8px"><input type="text" id="abPosto" placeholder="Posto ou ponto de recarga..." value="' + App.esc(a.posto || '') + '" style="flex:1;min-width:0">' +
+        '<button type="button" id="btnPinPosto" class="btn-icone-campo" onclick="Abastecimentos.usarLocalizacaoPosto()" title="Usar minha localização"><span class="ms" style="color:#22d3ee">my_location</span></button></div>' +
+        '<small style="display:block;margin-top:6px;color:var(--txt2);font-size:12px">Toque no alfinete para preencher automaticamente com o mais próximo, ou digite manualmente.</small>' +
       '</div>' +
-      '<div class="campo-form">' +
-        '<label>Este abastecimento é...</label>' +
+      '<div class="campo-form"><label>Este abastecimento é...</label>' +
         '<div class="toggle-ida-volta" id="abTipoLancamentoBtns">' +
-          '<button type="button" class="iv-btn' + (Abastecimentos._form.tipoLancamento === 'diaadia' ? ' sel' : '') + '" onclick="Abastecimentos.setTipoLancamento(\'diaadia\')">' +
-            '<span class="ms" style="color:#22c55e">home</span><b>Dia a dia</b><small>uso rotineiro</small>' +
-          '</button>' +
-          '<button type="button" class="iv-btn' + (Abastecimentos._form.tipoLancamento === 'viagem' ? ' sel' : '') + '" onclick="Abastecimentos.setTipoLancamento(\'viagem\')">' +
-            '<span class="ms" style="color:#a78bfa">luggage</span><b>Viagem específica</b><small>vincular a uma viagem</small>' +
-          '</button>' +
-        '</div>' +
-        '<div id="abViagemWrap" style="margin-top:10px;' + (Abastecimentos._form.tipoLancamento === 'viagem' ? '' : 'display:none') + '"></div>' +
+          '<button type="button" class="iv-btn' + (Abastecimentos._form.tipoLancamento === 'diaadia' ? ' sel' : '') + '" onclick="Abastecimentos.setTipoLancamento(\'diaadia\')"><span class="ms" style="color:#22c55e">home</span><b>Dia a dia</b><small>uso rotineiro</small></button>' +
+          '<button type="button" class="iv-btn' + (Abastecimentos._form.tipoLancamento === 'viagem' ? ' sel' : '') + '" onclick="Abastecimentos.setTipoLancamento(\'viagem\')"><span class="ms" style="color:#a78bfa">luggage</span><b>Viagem específica</b><small>vincular a uma viagem</small></button>' +
+        '</div><div id="abViagemWrap" style="margin-top:10px;' + (Abastecimentos._form.tipoLancamento === 'viagem' ? '' : 'display:none') + '"></div>' +
       '</div>' +
-      '<div class="campo-form">' +
-        '<label>Nível do tanque ao completar</label>' +
+      '<div class="campo-form"><label>Nível disponível após o lançamento</label>' +
         '<div style="background:var(--bg2,#111c33);border:1px solid var(--linha,#26365c);border-radius:14px;padding:14px">' +
           Abastecimentos._gaugeSVG(Abastecimentos._form.nivelTanque) +
-          '<div id="abNivelBtns" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px">' +
-            Abastecimentos._botoesNivel(Abastecimentos._form.nivelTanque) +
-          '</div>' +
+          '<div id="abNivelBtns" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px">' + Abastecimentos._botoesNivel(Abastecimentos._form.nivelTanque) + '</div>' +
         '</div>' +
       '</div>' +
-      '<div class="campo-form"><label>Observações</label>' +
-        '<textarea id="abObs" rows="2" style="width:100%;background:var(--bg2);border:1px solid var(--linha);border-radius:11px;padding:12px;color:var(--txt);font-family:inherit;font-size:14px;resize:vertical">' + App.esc(a.obs || '') + '</textarea>' +
-      '</div>' +
-      '<div class="form-acoes">' +
-        '<button class="btn-cancelar-form" onclick="App.irPara(\'abastecimentos\')">Cancelar</button>' +
-        '<button class="btn-salvar-form" id="btnSalvarAb" onclick="Abastecimentos.validarESalvar()">' +
-          (a.id ? 'Salvar alterações' : 'Registrar abastecimento') +
-        '</button>' +
-      '</div>';
-    document.getElementById('formAbastecimentoContainer').innerHTML = html;
-    Abastecimentos.previa();
+      '<div class="campo-form"><label>Observações</label><textarea id="abObs" rows="2" style="width:100%;background:var(--bg2);border:1px solid var(--linha);border-radius:11px;padding:12px;color:var(--txt);font-family:inherit;font-size:14px;resize:vertical">' + App.esc(a.obs || '') + '</textarea></div>' +
+      '<div class="form-acoes"><button class="btn-cancelar-form" onclick="App.irPara(\'abastecimentos\')">Cancelar</button>' +
+        '<button class="btn-salvar-form" id="btnSalvarAb" onclick="Abastecimentos.validarESalvar()">' + (a.id ? 'Salvar alterações' : 'Registrar abastecimento') + '</button></div>';
 
-    if (Abastecimentos._form.tipoLancamento === 'viagem') {
-      Abastecimentos._carregarViagensDoVeiculo(vSel, a.viagemId);
-    }
+    document.getElementById('formAbastecimentoContainer').innerHTML = html;
+    Abastecimentos._renderCardsEnergeticos();
+    Abastecimentos.atualizarUnidadesCombustivel();
+    Abastecimentos.previa();
+    if (Abastecimentos._form.tipoLancamento === 'viagem') Abastecimentos._carregarViagensDoVeiculo(vSel, a.viagemId);
   },
 
   trocarVeiculoForm: function () {
-    var selVeic = document.getElementById('abVeiculo');
-    var selComb = document.getElementById('abCombustivel');
-    if (!selVeic || !selComb) return;
-    var veic = Abastecimentos.veiculos.filter(function (v) { return v.id === selVeic.value; })[0];
-    var alvo = Abastecimentos._resolverCombustivelForm(veic ? veic.combustivel : null);
-    for (var i = 0; i < selComb.options.length; i++) {
-      if (selComb.options[i].value === alvo) { selComb.selectedIndex = i; break; }
-    }
+    var veiculo = Abastecimentos._veiculoFormAtual();
+    var lista = Abastecimentos._energeticosDoVeiculo(veiculo);
+    Abastecimentos._form.energetico = lista[0] || 'Gasolina';
+    Abastecimentos._renderCardsEnergeticos();
     Abastecimentos.atualizarUnidadesCombustivel();
     if (Abastecimentos._form.tipoLancamento === 'viagem') {
-      Abastecimentos._carregarViagensDoVeiculo(selVeic.value, null);
+      var sel = document.getElementById('abVeiculo');
+      Abastecimentos._carregarViagensDoVeiculo(sel ? sel.value : null, null);
     }
   },
 
   atualizarUnidadesCombustivel: function () {
-    var sel = document.getElementById('abCombustivel');
-    if (!sel) return;
-    var unidade = Abastecimentos._unidadePorCombustivel(sel.value);
+    var unidade = Abastecimentos._unidadePorCombustivel(Abastecimentos._energeticoFormAtual());
     var labelQtd = document.getElementById('abLabelQtd');
     var labelPreco = document.getElementById('abLabelPreco');
     var inputQtd = document.getElementById('abLitros');
@@ -814,6 +822,7 @@ var Abastecimentos = {
   },
 
   /* =========================================================
+     TIPO DE LANÇAMENTO  /* =========================================================
      TIPO DE LANÇAMENTO: DIA A DIA vs VIAGEM ESPECÍFICA
      ========================================================= */
   setTipoLancamento: function (tipo) {
@@ -953,8 +962,7 @@ var Abastecimentos = {
   previa: function () {
     var el = document.getElementById('previaAbast');
     if (!el) return;
-    var selComb = document.getElementById('abCombustivel');
-    var unidade = Abastecimentos._unidadePorCombustivel(selComb ? selComb.value : 'Gasolina');
+    var unidade = Abastecimentos._unidadePorCombustivel(Abastecimentos._energeticoFormAtual());
     var l = Number(document.getElementById('abLitros').value) || 0;
     var t = Number(document.getElementById('abTotal').value) || 0;
     var p = Number(document.getElementById('abPreco').value) || 0;
@@ -1007,7 +1015,8 @@ var Abastecimentos = {
       precoLitro: Number(document.getElementById('abPreco').value) || 0,
       valorTotal: Number(document.getElementById('abTotal').value) || 0,
       posto: document.getElementById('abPosto').value.trim(),
-      combustivel: document.getElementById('abCombustivel').value,
+      combustivel: Abastecimentos._energeticoFormAtual(),
+      unidade: Abastecimentos._unidadePorCombustivel(Abastecimentos._energeticoFormAtual()).sigla,
       tanqueCheio: nivelTanque === 100 ? 'SIM' : 'NAO',
       nivelTanque: nivelTanque,
       viagemId: viagemId,
