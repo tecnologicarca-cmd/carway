@@ -88,59 +88,153 @@ var Viagens = {
   /* =========================================================
      EDGE FUNCTIONS
      ========================================================= */
-  chamarRoutes: function (origem, destino, idaVolta, emissionType) {
-    var url = CARWAY_CONFIG.SUPABASE_URL + '/functions/v1/google-routes';
-    return sb.auth.getSession().then(function (r) {
-      var token = r.data && r.data.session ? r.data.session.access_token : '';
-      if (!token) throw new Error('Sessão expirada. Faça login novamente.');
-      return fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-        body: JSON.stringify({
-          origem: { lat: origem.lat, lon: origem.lon },
-          destino: { lat: destino.lat, lon: destino.lon },
-          idaVolta: !!idaVolta,
-          emissionType: emissionType || 'GASOLINE'
-        })
-      });
-    }).then(function (r) { return r.json(); })
-      .then(function (data) { if (data.erro) throw new Error(data.erro); return data.rotas || []; });
-  },
-  chamarGeocode: function (params) {
-    var url = CARWAY_CONFIG.SUPABASE_URL + '/functions/v1/google-geocode';
-    return sb.auth.getSession().then(function (r) {
-      var token = r.data && r.data.session ? r.data.session.access_token : '';
-      if (!token) throw new Error('Sessão expirada. Faça login novamente.');
-      return fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-        body: JSON.stringify(params)
-      });
-    }).then(function (r) { return r.json(); })
-      .then(function (data) { if (data.erro) throw new Error(data.erro); return data.resultados || []; });
-  },
-  chamarPlaces: function (lat, lon, raio, limite, tipo) {
-    var url = CARWAY_CONFIG.SUPABASE_URL + '/functions/v1/google-places';
-    return sb.auth.getSession().then(function (r) {
-      var token = r.data && r.data.session ? r.data.session.access_token : '';
-      if (!token) throw new Error('Sessão expirada.');
-      return fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-        body: JSON.stringify({
-          lat: lat, lon: lon,
-          raio: raio || 10000,
-          limite: limite || 8,
-          tipo: tipo || 'gas_station'
-        })
-      });
-    }).then(function (r) { return r.json(); })
-      .then(function (data) {
-        if (data.erro) throw new Error(data.erro);
-        return data.locais || [];
-      });
-  },
+  _processarRespostaFuncao: function (resposta, nomeFuncao) {
+  var tipo = resposta.headers.get('content-type') || '';
 
+  if (tipo.indexOf('application/json') === -1) {
+    return resposta.text().then(function (texto) {
+      console.error('CarWay ' + nomeFuncao + ' - resposta não é JSON:', resposta.status, texto.substring(0, 300));
+
+      if (resposta.status === 401 || resposta.status === 403) {
+        throw new Error('Sua sessão expirou. Saia e entre novamente no app.');
+      }
+
+      if (resposta.status === 404) {
+        throw new Error('Serviço de mapas indisponível no momento.');
+      }
+
+      if (resposta.status >= 500) {
+        throw new Error('O serviço de mapas está fora do ar. Tente novamente em instantes.');
+      }
+
+      throw new Error('Resposta inesperada do serviço de mapas.');
+    });
+  }
+
+  return resposta.json().then(function (dados) {
+    if (!resposta.ok) {
+      var mensagem = (dados && (dados.erro || dados.error || dados.message)) || '';
+
+      console.error('CarWay ' + nomeFuncao + ' - erro ' + resposta.status + ':', mensagem);
+
+      if (resposta.status === 401 || resposta.status === 403) {
+        throw new Error('Sua sessão expirou. Saia e entre novamente no app.');
+      }
+
+      if (resposta.status === 429) {
+        throw new Error('Muitas consultas seguidas. Aguarde alguns segundos.');
+      }
+
+      if (resposta.status >= 500) {
+        throw new Error('O serviço de mapas está instável. Tente novamente.');
+      }
+
+      throw new Error(mensagem || 'Não foi possível consultar o serviço de mapas.');
+    }
+
+    if (dados && dados.erro) {
+      console.error('CarWay ' + nomeFuncao + ' - erro retornado:', dados.erro);
+      throw new Error(dados.erro);
+    }
+
+    return dados;
+  }).catch(function (e) {
+    if (e instanceof SyntaxError) {
+      console.error('CarWay ' + nomeFuncao + ' - JSON inválido');
+      throw new Error('Resposta inválida do serviço de mapas.');
+    }
+
+    throw e;
+  });
+},
+   
+chamarRoutes: function (origem, destino, idaVolta, emissionType) {
+  var url = CARWAY_CONFIG.SUPABASE_URL + '/functions/v1/google-routes';
+
+  return sb.auth.getSession().then(function (r) {
+    var token = r.data && r.data.session ? r.data.session.access_token : '';
+
+    if (!token) throw new Error('Sessão expirada. Faça login novamente.');
+
+    return fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token,
+        'apikey': CARWAY_CONFIG.SUPABASE_ANON_KEY
+      },
+      body: JSON.stringify({
+        origem: { lat: origem.lat, lon: origem.lon },
+        destino: { lat: destino.lat, lon: destino.lon },
+        idaVolta: !!idaVolta,
+        emissionType: emissionType || 'GASOLINE'
+      })
+    }).catch(function () {
+      throw new Error('Sem conexão com a internet. Verifique sua rede.');
+    });
+  }).then(function (resposta) {
+    return Viagens._processarRespostaFuncao(resposta, 'google-routes');
+  }).then(function (dados) {
+    return dados.rotas || [];
+  });
+},
+  chamarGeocode: function (params) {
+  var url = CARWAY_CONFIG.SUPABASE_URL + '/functions/v1/google-geocode';
+
+  return sb.auth.getSession().then(function (r) {
+    var token = r.data && r.data.session ? r.data.session.access_token : '';
+
+    if (!token) throw new Error('Sessão expirada. Faça login novamente.');
+
+    return fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token,
+        'apikey': CARWAY_CONFIG.SUPABASE_ANON_KEY
+      },
+      body: JSON.stringify(params)
+    }).catch(function () {
+      throw new Error('Sem conexão com a internet. Verifique sua rede.');
+    });
+  }).then(function (resposta) {
+    return Viagens._processarRespostaFuncao(resposta, 'google-geocode');
+  }).then(function (dados) {
+    return dados.resultados || [];
+  });
+},
+
+   chamarPlaces: function (lat, lon, raio, limite, tipo) {
+  var url = CARWAY_CONFIG.SUPABASE_URL + '/functions/v1/google-places';
+
+  return sb.auth.getSession().then(function (r) {
+    var token = r.data && r.data.session ? r.data.session.access_token : '';
+
+    if (!token) throw new Error('Sessão expirada. Faça login novamente.');
+
+    return fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token,
+        'apikey': CARWAY_CONFIG.SUPABASE_ANON_KEY
+      },
+      body: JSON.stringify({
+        lat: lat,
+        lon: lon,
+        raio: raio || 10000,
+        limite: limite || 8,
+        tipo: tipo || 'gas_station'
+      })
+    }).catch(function () {
+      throw new Error('Sem conexão com a internet. Verifique sua rede.');
+    });
+  }).then(function (resposta) {
+    return Viagens._processarRespostaFuncao(resposta, 'google-places');
+  }).then(function (dados) {
+    return dados.locais || [];
+  });
+},
   /* =========================================================
      DETECÇÃO DE DISPOSITIVO
      ========================================================= */
@@ -1128,22 +1222,22 @@ escolherAppNavegacao: function (app) {
 
   Viagens.abrirAppNavegacao(app, Viagens.plano.origem, Viagens.plano.destino, false);
 },
-  abrirAppNavegacao: function (app, origem, destino, silencioso) {
+ abrirAppNavegacao: function (app, origem, destino, silencioso) {
   if (!origem || !destino) return;
 
   var lat = destino.lat;
   var lon = destino.lon;
 
-  if (!silencioso) {
-    App.toast('Abrindo ' + Viagens.nomeApp(app) + '...', 'ok');
-  }
+  if (!silencioso) App.toast('Abrindo ' + Viagens.nomeApp(app) + '...', 'ok');
 
   if (app === 'waze') {
+    Viagens._paradasParaNavegacao = null;
     window.location.href = 'https://www.waze.com/ul?ll=' + lat + '%2C' + lon + '&navigate=yes&zoom=17';
     return;
   }
 
   if (app === 'uber') {
+    Viagens._paradasParaNavegacao = null;
     window.location.href = 'https://m.uber.com/ul/?action=setPickup&pickup=my_location&dropoff[latitude]=' + lat + '&dropoff[longitude]=' + lon;
     return;
   }
@@ -1153,12 +1247,12 @@ escolherAppNavegacao: function (app) {
   if (app === 'apple') {
     url = 'https://maps.apple.com/?saddr=' + origem.lat + ',' + origem.lon + '&daddr=' + lat + ',' + lon + '&dirflg=d';
   } else {
-    url = 'https://www.google.com/maps/dir/?api=1&origin=' + encodeURIComponent(origem.lat + ',' + origem.lon) + '&destination=' + encodeURIComponent(lat + ',' + lon) + '&travelmode=driving';
+    url = Viagens._urlMapsComParadas(origem, destino);
   }
 
+  Viagens._paradasParaNavegacao = null;
   window.open(url, '_blank', 'noopener');
 },
-
 nomeApp: function (app) {
   return ({ google: 'Google Maps', google_maps: 'Google Maps', waze: 'Waze', apple: 'Apple Maps', uber: 'Uber' })[app] || 'app';
 },
@@ -1221,7 +1315,29 @@ nomeApp: function (app) {
     }
   }
 },
-   
+   _htmlCabecalhoRota: function (origemTxt, destinoTxt, idaVolta) {
+  var origemCurta = String(origemTxt || '').split(',').slice(0, 2).join(',').trim();
+  var destinoCurta = String(destinoTxt || '').split(',').slice(0, 2).join(',').trim();
+
+  return '<div class="rota-cabecalho">' +
+    '<div class="rc-ponto">' +
+      '<span class="ms" style="color:#22c55e">trip_origin</span>' +
+      '<div><small>Saindo de</small><b>' + App.esc(origemCurta) + '</b></div>' +
+    '</div>' +
+    '<div class="rc-traco"></div>' +
+    '<div class="rc-ponto">' +
+      '<span class="ms" style="color:#ef4444">place</span>' +
+      '<div><small>Indo para</small><b>' + App.esc(destinoCurta) + '</b></div>' +
+    '</div>' +
+    '<div class="rc-rodape">' +
+      '<span class="ms">' + (idaVolta ? 'sync_alt' : 'east') + '</span>' +
+      '<div>' + (idaVolta
+        ? '<b style="color:var(--txt)">Ida e volta.</b> Distância, combustível e pedágio já incluem o retorno.'
+        : '<b style="color:var(--txt)">Somente ida.</b> Os valores consideram apenas o trajeto de ida.') +
+      '</div>' +
+    '</div>' +
+  '</div>';
+},
   /* =========================================================
      EDIÇÃO INTELIGENTE — decide se precisa refazer a busca paga
      ========================================================= */
@@ -1340,29 +1456,6 @@ nomeApp: function (app) {
         if (btn) { btn.disabled = false; btn.innerHTML = '<span class="ms">check</span> Criar viagem'; }
         if (!rotas.length) { App.toast('Nenhuma rota encontrada', 'erro'); return; }
         var custoPorKm = 1 / kmL;
-        rotas.forEach(function (r) {
-          var litros = r.km * custoPorKm;
-          r.litros = Math.round(litros * 100) / 100;
-          r.custoCombustivel = Math.round(litros * preco * 100) / 100;
-          r.custoPedagio = r.custoPedagio || 0;
-          r.custoTotal = Math.round((r.custoCombustivel + r.custoPedagio) * 100) / 100;
-        });
-        var iMaisRapida = 0, iMaisEconomica = 0;
-        for (var i = 1; i < rotas.length; i++) {
-          if (rotas[i].minutos < rotas[iMaisRapida].minutos) iMaisRapida = i;
-          if (rotas[i].custoTotal < rotas[iMaisEconomica].custoTotal) iMaisEconomica = i;
-        }
-        rotas[iMaisRapida].seloRapida = true;
-        rotas[iMaisEconomica].seloEconomica = true;
-        Viagens.plano.rotas = rotas;
-        Viagens.plano.paradasPorRota = {};
-        Viagens.calcularEMostrarRota(iMaisRapida);
-      })
-      .catch(function (e) {
-        if (btn) { btn.disabled = false; btn.innerHTML = '<span class="ms">check</span> Criar viagem'; }
-        App.toast(e.message || 'Erro ao buscar rotas', 'erro');
-      });
-  },
 
   calcularEMostrarRota: function (idx) {
     Viagens.plano.rotaAtiva = idx;
@@ -1619,7 +1712,7 @@ nomeApp: function (app) {
 
     if (veic) html += Viagens._veiculoBlocoHTML(veic) + '<div style="margin-bottom:14px"></div>';
 
-    html += '<div class="aviso info" style="margin-bottom:14px">' +
+    html += Viagens._htmlCabecalhoRota(origemTxt, destinoTxt, idaVolta);
       '<span class="ms">' + (idaVolta ? 'sync_alt' : 'east') + '</span>' +
       '<div><b>' + App.esc(origemTxt.split(',')[0]) + ' ' + (idaVolta ? '⇄' : '→') + ' ' + App.esc(destinoTxt.split(',')[0]) + '</b>' +
       (idaVolta ? 'Ida e volta. Distância, combustível e pedágio já incluem o retorno.' : 'Somente ida') + '</div>' +
@@ -1681,8 +1774,9 @@ nomeApp: function (app) {
       else if (r.temPedagio) pedagioTxt = '<b>—</b><small>pedágio indisponível</small>';
       else pedagioTxt = '<b>—</b><small>sem pedágio</small>';
 
-      var selos = '';
-      if (r.seloRapida) {
+     var selos = '';
+
+     if (r.seloRapida) {
         selos += '<div class="rota-selo" style="background:#3b82f6;' + (r.seloEconomica ? 'top:-10px' : '') + '">' +
           '<span class="ms">bolt</span>Mais rápida</div>';
       }
@@ -2810,51 +2904,73 @@ html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="b
      em vez de recalcular tudo junto e jogar em "Outros". Cada barra
      agora cresce com o valor certo. */
   renderOrcado: function (v, realizado) {
-    var prev = {
-      combustivel: Number(v.combustivelPrev) || 0,
-      pedagio: Number(v.pedagioPrev) || 0,
-      alimentacao: Number(v.alimentacaoPrev) || 0,
-      hospedagem: Number(v.hospedagemPrev) || 0,
-      outros: Number(v.outrosPrev) || 0
-    };
-    var totalPrev = prev.combustivel + prev.pedagio + prev.alimentacao + prev.hospedagem + prev.outros;
-    if (totalPrev === 0 && realizado.total === 0) {
-      return '<div class="orcamento"><div class="orc-titulo"><span class="ms">savings</span> Orçado x Realizado</div>' +
-        '<p style="color:var(--txt2);font-size:13px;text-align:center;padding:20px 0">Sem orçamento definido. Toque em "Orçamento" acima.</p></div>';
+  var prev = {
+    combustivel: Number(v.combustivelPrev) || 0,
+    pedagio: Number(v.pedagioPrev) || 0,
+    alimentacao: Number(v.alimentacaoPrev) || 0,
+    hospedagem: Number(v.hospedagemPrev) || 0,
+    outros: Number(v.outrosPrev) || 0
+  };
+
+  var totalPrev = prev.combustivel + prev.pedagio + prev.alimentacao + prev.hospedagem + prev.outros;
+
+  if (totalPrev === 0 && realizado.total === 0) {
+    return '<div class="orcamento"><div class="orc-titulo"><span class="ms">savings</span> Orçado x Realizado</div>' +
+      '<p style="color:var(--txt2);font-size:13px;text-align:center;padding:20px 0">Sem orçamento definido. Toque em "Orçamento" acima.</p></div>';
+  }
+
+  var cats = [
+    { nome: 'Combustível', cor: '#ef4444', prev: prev.combustivel, real: realizado.combustivel },
+    { nome: 'Pedágio', cor: '#f59e0b', prev: prev.pedagio, real: realizado.pedagio },
+    { nome: 'Alimentação', cor: '#22c55e', prev: prev.alimentacao, real: realizado.alimentacao },
+    { nome: 'Hospedagem', cor: '#a78bfa', prev: prev.hospedagem, real: realizado.hospedagem },
+    { nome: 'Outros', cor: '#94a3b8', prev: prev.outros, real: realizado.outros }
+  ];
+
+  var html = '<div class="orcamento"><div class="orc-titulo"><span class="ms">savings</span> Orçado x Realizado</div>';
+
+  cats.forEach(function (c) {
+    if (c.prev === 0 && c.real === 0) return;
+
+    var pct = c.prev > 0 ? Math.min(100, (c.real / c.prev) * 100) : (c.real > 0 ? 100 : 0);
+    var estouro = c.prev > 0 && c.real > c.prev;
+
+    html += '<div class="orc-cat">' +
+      '<div class="orc-cat-topo">' +
+        '<div class="orc-cat-nome"><span class="cor" style="background:' + c.cor + '"></span>' + c.nome + '</div>' +
+        '<div class="orc-cat-val"><b>' + App.moeda(c.real) + '</b>' +
+          (c.prev > 0 ? '<small>de ' + App.moeda(c.prev) + '</small>' : '<small>sem orçamento</small>') +
+        '</div></div>' +
+      '<div class="orc-barra"><i class="' + (estouro ? 'estouro' : '') + '" style="width:' + pct + '%;background:' + c.cor + '"></i></div>' +
+    '</div>';
+  });
+
+  var dif = realizado.total - totalPrev;
+  var linhaFinal = '';
+
+  if (totalPrev > 0) {
+    if (realizado.total <= 0) {
+      linhaFinal = '<div class="orc-linha destaque neutro"><span>Ainda sem gastos</span><b>' + App.moeda(totalPrev) + '</b></div>' +
+        '<small class="orc-nota">Nenhum lançamento registrado nesta viagem. Todo o orçamento previsto continua disponível.</small>';
+    } else if (dif > 0) {
+      linhaFinal = '<div class="orc-linha destaque ruim"><span>Acima do orçamento</span><b>' + App.moeda(dif) + '</b></div>' +
+        '<small class="orc-nota ruim">Você já gastou ' + App.moeda(dif) + ' a mais do que o previsto.</small>';
+    } else if (dif < 0) {
+      linhaFinal = '<div class="orc-linha destaque bom"><span>Dentro do orçamento</span><b>' + App.moeda(Math.abs(dif)) + '</b></div>' +
+        '<small class="orc-nota bom">Ainda restam ' + App.moeda(Math.abs(dif)) + ' do valor previsto.</small>';
+    } else {
+      linhaFinal = '<div class="orc-linha destaque"><span>Exatamente no previsto</span><b>' + App.moeda(0) + '</b></div>';
     }
-    var cats = [
-      { id: 'combustivel', nome: 'Combustível', cor: '#ef4444', prev: prev.combustivel, real: realizado.combustivel },
-      { id: 'pedagio', nome: 'Pedágio', cor: '#f59e0b', prev: prev.pedagio, real: realizado.pedagio },
-      { id: 'alimentacao', nome: 'Alimentação', cor: '#22c55e', prev: prev.alimentacao, real: realizado.alimentacao },
-      { id: 'hospedagem', nome: 'Hospedagem', cor: '#a78bfa', prev: prev.hospedagem, real: realizado.hospedagem },
-      { id: 'outros', nome: 'Outros', cor: '#94a3b8', prev: prev.outros, real: realizado.outros }
-    ];
-    var html = '<div class="orcamento"><div class="orc-titulo"><span class="ms">savings</span> Orçado x Realizado</div>';
-    cats.forEach(function (c) {
-      if (c.prev === 0 && c.real === 0) return;
-      var pct = c.prev > 0 ? Math.min(100, (c.real / c.prev) * 100) : (c.real > 0 ? 100 : 0);
-      var estouro = c.prev > 0 && c.real > c.prev;
-      html += '<div class="orc-cat">' +
-        '<div class="orc-cat-topo">' +
-          '<div class="orc-cat-nome"><span class="cor" style="background:' + c.cor + '"></span>' + c.nome + '</div>' +
-          '<div class="orc-cat-val"><b>' + App.moeda(c.real) + '</b>' +
-            (c.prev > 0 ? '<small>de ' + App.moeda(c.prev) + '</small>' : '<small>sem orçamento</small>') +
-          '</div></div>' +
-        '<div class="orc-barra"><i class="' + (estouro ? 'estouro' : '') + '" style="width:' + pct + '%;background:' + c.cor + '"></i></div>' +
-      '</div>';
-    });
-    var dif = realizado.total - totalPrev;
-    html += '<div class="orc-total">' +
-      '<div class="orc-linha"><span>Previsto</span><b>' + App.moeda(totalPrev) + '</b></div>' +
-      '<div class="orc-linha"><span>Realizado</span><b>' + App.moeda(realizado.total) + '</b></div>' +
-      (totalPrev > 0
-        ? '<div class="orc-linha destaque ' + (dif > 0 ? 'ruim' : (dif < 0 ? 'bom' : '')) + '">' +
-            '<span>' + (dif > 0 ? 'Estourou' : (dif < 0 ? 'Economizou' : 'No previsto')) + '</span>' +
-            '<b>' + (dif > 0 ? '+' : '') + App.moeda(dif) + '</b></div>'
-        : '') +
-    '</div></div>';
-    return html;
-  },
+  }
+
+  html += '<div class="orc-total">' +
+    '<div class="orc-linha"><span>Previsto</span><b>' + App.moeda(totalPrev) + '</b></div>' +
+    '<div class="orc-linha"><span>Realizado</span><b>' + App.moeda(realizado.total) + '</b></div>' +
+    linhaFinal +
+  '</div></div>';
+
+  return html;
+},
 
   itemAbastecimento: function (a) {
     var val = Number(a.valorTotal) || (Number(a.litros) || 0) * (Number(a.precoLitro) || 0);
@@ -3140,38 +3256,56 @@ html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="b
     });
   },
   renderEncerrar: function (v) {
-    var dataHoje = App.hojeISO();
-    var ehIniciar = v.status === 'planejada';
-    var html =
-      '<h2 class="form-titulo">' + (ehIniciar ? 'Iniciar viagem' : 'Encerrar viagem') + '</h2>' +
-      '<div class="aviso info" style="margin-bottom:18px">' +
-        '<span class="ms">' + (ehIniciar ? 'play_arrow' : 'stop_circle') + '</span>' +
-        '<div><b>' + App.esc(v.titulo || (v.origem + ' → ' + v.destino)) + '</b>' +
-        (ehIniciar ? 'Vamos registrar o KM de saída do seu veículo.' : 'Vamos registrar o KM de retorno do seu veículo.') + '</div>' +
+  var dataHoje = App.hojeISO();
+  var ehIniciar = v.status === 'planejada';
+  var distanciaPlanejada = Number(v.distancia) || 0;
+
+  var resumo = ehIniciar
+    ? '<div style="display:flex;justify-content:space-between;font-size:13px;padding:4px 0">' +
+        '<span style="color:var(--txt2)">Distância planejada</span><b>' + App.fmtNum(distanciaPlanejada) + ' km</b>' +
       '</div>' +
-      '<div class="campo-form"><label>KM ' + (ehIniciar ? 'ao sair' : 'ao voltar') + '</label>' +
-        '<input type="number" id="encKm" placeholder="0" value="' + (v.kmInicial || '') + '" oninput="Viagens.calcEncerrar(' + (v.kmInicial || 0) + ')">' +
+      '<div style="display:flex;justify-content:space-between;font-size:13px;padding:4px 0;border-top:1px solid var(--linha);margin-top:4px;padding-top:8px">' +
+        '<span style="color:var(--txt2)">Percurso</span><b>' + (String(v.idaVolta).toUpperCase() === 'SIM' ? 'Ida e volta' : 'Somente ida') + '</b>' +
+      '</div>'
+    : '<div style="display:flex;justify-content:space-between;font-size:13px;padding:4px 0">' +
+        '<span style="color:var(--txt2)">KM ao sair</span><b>' + App.fmtNum(v.kmInicial || 0) + ' km</b>' +
       '</div>' +
-      '<div class="campo-form"><label>Data ' + (ehIniciar ? 'de saída' : 'de retorno') + '</label>' +
-        '<input type="date" id="encData" value="' + (ehIniciar ? (v.dataInicio || dataHoje) : (v.dataFim || dataHoje)) + '">' +
+      '<div style="display:flex;justify-content:space-between;font-size:13px;padding:4px 0">' +
+        '<span style="color:var(--txt2)">Distância planejada</span><b>' + App.fmtNum(distanciaPlanejada) + ' km</b>' +
       '</div>' +
-      '<div style="background:var(--bg2);border:1px solid var(--linha);border-radius:11px;padding:12px;margin-bottom:16px">' +
-        '<div style="display:flex;justify-content:space-between;font-size:13px;padding:4px 0">' +
-          '<span style="color:var(--txt2)">KM inicial</span><b>' + App.fmtNum(v.kmInicial || 0) + ' km</b>' +
-        '</div>' +
-        '<div style="display:flex;justify-content:space-between;font-size:13px;padding:4px 0;border-top:1px solid var(--linha);margin-top:4px;padding-top:8px">' +
-          '<span style="color:var(--txt2)">Distância</span><b id="encDist">—</b>' +
-        '</div>' +
-      '</div>' +
-      '<div class="form-acoes-viagem">' +
-        '<button class="btn-cancelar-form" onclick="App.irPara(\'viagens\')"><span class="ms">close</span> Cancelar</button>' +
-        '<button class="btn-novo btn-bloco-full" onclick="Viagens.confirmarEncerrar(\'' + v.id + '\',' + ehIniciar + ')">' +
-          '<span class="ms">' + (ehIniciar ? 'play_arrow' : 'flag') + '</span> ' + (ehIniciar ? 'Iniciar viagem' : 'Encerrar viagem') +
-        '</button>' +
+      '<div style="display:flex;justify-content:space-between;font-size:13px;padding:4px 0;border-top:1px solid var(--linha);margin-top:4px;padding-top:8px">' +
+        '<span style="color:var(--txt2)">Distância percorrida</span><b id="encDist">—</b>' +
       '</div>';
-    document.getElementById('formEncerrarViagemContainer').innerHTML = html;
-    if (!ehIniciar) Viagens.calcEncerrar(v.kmInicial);
-  },
+
+  var html =
+    '<h2 class="form-titulo">' + (ehIniciar ? 'Iniciar viagem' : 'Encerrar viagem') + '</h2>' +
+    '<div class="aviso info" style="margin-bottom:18px">' +
+      '<span class="ms">' + (ehIniciar ? 'play_arrow' : 'stop_circle') + '</span>' +
+      '<div><b>' + App.esc(v.titulo || (v.origem + ' → ' + v.destino)) + '</b>' +
+      (ehIniciar ? 'Registre o KM do painel antes de sair.' : 'Registre o KM do painel ao chegar.') + '</div>' +
+    '</div>' +
+    '<div class="campo-form"><label>KM do painel ' + (ehIniciar ? 'ao sair' : 'ao voltar') + '</label>' +
+      '<input type="number" id="encKm" placeholder="0" value="' + (v.kmInicial || '') + '" oninput="Viagens.calcEncerrar(' + (v.kmInicial || 0) + ')">' +
+    '</div>' +
+    '<div class="campo-form"><label>Data ' + (ehIniciar ? 'de saída' : 'de retorno') + '</label>' +
+      '<input type="date" id="encData" value="' + (ehIniciar ? (v.dataInicio || dataHoje) : (v.dataFim || dataHoje)) + '">' +
+    '</div>' +
+    '<div style="background:var(--bg2);border:1px solid var(--linha);border-radius:11px;padding:12px;margin-bottom:16px">' + resumo + '</div>' +
+    (ehIniciar
+      ? '<label class="switch" style="margin-bottom:16px"><span>Abrir navegação ao iniciar</span><input type="checkbox" id="encAbrirNav" checked></label>'
+      : '') +
+    '<div class="form-acoes-viagem">' +
+      '<button class="btn-cancelar-form" onclick="App.irPara(\'viagens\')"><span class="ms">close</span> Cancelar</button>' +
+      '<button class="btn-novo btn-bloco-full" onclick="Viagens.confirmarEncerrar(\'' + v.id + '\',' + ehIniciar + ')">' +
+        '<span class="ms">' + (ehIniciar ? 'play_arrow' : 'flag') + '</span> ' + (ehIniciar ? 'Iniciar viagem' : 'Encerrar viagem') +
+      '</button>' +
+    '</div>';
+
+  document.getElementById('formEncerrarViagemContainer').innerHTML = html;
+
+  if (!ehIniciar) Viagens.calcEncerrar(v.kmInicial);
+},
+   
   calcEncerrar: function (kmIni) {
     var km = Number(document.getElementById('encKm').value) || 0;
     var el = document.getElementById('encDist');
@@ -3180,20 +3314,92 @@ html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="b
     else if (km > 0 && km <= kmIni) { el.textContent = 'KM inválido'; el.style.color = '#fca5a5'; }
     else { el.textContent = '—'; el.style.color = ''; }
   },
-  confirmarEncerrar: function (id, ehIniciar) {
-    var km = Number(document.getElementById('encKm').value) || 0;
-    var data = document.getElementById('encData').value;
-    if (km <= 0) { App.toast('Informe o KM', 'erro'); return; }
-    var reg = { id: id };
-    if (ehIniciar) { reg.status = 'andamento'; reg.kmInicial = km; reg.dataInicio = data; }
-    else { reg.status = 'concluida'; reg.kmFinal = km; reg.dataFim = data; }
-    sb.from('viagens').update(reg).eq('id', id).then(function (r) {
-      if (r.error) { App.toast('Erro: ' + r.error.message, 'erro'); return; }
-      App.toast(ehIniciar ? 'Viagem iniciada!' : 'Viagem concluída!', 'ok');
-      App.irPara('viagens');
-    });
-  },
+confirmarEncerrar: function (id, ehIniciar) {
+  var km = Number(document.getElementById('encKm').value) || 0;
+  var data = document.getElementById('encData').value;
 
+  if (km <= 0) { App.toast('Informe o KM', 'erro'); return; }
+
+  var elNav = document.getElementById('encAbrirNav');
+  var abrirNavegacao = ehIniciar && elNav ? elNav.checked : false;
+
+  var reg = { id: id };
+
+  if (ehIniciar) { reg.status = 'andamento'; reg.kmInicial = km; reg.dataInicio = data; }
+  else { reg.status = 'concluida'; reg.kmFinal = km; reg.dataFim = data; }
+
+  sb.from('viagens').update(reg).eq('id', id).then(function (r) {
+    if (r.error) { App.toast('Erro: ' + r.error.message, 'erro'); return; }
+
+    if (App._painelRaw) App._painelRaw = null;
+    App.toast(ehIniciar ? 'Viagem iniciada!' : 'Viagem concluída!', 'ok');
+
+    if (abrirNavegacao) {
+      Viagens.abrirNavegacaoDaViagem(id);
+      return;
+    }
+
+    App.irPara('viagens');
+  });
+},
+
+   abrirNavegacaoDaViagem: function (viagemId) {
+  Promise.all([
+    sb.from('viagens').select('rota,titulo,origem,destino').eq('id', viagemId).single(),
+    sb.from('paradas_viagem').select('postoLat,postoLon,postoNome,ordem,status').eq('viagemId', viagemId).order('ordem')
+  ]).then(function (resultados) {
+    var rViagem = resultados[0];
+    var rParadas = resultados[1];
+
+    if (rViagem.error || !rViagem.data || !rViagem.data.rota) {
+      App.toast('Rota não encontrada', 'erro');
+      App.irPara('viagens');
+      return;
+    }
+
+    var rota;
+
+    try { rota = JSON.parse(rViagem.data.rota); }
+    catch (e) { App.toast('Rota inválida', 'erro'); App.irPara('viagens'); return; }
+
+    if (!rota.origem || !rota.destino) {
+      App.toast('Rota sem coordenadas', 'erro');
+      App.irPara('viagens');
+      return;
+    }
+
+    Viagens.plano.origem = rota.origem;
+    Viagens.plano.destino = rota.destino;
+    Viagens._paradasParaNavegacao = (rParadas.data || []).filter(function (p) {
+      return p.postoLat && p.postoLon && String(p.status).toUpperCase() !== 'IGNORADA';
+    });
+
+    Viagens._continuarAbrirNoMaps();
+    setTimeout(function () { App.irParaDetalheViagem(viagemId); }, 1200);
+  }).catch(function (e) {
+    console.error('CarWay - erro ao abrir navegação:', e);
+    App.irPara('viagens');
+  });
+},
+
+_urlMapsComParadas: function (origem, destino) {
+  var url = 'https://www.google.com/maps/dir/?api=1' +
+    '&origin=' + encodeURIComponent(origem.lat + ',' + origem.lon) +
+    '&destination=' + encodeURIComponent(destino.lat + ',' + destino.lon) +
+    '&travelmode=driving';
+
+  var paradas = Viagens._paradasParaNavegacao || [];
+
+  var pontos = paradas.slice(0, 9).map(function (p) {
+    return p.postoLat + ',' + p.postoLon;
+  });
+
+  if (pontos.length) {
+    url += '&waypoints=' + encodeURIComponent(pontos.join('|'));
+  }
+
+  return url;
+},
   /* =========================================================
      EXCLUIR
      ========================================================= */
