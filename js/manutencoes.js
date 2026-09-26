@@ -1,4 +1,4 @@
-/* APP_VERSION: v2.8 - fila offline */
+/* APP_VERSION: v2.9 - offline com formulário local */
 /* =====================================================================
    CARWAY - MANUTENCOES
    Historico de mudancas relevantes:
@@ -1292,22 +1292,16 @@ var Manutencoes = {
   /* =========================================================
      FORM DE MANUTENCAO
      ========================================================= */
-  abrirForm: function (id, planoIdPre, veiculoIdPre) {
-    var precisaCarregar = Manutencoes.veiculos.length === 0;
-    var carregar = precisaCarregar
-      ? Promise.all([
-          sb.from('veiculos').select('*').eq('organizacaoId', orgAtual.id).order('nome'),
-          sb.from('planos').select('*').eq('organizacaoId', orgAtual.id)
-        ]).then(function (rs) {
-          Manutencoes.veiculos = rs[0].data || [];
-          Manutencoes.planos = rs[1].data || [];
-        })
-      : Promise.resolve();
-    carregar.then(function () {
-      if (Manutencoes.veiculos.length === 0) {
-        App.abrirModal('Veículo necessário',
+  abrirForm: async function (id, planoIdPre, veiculoIdPre) {
+    var cacheVeiculos = Array.isArray(Manutencoes.veiculos) ? Manutencoes.veiculos.slice() : [];
+    var cachePlanos = Array.isArray(Manutencoes.planos) ? Manutencoes.planos.slice() : [];
+
+    function abrirComDados() {
+      if (!Manutencoes.veiculos.length) {
+        App.abrirModal(
+          'Veículo necessário',
           '<div style="text-align:center;padding:10px 0">' +
-            '<span class="ms" style="font-size:56px;color:var(--txt2);opacity:0.5">directions_car</span>' +
+            '<span class="ms" style="font-size:56px;color:var(--txt2);opacity:.5">directions_car</span>' +
             '<h3 style="margin:16px 0 10px">Cadastre um veículo primeiro</h3>' +
             '<p style="color:var(--txt2);font-size:14px;line-height:1.6;margin:0 0 20px">' +
               'Para lançar manutenções, você precisa cadastrar pelo menos um veículo.' +
@@ -1318,21 +1312,47 @@ var Manutencoes = {
         );
         return;
       }
+
       if (id) {
-        sb.from('manutencoes').select('*').eq('id', id).single().then(function (r) {
-          if (r.error || !r.data) {
-            App.toast('Manutenção não encontrada', 'erro');
-            return;
-          }
-          Manutencoes.editando = r.data;
-          Manutencoes.renderForm(planoIdPre, veiculoIdPre);
-        });
+        var local = (Manutencoes.lista || []).filter(function (x) { return x.id === id; })[0];
+        if (!local) { App.toast('Manutenção não encontrada neste aparelho', 'erro'); return; }
+        Manutencoes.editando = local;
       } else {
         Manutencoes.editando = null;
-        Manutencoes.renderForm(planoIdPre, veiculoIdPre);
       }
-    });
+      Manutencoes.renderForm(planoIdPre, veiculoIdPre);
+    }
+
+    if (!navigator.onLine) {
+      Manutencoes.veiculos = cacheVeiculos;
+      Manutencoes.planos = cachePlanos;
+      abrirComDados();
+      return;
+    }
+
+    try {
+      if (!Manutencoes.veiculos.length) {
+        var rs = await Promise.all([
+          sb.from('veiculos').select('*').eq('organizacaoId', orgAtual.id).order('nome'),
+          sb.from('planos').select('*').eq('organizacaoId', orgAtual.id)
+        ]);
+        Manutencoes.veiculos = (!rs[0].error && rs[0].data && rs[0].data.length) ? rs[0].data : cacheVeiculos;
+        Manutencoes.planos = (!rs[1].error && rs[1].data) ? rs[1].data : cachePlanos;
+      }
+
+      if (id) {
+        var r = await sb.from('manutencoes').select('*').eq('id', id).single();
+        if (!r.error && r.data) Manutencoes.editando = r.data;
+      }
+      abrirComDados();
+    } catch (erro) {
+      console.warn('CarWay manutenções - usando dados locais:', erro);
+      Manutencoes.veiculos = cacheVeiculos;
+      Manutencoes.planos = cachePlanos;
+      abrirComDados();
+    }
   },
+
 
   renderForm: function (planoIdPre, veiculoIdPre) {
     var m = Manutencoes.editando || {};
