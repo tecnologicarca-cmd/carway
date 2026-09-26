@@ -1,4 +1,4 @@
-/* APP_VERSION: v3.7 - offline com formulário local */
+/* APP_VERSION: v3.8 - offline com formulário local */
 /* =====================================================================
    CARWAY - ABASTECIMENTOS
    v3.2 (esta versao)
@@ -696,6 +696,16 @@ var Abastecimentos = {
      FORMULARIO
      ========================================================= */
   abrirForm: async function (id, veiculoIdPre) {
+    /* Sincroniza o formulário com a fonte central já carregada pelo módulo Veiculos. */
+    if (
+      (!Array.isArray(Abastecimentos.veiculos) || !Abastecimentos.veiculos.length) &&
+      typeof Veiculos !== 'undefined' &&
+      Array.isArray(Veiculos.lista) &&
+      Veiculos.lista.length
+    ) {
+      Abastecimentos.veiculos = Veiculos.lista.slice();
+    }
+
     var cacheVeiculos = Array.isArray(Abastecimentos.veiculos) ? Abastecimentos.veiculos.slice() : [];
 
     function abrirComVeiculos() {
