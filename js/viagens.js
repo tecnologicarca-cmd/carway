@@ -1,4 +1,4 @@
-/* APP_VERSION: v9.2 */
+/* APP_VERSION: v10.4 - corrigido */
 /* =====================================================================
    CARWAY v16 - VIAGENS
    Planejador completo com Google Routes + Geocoding + Places
@@ -2786,6 +2786,20 @@ html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="b
       '</button>' +
       (aberto ? '<div style="padding:0 12px 12px">' + lista.map(Viagens.paradaSalvaHTML).join('') + '</div>' : '') +
     '</div>';
+  },
+
+  toggleGrupoParada: function (trecho) {
+    if (trecho !== 'IDA' && trecho !== 'VOLTA') return;
+
+    if (!Viagens._paradasGrupoAberto) {
+      Viagens._paradasGrupoAberto = { IDA: false, VOLTA: false };
+    }
+
+    Viagens._paradasGrupoAberto[trecho] = !Viagens._paradasGrupoAberto[trecho];
+
+    if (Viagens._detalheAtual && Viagens._detalheAtual.viagem) {
+      Viagens.renderDetalhe();
+    }
   },
 
   /* CORRIGIDO (print8): botões "Abasteci aqui" / "Já lancei" / "Não
