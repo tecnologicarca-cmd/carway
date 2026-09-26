@@ -474,3 +474,107 @@ body.tema-claro .btn-cancelar,
 body.tema-claro .btn-voltar,
 body.tema-claro .btn-excluir,
 body.tema-claro button.excluir { color: #fff !important; }
+
+/* =====================================================================
+   CARWAY UI v1.1
+   Correção das cores na tela Nova despesa
+   ===================================================================== */
+
+/* Cada botão recebe a cor por meio do atributo data-cat */
+.cat-opcao[data-cat="Alimentação"] {
+  --cat-cor: #22c55e;
+}
+
+.cat-opcao[data-cat="Hospedagem"] {
+  --cat-cor: #a78bfa;
+}
+
+.cat-opcao[data-cat="Pedágio"] {
+  --cat-cor: #f59e0b;
+}
+
+.cat-opcao[data-cat="Estacionamento"] {
+  --cat-cor: #22d3ee;
+}
+
+.cat-opcao[data-cat="Lavagem"] {
+  --cat-cor: #06b6d4;
+}
+
+.cat-opcao[data-cat="Manutenção"] {
+  --cat-cor: #ec4899;
+}
+
+.cat-opcao[data-cat="Multa"] {
+  --cat-cor: #ef4444;
+}
+
+.cat-opcao[data-cat="Outros"] {
+  --cat-cor: #94a3b8;
+}
+
+/* Estado normal das categorias */
+.cat-opcao[data-cat] {
+  color: var(--cat-cor) !important;
+  border-color: color-mix(
+    in srgb,
+    var(--cat-cor) 35%,
+    var(--linha)
+  ) !important;
+
+  background: color-mix(
+    in srgb,
+    var(--cat-cor) 7%,
+    var(--bg2)
+  ) !important;
+}
+
+/* Ícone com a cor da categoria */
+.cat-opcao[data-cat] .ms {
+  color: var(--cat-cor) !important;
+}
+
+/* Texto permanece branco no estado normal */
+.cat-opcao[data-cat] span:last-child {
+  color: var(--txt) !important;
+}
+
+/* Categoria selecionada */
+.cat-opcao[data-cat].sel {
+  color: var(--cat-cor) !important;
+  border-color: var(--cat-cor) !important;
+
+  background: color-mix(
+    in srgb,
+    var(--cat-cor) 18%,
+    var(--bg2)
+  ) !important;
+
+  box-shadow: 0 0 0 1px color-mix(
+    in srgb,
+    var(--cat-cor) 28%,
+    transparent
+  );
+}
+
+/* Ícone selecionado mantém a própria cor */
+.cat-opcao[data-cat].sel .ms {
+  color: var(--cat-cor) !important;
+}
+
+/* Texto da categoria selecionada */
+.cat-opcao[data-cat].sel span:last-child {
+  color: var(--cat-cor) !important;
+  font-weight: 700;
+}
+
+/* Efeito ao passar o mouse */
+.cat-opcao[data-cat]:hover {
+  border-color: var(--cat-cor) !important;
+
+  background: color-mix(
+    in srgb,
+    var(--cat-cor) 14%,
+    var(--bg2)
+  ) !important;
+}
