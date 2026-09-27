@@ -1,4 +1,4 @@
-/* APP_VERSION: v10.11 - correção unidade da parada - UTF-8 corrigido - leitura offline - multi-energetico + lancamentos offline */
+/* APP_VERSION: v10.12 - correção unidade da parada - UTF-8 corrigido - leitura offline - multi-energetico + lancamentos offline */
 /* =====================================================================
    CARWAY v16 - VIAGENS
    Planejador completo com Google Routes + Geocoding + Places
