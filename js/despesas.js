@@ -1,4 +1,4 @@
-/* APP_VERSION: v3.7 - leitura e gravação offline - offline com formulários locais */
+/* APP_VERSION: v3.8 - ícone de manutenção padronizado - leitura e gravação offline - offline com formulários locais */
 /* =====================================================================
    CARWAY - DESPESAS v3.2
    - Conectado ao seletor global de veiculo (App.veiculoAtivoId).
@@ -15,7 +15,7 @@ var CATEGORIAS_DESPESA = [
   { id: 'Pedágio',        icone: 'toll',           classe: 'cat-pedagio',        cor: '#f59e0b' },
   { id: 'Estacionamento', icone: 'local_parking',  classe: 'cat-estacionamento', cor: '#22d3ee' },
   { id: 'Lavagem',        icone: 'local_car_wash', classe: 'cat-lavagem',        cor: '#06b6d4' },
-  { id: 'Manutenção',     icone: 'build',          classe: 'cat-manutencao',     cor: '#ec4899' },
+  { id: 'Manutenção',     icone: 'build',          classe: 'cat-manutencao',     cor: '#f59e0b' },
   { id: 'Multa',          icone: 'gavel',          classe: 'cat-multa',          cor: '#ef4444' },
   { id: 'Outros',         icone: 'receipt_long',   classe: 'cat-outros',         cor: '#94a3b8' }
 ];
