@@ -1,4 +1,4 @@
-/* APP_VERSION: v10.8 - multi-energetico + lancamentos offline */
+/* APP_VERSION: v10.9 - leitura offline - multi-energetico + lancamentos offline */
 /* =====================================================================
    CARWAY v16 - VIAGENS
    Planejador completo com Google Routes + Geocoding + Places
@@ -403,35 +403,48 @@ chamarRoutes: function (origem, destino, idaVolta, emissionType) {
   /* =========================================================
      LISTA DE VIAGENS
      ========================================================= */
-  carregarLista: function () {
+  carregarLista: async function () {
     var el = document.getElementById('blocoEmAndamento');
     if (el) el.innerHTML = '<div class="bloco-vazio">Carregando...</div>';
     var hoje = new Date();
-    if (!Viagens.periodo.ano) {
-      Viagens.periodo.ano = hoje.getFullYear();
-      Viagens.periodo.mes = hoje.getMonth() + 1;
-    }
+    if (!Viagens.periodo.ano) { Viagens.periodo.ano = hoje.getFullYear(); Viagens.periodo.mes = hoje.getMonth() + 1; }
     Viagens._registrarListenerVeiculoGlobal();
-    Promise.all([
-      sb.from('viagens').select('*').eq('organizacaoId', orgAtual.id).order('dataInicio', { ascending: false }),
-      sb.from('veiculos').select('id, nome, placa, tanque, combustivel, tipo, cor, energeticos, plugIn, capacidadeGnv, capacidadeBateria').eq('organizacaoId', orgAtual.id),
-      sb.from('abastecimentos').select('viagemId, veiculoId, valorTotal, litros, precoLitro, data, combustivel, unidade').eq('organizacaoId', orgAtual.id),
-      sb.from('despesas').select('viagemId, valor').eq('organizacaoId', orgAtual.id),
-      sb.from('manutencoes').select('viagemId, custo').eq('organizacaoId', orgAtual.id)
-    ]).then(function (r) {
-      Viagens.lista = r[0].data || [];
-      Viagens.veiculos = r[1].data || [];
-      Viagens.abastecimentos = r[2].data || [];
-      Viagens.despesas = r[3].data || [];
-      Viagens.manutencoes = r[4].data || [];
-      Viagens._garantirContainersTopo();
-      Viagens.renderFiltroPeriodo();
-      Viagens.renderChipsStatus();
-      Viagens.renderKpis();
-      Viagens.renderTudo();
-      Viagens._organizarTopoViagens();
-    });
+    function aplicar(d) {
+      d = d || {};
+      Viagens.lista = Array.isArray(d.viagens) ? d.viagens : [];
+      Viagens.veiculos = Array.isArray(d.veiculos) ? d.veiculos : [];
+      Viagens.abastecimentos = Array.isArray(d.abastecimentos) ? d.abastecimentos : [];
+      Viagens.despesas = Array.isArray(d.despesas) ? d.despesas : [];
+      Viagens.manutencoes = Array.isArray(d.manutencoes) ? d.manutencoes : [];
+      Viagens._garantirContainersTopo(); Viagens.renderFiltroPeriodo(); Viagens.renderChipsStatus();
+      Viagens.renderKpis(); Viagens.renderTudo(); Viagens._organizarTopoViagens();
+    }
+    if (!navigator.onLine) {
+      var cache = await Offline.obterColecao('viagens-pagina', null);
+      if (!cache) cache = {
+        viagens: await Offline.obterColecao('viagens', []),
+        veiculos: await Offline.obterColecao('veiculos', []),
+        abastecimentos: [], despesas: await Offline.obterColecao('despesas', []), manutencoes: []
+      };
+      aplicar(cache); return;
+    }
+    try {
+      var r = await Promise.all([
+        sb.from('viagens').select('*').eq('organizacaoId', orgAtual.id).order('dataInicio', { ascending: false }),
+        sb.from('veiculos').select('id, nome, placa, tanque, combustivel, tipo, cor, energeticos, plugIn, capacidadeGnv, capacidadeBateria').eq('organizacaoId', orgAtual.id),
+        sb.from('abastecimentos').select('viagemId, veiculoId, valorTotal, litros, precoLitro, data, combustivel, unidade').eq('organizacaoId', orgAtual.id),
+        sb.from('despesas').select('viagemId, valor').eq('organizacaoId', orgAtual.id),
+        sb.from('manutencoes').select('viagemId, custo').eq('organizacaoId', orgAtual.id)
+      ]);
+      var dados={viagens:r[0].data||[],veiculos:r[1].data||[],abastecimentos:r[2].data||[],despesas:r[3].data||[],manutencoes:r[4].data||[]};
+      aplicar(dados);
+      await Promise.all([Offline.salvarColecao('viagens',dados.viagens),Offline.salvarColecao('veiculos',dados.veiculos),Offline.salvarColecao('viagens-pagina',dados)]);
+    } catch (erro) {
+      console.warn('CarWay viagens - rede falhou, usando cache:', erro);
+      aplicar(await Offline.obterColecao('viagens-pagina',{viagens:Viagens.lista||[],veiculos:Viagens.veiculos||[]}));
+    }
   },
+
 
   _garantirContainersTopo: function () {
     if (document.getElementById('chipsStatusViagens')) return;
@@ -801,70 +814,49 @@ chamarRoutes: function (origem, destino, idaVolta, emissionType) {
   /* =========================================================
      FORMULÃRIO PLANEJADOR
      ========================================================= */
-abrirPlanejador: function (idExistente) {
-  App.fecharModal();
-
-  Viagens._registrarListenerVeiculoGlobal();
-    var precisaCarregar = Viagens.veiculos.length === 0;
-    var carregar = precisaCarregar
-      ? Promise.all([
-          sb.from('veiculos').select('id, nome, placa, tanque, combustivel, tipo, cor, energeticos, plugIn, capacidadeGnv, capacidadeBateria').eq('organizacaoId', orgAtual.id).order('nome'),
-          sb.from('abastecimentos').select('veiculoId, precoLitro, data, combustivel, unidade').eq('organizacaoId', orgAtual.id)
-        ]).then(function (rs) {
-          Viagens.veiculos = rs[0].data || [];
-          Viagens.abastecimentos = rs[1].data || [];
-        })
-      : Promise.resolve();
-    carregar.then(function () {
-      if (Viagens.veiculos.length === 0) {
-        App.abrirModal('VeÃ­culo necessÃ¡rio',
-          '<div style="text-align:center;padding:10px 0">' +
-            '<span class="ms" style="font-size:56px;color:var(--txt2);opacity:0.5">directions_car</span>' +
-            '<h3 style="margin:16px 0 10px">Cadastre um veÃ­culo primeiro</h3>' +
-            '<p style="color:var(--txt2);font-size:14px;line-height:1.6;margin:0 0 20px">Para planejar viagens, vocÃª precisa cadastrar pelo menos um veÃ­culo.</p>' +
-          '</div>',
-          function () { App.fecharModal(); App.irParaFormVeiculo(); },
-          'Cadastrar veÃ­culo'
-        );
-        return;
+abrirPlanejador: async function (idExistente) {
+    App.fecharModal();
+    Viagens._registrarListenerVeiculoGlobal();
+    if (!Viagens.veiculos.length && typeof Veiculos !== 'undefined' && Veiculos.lista.length) {
+      Viagens.veiculos = Veiculos.lista.slice();
+    }
+    if (!Viagens.veiculos.length) Viagens.veiculos = await Offline.obterColecao('veiculos', []);
+    if (!Viagens.abastecimentos.length) {
+      var paginaCache = await Offline.obterColecao('viagens-pagina', null);
+      if (paginaCache && paginaCache.abastecimentos) Viagens.abastecimentos = paginaCache.abastecimentos;
+    }
+    if (!Viagens.veiculos.length && navigator.onLine) {
+      try {
+        var rs = await Promise.all([
+          sb.from('veiculos').select('id,nome,placa,tanque,combustivel,tipo,cor,energeticos,plugIn,capacidadeGnv,capacidadeBateria').eq('organizacaoId', orgAtual.id).order('nome'),
+          sb.from('abastecimentos').select('veiculoId,precoLitro,data,combustivel,unidade').eq('organizacaoId', orgAtual.id)
+        ]);
+        Viagens.veiculos = rs[0].data || []; Viagens.abastecimentos = rs[1].data || [];
+        await Offline.salvarColecao('veiculos', Viagens.veiculos);
+      } catch (e) { console.warn('CarWay viagens - usando veículos locais:', e); }
+    }
+    if (!Viagens.veiculos.length) {
+      App.abrirModal('Veículo necessário','<div style="text-align:center;padding:10px 0"><span class="ms" style="font-size:56px;color:var(--txt2);opacity:.5">directions_car</span><h3>Cadastre um veículo primeiro</h3><p>Para planejar viagens, é necessário ter pelo menos um veículo salvo neste aparelho.</p></div>',function(){App.fecharModal();App.irParaFormVeiculo();},'Cadastrar veículo');
+      return;
+    }
+    if (idExistente) {
+      var existente = Viagens.lista.filter(function(v){return v.id===idExistente;})[0];
+      if (!existente && navigator.onLine) {
+        var rr=await sb.from('viagens').select('*').eq('id',idExistente).single(); existente=rr.data;
       }
-      if (idExistente) {
-        sb.from('viagens').select('*').eq('id', idExistente).single().then(function (r) {
-          if (r.error || !r.data) { App.toast('Viagem nÃ£o encontrada', 'erro'); return; }
-          Viagens.editando = r.data;
-          Viagens._modoEdicao = true;
-          Viagens._origemOriginalTxt = r.data.origem || '';
-          Viagens._destinoOriginalTxt = r.data.destino || '';
-          Viagens._idaVoltaOriginal = String(r.data.idaVolta).toUpperCase() === 'SIM';
-          Viagens.plano = {
-            origem: r.data.origem ? { lat: 0, lon: 0, endereco: r.data.origem } : null,
-            destino: r.data.destino ? { lat: 0, lon: 0, endereco: r.data.destino } : null,
-            idaVolta: Viagens._idaVoltaOriginal,
-            rotas: null, rotaAtiva: 0, paradasPorRota: {},
-            veiculoSelecionado: null, parametrosAutonomia: null, energeticoSelecionado: null
-          };
-          if (r.data.rota) {
-            try {
-              var rotaSalva = JSON.parse(r.data.rota);
-              Viagens.plano.origem = rotaSalva.origem || Viagens.plano.origem;
-              Viagens.plano.destino = rotaSalva.destino || Viagens.plano.destino;
-              Viagens.plano.energeticoSelecionado = rotaSalva.energetico || null;
-            } catch (e) {}
-          }
-          Viagens.renderPlanejador(r.data);
-        });
-      } else {
-        Viagens.editando = null;
-        Viagens._modoEdicao = false;
-        Viagens.plano = {
-          origem: null, destino: null, idaVolta: false,
-          rotas: null, rotaAtiva: 0, paradasPorRota: {},
-          veiculoSelecionado: null, parametrosAutonomia: null, energeticoSelecionado: null
-        };
-        Viagens.renderPlanejador(null);
-      }
-    });
+      if (!existente) { App.toast('Viagem não encontrada neste aparelho','erro'); return; }
+      Viagens.editando=existente; Viagens._modoEdicao=true;
+      Viagens._origemOriginalTxt=existente.origem||''; Viagens._destinoOriginalTxt=existente.destino||'';
+      Viagens._idaVoltaOriginal=String(existente.idaVolta).toUpperCase()==='SIM';
+      Viagens.plano={origem:existente.origem?{lat:0,lon:0,endereco:existente.origem}:null,destino:existente.destino?{lat:0,lon:0,endereco:existente.destino}:null,idaVolta:Viagens._idaVoltaOriginal,rotas:null,rotaAtiva:0,paradasPorRota:{},veiculoSelecionado:null,parametrosAutonomia:null,energeticoSelecionado:null};
+      if(existente.rota){try{var rotaSalva=JSON.parse(existente.rota);Viagens.plano.origem=rotaSalva.origem||Viagens.plano.origem;Viagens.plano.destino=rotaSalva.destino||Viagens.plano.destino;Viagens.plano.energeticoSelecionado=rotaSalva.energetico||null;}catch(e){}}
+      Viagens.renderPlanejador(existente); return;
+    }
+    Viagens.editando=null; Viagens._modoEdicao=false;
+    Viagens.plano={origem:null,destino:null,idaVolta:false,rotas:null,rotaAtiva:0,paradasPorRota:{},veiculoSelecionado:null,parametrosAutonomia:null,energeticoSelecionado:null};
+    Viagens.renderPlanejador(null);
   },
+
   renderPlanejador: function (viagemExistente) {
     var v = viagemExistente || {};
     var veiculos = Viagens.veiculos;
