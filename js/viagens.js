@@ -993,10 +993,10 @@ abrirPlanejador: async function (idExistente) {
       ? '<button class="btn-cancelar-form" onclick="App.irParaDetalheViagem(\'' + v.id + '\')"><span class="ms">close</span> Cancelar</button>'
       : '<button class="btn-cancelar-form" onclick="App.irPara(\'viagens\')"><span class="ms">close</span> Cancelar</button>';
 
-   html +=
+    html +=
       '<div class="form-acoes-viagem">' +
         '<div style="display:flex;gap:8px;width:100%">' +
-          '<div style="flex:1;display:flex">' + acaoCancelar.replace( 'class="btn-cancelar-form"', 'class="btn-cancelar-form" style="width:100%;justify-content:center"') +'</div>'
+          '<div style="flex:1">' + acaoCancelar + '</div>' +
           '<div style="flex:1"><button class="btn-novo-sec" style="width:100%;justify-content:center" onclick="Viagens.abrirNoMaps()"><span class="ms">navigation</span> Abrir no Maps</button></div>' +
         '</div>' +
         acaoPrincipal +
