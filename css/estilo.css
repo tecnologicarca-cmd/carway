@@ -3602,3 +3602,145 @@ body.tema-claro .sem-registros {
   color: var(--txt2);
   border-color: #d9ccbb;
 }
+
+/* =====================================================================
+   CARWAY v18.2 - TEMA CLARO COM FUNDO CINZA E CARDS DESTACADOS
+   Corrige a faixa escura inferior e aumenta o contraste entre pagina,
+   cards, campos e navegacao. Nao altera o tema escuro.
+   ===================================================================== */
+body.tema-claro {
+  --bg: #e5e7eb;
+  --bg2: #f1f5f9;
+  --card: #ffffff;
+  --card2: #f8fafc;
+  --linha: #cbd5e1;
+  --txt: #172033;
+  --txt2: #64748b;
+
+  --cw-bg: #e5e7eb;
+  --cw-bg-2: #f1f5f9;
+  --cw-card: #ffffff;
+  --cw-card-2: #f8fafc;
+  --cw-border: #cbd5e1;
+  --cw-text: #172033;
+  --cw-muted: #64748b;
+
+  background: #e5e7eb !important;
+}
+
+/* O index antigo define o HTML como escuro. No tema claro, cobre toda a
+   area util para que nao apareca uma faixa azul-marinho abaixo do conteudo. */
+html:has(body.tema-claro) {
+  background: #e5e7eb !important;
+}
+
+body.tema-claro .tela.ativa,
+body.tema-claro .tela-pagina.ativa,
+body.tema-claro .conteudo,
+body.tema-claro .pagina-conteudo {
+  background: #e5e7eb;
+}
+
+body.tema-claro .tela.ativa {
+  min-height: 100vh;
+}
+
+body.tema-claro .tela-pagina.ativa,
+body.tema-claro .conteudo {
+  min-height: calc(100vh - 150px);
+}
+
+body.tema-claro .pagina-conteudo {
+  min-height: calc(100vh - 190px);
+}
+
+/* Cabecalho e barra inferior claros; barra de veiculos continua escura. */
+body.tema-claro .topbar,
+body.tema-claro #topbar,
+body.tema-claro .tabbar,
+body.tema-claro #tabbar {
+  background: rgba(255, 255, 255, .98);
+  border-color: #cbd5e1;
+}
+
+body.tema-claro .barra-veic {
+  background: #111827;
+  border-color: #263247;
+}
+
+/* Títulos que tinham cor branca fixa passam a ser legiveis no tema claro. */
+body.tema-claro .saudacao h1,
+body.tema-claro .pagina-conteudo > h1,
+body.tema-claro .pagina-conteudo > h2,
+body.tema-claro .topbar-info b,
+body.tema-claro .topbar-texto b,
+body.tema-claro .titulo-pagina,
+body.tema-claro .form-titulo {
+  color: #172033 !important;
+}
+
+body.tema-claro .topbar-info small,
+body.tema-claro .topbar-texto small,
+body.tema-claro .saudacao p {
+  color: #64748b !important;
+}
+
+/* Cards brancos sobre cinza, com borda e sombra suficientes para destaque. */
+body.tema-claro .menu-card,
+body.tema-claro .painel-resumo,
+body.tema-claro .lancar-item,
+body.tema-claro .hub,
+body.tema-claro .card-veiculo,
+body.tema-claro .form-container,
+body.tema-claro .config-item,
+body.tema-claro .modal-caixa,
+body.tema-claro .fipe-compacto,
+body.tema-claro .abas-filtro,
+body.tema-claro .kpi-abast,
+body.tema-claro .card-abast,
+body.tema-claro .abas-manut,
+body.tema-claro .card-manut,
+body.tema-claro .card-historico,
+body.tema-claro .card-plano,
+body.tema-claro .card-desp,
+body.tema-claro .card-viagem,
+body.tema-claro .detalhe-cab,
+body.tema-claro .orcamento,
+body.tema-claro .rota-card,
+body.tema-claro .bloco-viagens,
+body.tema-claro .rota-cabecalho,
+body.tema-claro .app-nav-item,
+body.tema-claro .btn-admin-share {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  color: #172033;
+  box-shadow: 0 5px 15px rgba(15, 23, 42, .10);
+}
+
+body.tema-claro .card-abast,
+body.tema-claro .card-manut,
+body.tema-claro .card-desp,
+body.tema-claro .card-viagem,
+body.tema-claro .card-veiculo {
+  background: #ffffff;
+}
+
+body.tema-claro input,
+body.tema-claro select,
+body.tema-claro textarea,
+body.tema-claro .filtro-item,
+body.tema-claro .mes-seletor,
+body.tema-claro .ano-seletor {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  color: #172033;
+}
+
+/* Áreas vazias ficam no mesmo cinza da pagina, sem nova faixa escura. */
+body.tema-claro .vazio,
+body.tema-claro .vazio-veiculo,
+body.tema-claro .sem-registros {
+  background: transparent;
+  color: #64748b;
+  border-color: #cbd5e1;
+}
