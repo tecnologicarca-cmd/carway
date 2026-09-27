@@ -21,7 +21,7 @@ const APP_SHELL = [
    /* './css/estilo.css?v=17.6',
 './css/carway-ui.css?v=1.4',*/
 
-   './css/estilo.css?v=18.1',
+   './css/estilo.css?v=18.2',
 
   './fonts/material-symbols-rounded.woff2',
 
