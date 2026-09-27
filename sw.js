@@ -19,7 +19,7 @@ const APP_SHELL = [
   './manifest.json',
 
   './css/estilo.css?v=17.6',
-  './css/carway-ui.css?v=1.2',
+  './css/carway-ui.css?v=1.3',
 
   './fonts/material-symbols-rounded.woff2',
 
