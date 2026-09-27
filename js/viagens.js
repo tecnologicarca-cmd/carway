@@ -1,4 +1,4 @@
-/* APP_VERSION: v10.10 - UTF-8 corrigido - leitura offline - multi-energetico + lancamentos offline */
+/* APP_VERSION: v10.11 - correção unidade da parada - UTF-8 corrigido - leitura offline - multi-energetico + lancamentos offline */
 /* =====================================================================
    CARWAY v16 - VIAGENS
    Planejador completo com Google Routes + Geocoding + Places
@@ -2885,6 +2885,9 @@ html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="b
      largura/estilo (btn-novo-sec), em vez de pilulas pequenas
      inconsistentes. */
 paradaSalvaHTML: function (p) {
+  var unidadeParada = p.unidadeQuantidade ||
+    (p.energetico ? Viagens._infoEnergetico(p.energetico).unidade : '') ||
+    'L';
   var status = String(p.status || 'PENDENTE').toUpperCase();
 
   var concluida = status === 'CONCLUIDA';
