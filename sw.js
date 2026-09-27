@@ -39,7 +39,7 @@ const APP_SHELL = [
   './js/equipe.js?v=1.0',
   './js/conta.js?v=1.1',
   './js/paineladmin.js?v=3.0',
-  './js/viagens.js?v=10.10'
+  './js/viagens.js?v=10.11'
 ];
 
 /* Arquivos que podem ser acrescentados nas próximas etapas. */
