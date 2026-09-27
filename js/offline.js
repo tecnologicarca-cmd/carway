@@ -145,6 +145,25 @@ var Offline = {
       );
     });
   },
+  chaveContexto: function (nome) {
+    var orgId = (typeof orgAtual !== 'undefined' && orgAtual && orgAtual.id)
+      ? orgAtual.id
+      : 'SEM_ORG';
+    return 'org:' + orgId + ':' + String(nome || '');
+  },
+  salvarColecao: function (nome, valor) {
+    return Offline.salvarContexto(
+      Offline.chaveContexto(nome),
+      Array.isArray(valor) ? Offline._clonar(valor) : valor
+    );
+  },
+  obterColecao: function (nome, padrao) {
+    return Offline.obterContexto(Offline.chaveContexto(nome))
+      .then(function (valor) {
+        return valor == null ? (padrao == null ? [] : padrao) : valor;
+      });
+  },
+
 
   /* =========================================================
      SALVAMENTO COM FALLBACK
