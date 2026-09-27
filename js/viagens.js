@@ -1,55 +1,55 @@
-/* APP_VERSION: v10.9 - leitura offline - multi-energetico + lancamentos offline */
+/* APP_VERSION: v10.10 - UTF-8 corrigido - leitura offline - multi-energetico + lancamentos offline */
 /* =====================================================================
    CARWAY v16 - VIAGENS
    Planejador completo com Google Routes + Geocoding + Places
-   via Edge Functions + verificaÃ§Ã£o de manutenÃ§Ã£o.
+   via Edge Functions + verificação de manutenção.
 
-   v9.2 (esta versÃ£o) â€” ajustes de layout e correÃ§Ã£o do OrÃ§ado x Realizado
-   - NOVO: bloco de informaÃ§Ã£o do veÃ­culo (planejador, resultados de rota
-     e tela final de criar viagem) agora fica em UMA ÃšNICA LINHA: Ã­cone +
-     nome + placa, e Ã  direita Ã­cone (bomba vermelha ou bateria/recarga
-     verde para elÃ©trico) + "CombustÃ­vel: X". Antes ficava empilhado em
-     3 linhas separadas. Um Ãºnico helper (_veiculoBlocoHTML) Ã© usado nos
-     4 lugares onde esse bloco aparece â€” inclusive na ediÃ§Ã£o de viagem,
+   v9.2 (esta versão) — ajustes de layout e correção do Orçado x Realizado
+   - NOVO: bloco de informação do veículo (planejador, resultados de rota
+     e tela final de criar viagem) agora fica em UMA ÚNICA LINHA: ícone +
+     nome + placa, e à direita ícone (bomba vermelha ou bateria/recarga
+     verde para elétrico) + "Combustível: X". Antes ficava empilhado em
+     3 linhas separadas. Um único helper (_veiculoBlocoHTML) é usado nos
+     4 lugares onde esse bloco aparece — inclusive na edição de viagem,
      que reaproveita a mesma tela.
-   - CORRIGIDO: botÃ£o "Cancelar" do planejador (e da ediÃ§Ã£o) agora usa a
-     classe padrÃ£o arredondada do app (btn-cancelar-form) em vez de um
-     estilo quadrado fora do padrÃ£o.
-   - RENOMEADO: botÃ£o "Buscar rotas" â†’ "Criar viagem" (mesma funÃ§Ã£o,
-     sÃ³ o texto mudou), a pedido do usuÃ¡rio.
-   - MELHORADO: disposiÃ§Ã£o dos botÃµes do planejador â€” "Cancelar" e
-     "Abrir no Maps" ficam lado a lado (mesma largura), com o botÃ£o
-     principal ("Criar viagem"/"Salvar alteraÃ§Ãµes") abaixo, em largura
-     total â€” mesmo padrÃ£o usado em outras telas do app.
-   - NOVO: na lista de viagens, o botÃ£o "Nova viagem" foi renomeado para
-     "Criar nova viagem" e movido para o TOPO da pÃ¡gina (acima de
-     Postos/PDF, filtro de perÃ­odo e KPIs). Os chips de status
-     (Todos/Em andamento/Planejadas/ConcluÃ­das) foram movidos para onde
-     o botÃ£o "Nova viagem" ficava antes â€” logo acima da lista de cards.
-   - CORRIGIDO: nos cards da lista com status "Planejada", os botÃµes
+   - CORRIGIDO: botão "Cancelar" do planejador (e da edição) agora usa a
+     classe padrão arredondada do app (btn-cancelar-form) em vez de um
+     estilo quadrado fora do padrão.
+   - RENOMEADO: botão "Buscar rotas" → "Criar viagem" (mesma função,
+     só o texto mudou), a pedido do usuário.
+   - MELHORADO: disposição dos botões do planejador — "Cancelar" e
+     "Abrir no Maps" ficam lado a lado (mesma largura), com o botão
+     principal ("Criar viagem"/"Salvar alterações") abaixo, em largura
+     total — mesmo padrão usado em outras telas do app.
+   - NOVO: na lista de viagens, o botão "Nova viagem" foi renomeado para
+     "Criar nova viagem" e movido para o TOPO da página (acima de
+     Postos/PDF, filtro de período e KPIs). Os chips de status
+     (Todos/Em andamento/Planejadas/Concluídas) foram movidos para onde
+     o botão "Nova viagem" ficava antes — logo acima da lista de cards.
+   - CORRIGIDO: nos cards da lista com status "Planejada", os botões
      Ver / Iniciar / Excluir (lixeira) agora ficam sempre na MESMA
-     linha (antes a lixeira quebrava para uma linha prÃ³pria).
-   - CORRIGIDO: botÃµes Encerrar/Editar/OrÃ§amento/Excluir no topo do
-     detalhe da viagem agora seguem o padrÃ£o visual do app (botÃµes
-     secundÃ¡rios uniformes, em vez de pilulas pequenas fora do padrÃ£o).
-   - CORRIGIDO (bug importante): o grÃ¡fico "OrÃ§ado x Realizado" sempre
-     jogava TODO o valor gasto (alimentaÃ§Ã£o, hospedagem, pedÃ¡gio) dentro
+     linha (antes a lixeira quebrava para uma linha própria).
+   - CORRIGIDO: botões Encerrar/Editar/Orçamento/Excluir no topo do
+     detalhe da viagem agora seguem o padrão visual do app (botões
+     secundários uniformes, em vez de pilulas pequenas fora do padrão).
+   - CORRIGIDO (bug importante): o gráfico "Orçado x Realizado" sempre
+     jogava TODO o valor gasto (alimentação, hospedagem, pedágio) dentro
      da barra "Outros", porque a tela nunca separava os valores reais
-     por categoria (sÃ³ o PDF fazia essa separaÃ§Ã£o corretamente). Agora
-     a tela tambÃ©m separa por categoria (AlimentaÃ§Ã£o/Hospedagem/PedÃ¡gio/
-     Outros), entÃ£o cada barra cresce com o valor certo.
-   - CORRIGIDO: botÃµes "Abasteci aqui" / "JÃ¡ lancei" / "NÃ£o parei" (nas
-     paradas jÃ¡ salvas da viagem) agora seguem o padrÃ£o visual do app,
+     por categoria (só o PDF fazia essa separação corretamente). Agora
+     a tela também separa por categoria (Alimentação/Hospedagem/Pedágio/
+     Outros), então cada barra cresce com o valor certo.
+   - CORRIGIDO: botões "Abasteci aqui" / "Já lancei" / "Não parei" (nas
+     paradas já salvas da viagem) agora seguem o padrão visual do app,
      com os 3 na mesma largura/estilo.
-   - REMOVIDO: botÃ£o "Refazer" no mapa do detalhe (redundante â€” jÃ¡ existe
-     "Editar" no topo da pÃ¡gina). "Tela cheia" e "Postos" agora ficam
+   - REMOVIDO: botão "Refazer" no mapa do detalhe (redundante — já existe
+     "Editar" no topo da página). "Tela cheia" e "Postos" agora ficam
      lado a lado, e "Exportar viagem em PDF" fica abaixo, centralizado
      e em largura total.
-   - REMOVIDO (redundÃ¢ncia): a seÃ§Ã£o "Abastecimentos" no detalhe da
-     viagem sÃ³ aparece agora quando a viagem NÃƒO tem paradas planejadas
-     â€” quando hÃ¡ paradas, os abastecimentos vinculados jÃ¡ aparecem
-     dentro de cada parada concluÃ­da, entÃ£o repetir a lista embaixo
-     era informaÃ§Ã£o duplicada.
+   - REMOVIDO (redundância): a seção "Abastecimentos" no detalhe da
+     viagem só aparece agora quando a viagem NÃO tem paradas planejadas
+     — quando há paradas, os abastecimentos vinculados já aparecem
+     dentro de cada parada concluída, então repetir a lista embaixo
+     era informação duplicada.
    ===================================================================== */
 var Viagens = {
   lista: [],
@@ -94,21 +94,21 @@ var Viagens = {
 
   if (tipo.indexOf('application/json') === -1) {
     return resposta.text().then(function (texto) {
-      console.error('CarWay ' + nomeFuncao + ' - resposta nÃ£o Ã© JSON:', resposta.status, texto.substring(0, 300));
+      console.error('CarWay ' + nomeFuncao + ' - resposta não é JSON:', resposta.status, texto.substring(0, 300));
 
       if (resposta.status === 401 || resposta.status === 403) {
-        throw new Error('Sua sessÃ£o expirou. Saia e entre novamente no app.');
+        throw new Error('Sua sessão expirou. Saia e entre novamente no app.');
       }
 
       if (resposta.status === 404) {
-        throw new Error('ServiÃ§o de mapas indisponÃ­vel no momento.');
+        throw new Error('Serviço de mapas indisponível no momento.');
       }
 
       if (resposta.status >= 500) {
-        throw new Error('O serviÃ§o de mapas estÃ¡ fora do ar. Tente novamente em instantes.');
+        throw new Error('O serviço de mapas está fora do ar. Tente novamente em instantes.');
       }
 
-      throw new Error('Resposta inesperada do serviÃ§o de mapas.');
+      throw new Error('Resposta inesperada do serviço de mapas.');
     });
   }
 
@@ -119,7 +119,7 @@ var Viagens = {
       console.error('CarWay ' + nomeFuncao + ' - erro ' + resposta.status + ':', mensagem);
 
       if (resposta.status === 401 || resposta.status === 403) {
-        throw new Error('Sua sessÃ£o expirou. Saia e entre novamente no app.');
+        throw new Error('Sua sessão expirou. Saia e entre novamente no app.');
       }
 
       if (resposta.status === 429) {
@@ -127,10 +127,10 @@ var Viagens = {
       }
 
       if (resposta.status >= 500) {
-        throw new Error('O serviÃ§o de mapas estÃ¡ instÃ¡vel. Tente novamente.');
+        throw new Error('O serviço de mapas está instável. Tente novamente.');
       }
 
-      throw new Error(mensagem || 'NÃ£o foi possÃ­vel consultar o serviÃ§o de mapas.');
+      throw new Error(mensagem || 'Não foi possível consultar o serviço de mapas.');
     }
 
     if (dados && dados.erro) {
@@ -141,8 +141,8 @@ var Viagens = {
     return dados;
   }).catch(function (e) {
     if (e instanceof SyntaxError) {
-      console.error('CarWay ' + nomeFuncao + ' - JSON invÃ¡lido');
-      throw new Error('Resposta invÃ¡lida do serviÃ§o de mapas.');
+      console.error('CarWay ' + nomeFuncao + ' - JSON inválido');
+      throw new Error('Resposta inválida do serviço de mapas.');
     }
 
     throw e;
@@ -155,7 +155,7 @@ chamarRoutes: function (origem, destino, idaVolta, emissionType) {
   return sb.auth.getSession().then(function (r) {
     var token = r.data && r.data.session ? r.data.session.access_token : '';
 
-    if (!token) throw new Error('SessÃ£o expirada. FaÃ§a login novamente.');
+    if (!token) throw new Error('Sessão expirada. Faça login novamente.');
 
     return fetch(url, {
       method: 'POST',
@@ -171,7 +171,7 @@ chamarRoutes: function (origem, destino, idaVolta, emissionType) {
         emissionType: emissionType || 'GASOLINE'
       })
     }).catch(function () {
-      throw new Error('Sem conexÃ£o com a internet. Verifique sua rede.');
+      throw new Error('Sem conexão com a internet. Verifique sua rede.');
     });
   }).then(function (resposta) {
     return Viagens._processarRespostaFuncao(resposta, 'google-routes');
@@ -185,7 +185,7 @@ chamarRoutes: function (origem, destino, idaVolta, emissionType) {
   return sb.auth.getSession().then(function (r) {
     var token = r.data && r.data.session ? r.data.session.access_token : '';
 
-    if (!token) throw new Error('SessÃ£o expirada. FaÃ§a login novamente.');
+    if (!token) throw new Error('Sessão expirada. Faça login novamente.');
 
     return fetch(url, {
       method: 'POST',
@@ -196,7 +196,7 @@ chamarRoutes: function (origem, destino, idaVolta, emissionType) {
       },
       body: JSON.stringify(params)
     }).catch(function () {
-      throw new Error('Sem conexÃ£o com a internet. Verifique sua rede.');
+      throw new Error('Sem conexão com a internet. Verifique sua rede.');
     });
   }).then(function (resposta) {
     return Viagens._processarRespostaFuncao(resposta, 'google-geocode');
@@ -211,7 +211,7 @@ chamarRoutes: function (origem, destino, idaVolta, emissionType) {
   return sb.auth.getSession().then(function (r) {
     var token = r.data && r.data.session ? r.data.session.access_token : '';
 
-    if (!token) throw new Error('SessÃ£o expirada. FaÃ§a login novamente.');
+    if (!token) throw new Error('Sessão expirada. Faça login novamente.');
 
     return fetch(url, {
       method: 'POST',
@@ -228,7 +228,7 @@ chamarRoutes: function (origem, destino, idaVolta, emissionType) {
         tipo: tipo || 'gas_station'
       })
     }).catch(function () {
-      throw new Error('Sem conexÃ£o com a internet. Verifique sua rede.');
+      throw new Error('Sem conexão com a internet. Verifique sua rede.');
     });
   }).then(function (resposta) {
     return Viagens._processarRespostaFuncao(resposta, 'google-places');
@@ -237,7 +237,7 @@ chamarRoutes: function (origem, destino, idaVolta, emissionType) {
   });
 },
   /* =========================================================
-     DETECÃ‡ÃƒO DE DISPOSITIVO
+     DETECÇÃO DE DISPOSITIVO
      ========================================================= */
   ehDispositivoMovel: function () {
     var ua = navigator.userAgent || '';
@@ -249,16 +249,16 @@ chamarRoutes: function (origem, destino, idaVolta, emissionType) {
   },
 
   /* =========================================================
-     BLOCO DO VEÃCULO â€” helper Ãºnico, em UMA linha (Ã­cone + nome +
-     placa + Ã­cone de combustÃ­vel/recarga + nome do combustÃ­vel).
-     Usado no planejador, na troca de veÃ­culo, nos resultados de rota
-     e na tela final de criar viagem â€” assim os 4 lugares ficam
-     sempre idÃªnticos e consistentes.
+     BLOCO DO VEÍCULO — helper único, em UMA linha (ícone + nome +
+     placa + ícone de combustível/recarga + nome do combustível).
+     Usado no planejador, na troca de veículo, nos resultados de rota
+     e na tela final de criar viagem — assim os 4 lugares ficam
+     sempre idênticos e consistentes.
      ========================================================= */
   _infoEnergetico: function (energetico) {
     var c = String(energetico || 'Gasolina').toUpperCase();
-    if (c.indexOf('ELÃ‰TR') > -1 || c.indexOf('ELETR') > -1) return { nome: 'ElÃ©trico', unidade: 'kWh', consumo: 'km/kWh', capacidade: 'Bateria', icone: 'ev_station', cor: '#22c55e', categoria: 'eletrico', emissionType: 'ELECTRIC' };
-    if (c.indexOf('GNV') > -1) return { nome: 'GNV', unidade: 'mÂ³', consumo: 'km/mÂ³', capacidade: 'Cilindro', icone: 'propane_tank', cor: '#22d3ee', categoria: 'gnv', emissionType: 'GASOLINE' };
+    if (c.indexOf('ELÉTR') > -1 || c.indexOf('ELETR') > -1) return { nome: 'Elétrico', unidade: 'kWh', consumo: 'km/kWh', capacidade: 'Bateria', icone: 'ev_station', cor: '#22c55e', categoria: 'eletrico', emissionType: 'ELECTRIC' };
+    if (c.indexOf('GNV') > -1) return { nome: 'GNV', unidade: 'm³', consumo: 'km/m³', capacidade: 'Cilindro', icone: 'propane_tank', cor: '#22d3ee', categoria: 'gnv', emissionType: 'GASOLINE' };
     if (c.indexOf('ETANOL') > -1) return { nome: 'Etanol', unidade: 'L', consumo: 'km/L', capacidade: 'Tanque', icone: 'local_gas_station', cor: '#22c55e', categoria: 'combustivel', emissionType: 'GASOLINE' };
     if (c.indexOf('DIESEL') > -1) return { nome: 'Diesel', unidade: 'L', consumo: 'km/L', capacidade: 'Tanque', icone: 'local_gas_station', cor: '#f59e0b', categoria: 'combustivel', emissionType: 'DIESEL' };
     return { nome: 'Gasolina', unidade: 'L', consumo: 'km/L', capacidade: 'Tanque', icone: 'local_gas_station', cor: '#ef4444', categoria: 'combustivel', emissionType: 'GASOLINE' };
@@ -272,10 +272,10 @@ chamarRoutes: function (origem, destino, idaVolta, emissionType) {
       if (lista.length) return lista;
     }
     var c = String(veic.combustivel || '').toUpperCase();
-    if (c.indexOf('ELÃ‰TR') > -1 || c.indexOf('ELETR') > -1) return ['ElÃ©trico'];
+    if (c.indexOf('ELÉTR') > -1 || c.indexOf('ELETR') > -1) return ['Elétrico'];
     if (c.indexOf('FLEX') > -1) return ['Gasolina', 'Etanol'];
     if (c.indexOf('GNV') > -1) return ['Gasolina', 'GNV'];
-    if (c.indexOf('HÃBR') > -1 || c.indexOf('HIBR') > -1) return veic.plugIn ? ['Gasolina', 'ElÃ©trico'] : ['Gasolina'];
+    if (c.indexOf('HÍBR') > -1 || c.indexOf('HIBR') > -1) return veic.plugIn ? ['Gasolina', 'Elétrico'] : ['Gasolina'];
     if (c.indexOf('DIESEL') > -1) return ['Diesel'];
     if (c.indexOf('ETANOL') > -1) return ['Etanol'];
     return ['Gasolina'];
@@ -283,7 +283,7 @@ chamarRoutes: function (origem, destino, idaVolta, emissionType) {
 
   _capacidadeEnergetico: function (veic, energetico) {
     var info = Viagens._infoEnergetico(energetico);
-    if (info.nome === 'ElÃ©trico') return Number(veic && veic.capacidadeBateria) || Number(veic && veic.tanque) || 0;
+    if (info.nome === 'Elétrico') return Number(veic && veic.capacidadeBateria) || Number(veic && veic.tanque) || 0;
     if (info.nome === 'GNV') return Number(veic && veic.capacidadeGnv) || Number(veic && veic.tanque) || 0;
     return Number(veic && veic.tanque) || 0;
   },
@@ -301,7 +301,7 @@ chamarRoutes: function (origem, destino, idaVolta, emissionType) {
       ' style="display:flex;align-items:center;gap:9px;flex-wrap:wrap;border-color:' + corVeic + '44">' +
       '<span class="ms" style="color:' + corVeic + ';font-size:24px;flex:none">' + icoVeic + '</span>' +
       '<b style="white-space:nowrap">' + App.esc(veic.nome) + '</b>' +
-      '<span style="color:var(--txt2);font-size:12.5px;white-space:nowrap">Â· ' + App.esc(veic.placa || 'sem placa') + '</span>' +
+      '<span style="color:var(--txt2);font-size:12.5px;white-space:nowrap">· ' + App.esc(veic.placa || 'sem placa') + '</span>' +
       '<span style="display:inline-flex;align-items:center;gap:4px;margin-left:auto;font-size:12px;white-space:nowrap">' +
         '<span class="ms" style="color:' + info.cor + ';font-size:16px">' + info.icone + '</span>' +
         'Energia: <b style="color:' + info.cor + '">' + App.esc(info.nome) + '</b>' +
@@ -340,7 +340,7 @@ chamarRoutes: function (origem, destino, idaVolta, emissionType) {
     if (lCons) lCons.textContent = 'Consumo (' + info.consumo + ')';
     if (lCap) lCap.textContent = info.capacidade + ' (' + info.unidade + ')';
     if (lNivel) lNivel.textContent = info.capacidade + ' agora';
-    if (lPreco) lPreco.textContent = 'PreÃ§o / ' + info.unidade;
+    if (lPreco) lPreco.textContent = 'Preço / ' + info.unidade;
     var cap = document.getElementById('plTanque');
     if (cap && capacidade > 0) cap.value = capacidade;
     if (atualizarPreco) {
@@ -352,8 +352,8 @@ chamarRoutes: function (origem, destino, idaVolta, emissionType) {
   },
 
   /* =========================================================
-     HISTÃ“RICO DE ENDEREÃ‡OS  /* =========================================================
-     HISTÃ“RICO DE ENDEREÃ‡OS
+     HISTÓRICO DE ENDEREÇOS  /* =========================================================
+     HISTÓRICO DE ENDEREÇOS
      ========================================================= */
   lerHistorico: function () {
     try {
@@ -460,13 +460,13 @@ chamarRoutes: function (origem, destino, idaVolta, emissionType) {
     ancoraDestino.parentNode.insertBefore(acoes, ancoraDestino);
   },
 
-  /* Reorganiza o topo da pÃ¡gina (uma Ãºnica vez): renomeia o botÃ£o
-     nativo "Nova viagem" para "Criar nova viagem", move esse botÃ£o
-     para o TOPO da pÃ¡gina, e move os chips de status para onde o
-     botÃ£o ficava antes (logo acima da lista de cards). Feito via DOM
-     (sem editar index.html), com verificaÃ§Ãµes defensivas em cada
-     passo â€” se algum elemento nÃ£o for encontrado, simplesmente nÃ£o
-     mexe naquela parte, sem quebrar o resto da pÃ¡gina. */
+  /* Reorganiza o topo da página (uma única vez): renomeia o botão
+     nativo "Nova viagem" para "Criar nova viagem", move esse botão
+     para o TOPO da página, e move os chips de status para onde o
+     botão ficava antes (logo acima da lista de cards). Feito via DOM
+     (sem editar index.html), com verificações defensivas em cada
+     passo — se algum elemento não for encontrado, simplesmente não
+     mexe naquela parte, sem quebrar o resto da página. */
     _organizarTopoViagens: function () {
     if (Viagens._topoOrganizado) return;
     var pg = document.getElementById('pg-viagens');
@@ -497,7 +497,7 @@ chamarRoutes: function (origem, destino, idaVolta, emissionType) {
       }
       Viagens._topoOrganizado = true;
     } catch (e) {
-      console.warn('CarWay: nÃ£o foi possÃ­vel reorganizar o topo de Viagens:', e);
+      console.warn('CarWay: não foi possível reorganizar o topo de Viagens:', e);
     }
   },
 
@@ -527,7 +527,7 @@ chamarRoutes: function (origem, destino, idaVolta, emissionType) {
       chip('todos', 'apps', '#60a5fa', 'Todos', listaPeriodo.length) +
       chip('andamento', 'directions_run', '#f59e0b', 'Em andamento', qtdAndamento) +
       chip('planejada', 'schedule', '#3b82f6', 'Planejadas', qtdPlanejada) +
-      chip('concluida', 'check_circle', '#22c55e', 'ConcluÃ­das', qtdConcluida);
+      chip('concluida', 'check_circle', '#22c55e', 'Concluídas', qtdConcluida);
   },
 
   setFiltroStatus: function (v) {
@@ -542,12 +542,12 @@ chamarRoutes: function (origem, destino, idaVolta, emissionType) {
     var p = Viagens.periodo;
     var anos = Viagens.anosDisponiveis();
     var html = '<div class="filtro-viagens">' +
-      '<button class="fv-modo' + (p.modo === 'mes' ? ' sel' : '') + '" onclick="Viagens.setModo(\'mes\')">MÃªs</button>' +
+      '<button class="fv-modo' + (p.modo === 'mes' ? ' sel' : '') + '" onclick="Viagens.setModo(\'mes\')">Mês</button>' +
       '<button class="fv-modo' + (p.modo === 'ano' ? ' sel' : '') + '" onclick="Viagens.setModo(\'ano\')">Ano</button>' +
       '<button class="fv-modo' + (p.modo === 'tudo' ? ' sel' : '') + '" onclick="Viagens.setModo(\'tudo\')">Tudo</button>' +
     '</div>';
     if (p.modo === 'mes') {
-      var meses = ['Janeiro','Fevereiro','MarÃ§o','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+      var meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
       html += '<div class="fv-nav">' +
         '<button onclick="Viagens.navMes(-1)"><span class="ms">chevron_left</span></button>' +
         '<select onchange="Viagens.setMes(this.value)">' +
@@ -634,7 +634,7 @@ chamarRoutes: function (origem, destino, idaVolta, emissionType) {
 
     if (!lista.length) {
       elPrincipal.innerHTML = '<div class="bloco-vazio">' +
-        (Viagens.filtroStatus === 'todos' ? 'Nenhuma viagem neste perÃ­odo.' : 'Nenhuma viagem neste filtro.') +
+        (Viagens.filtroStatus === 'todos' ? 'Nenhuma viagem neste período.' : 'Nenhuma viagem neste filtro.') +
       '</div>';
       Viagens.renderAcoesRodape();
       return;
@@ -654,7 +654,7 @@ chamarRoutes: function (origem, destino, idaVolta, emissionType) {
 
   exportarPDF: function () {
     if (!window.jspdf || !window.jspdf.jsPDF) {
-      App.toast('Biblioteca de PDF nÃ£o carregada. Atualize a pÃ¡gina (Ctrl+F5).', 'erro');
+      App.toast('Biblioteca de PDF não carregada. Atualize a página (Ctrl+F5).', 'erro');
       return;
     }
     var lista = Viagens.lista.filter(function (v) { return Viagens._noPeriodo(v); });
@@ -671,23 +671,23 @@ chamarRoutes: function (origem, destino, idaVolta, emissionType) {
     var totalGasto = 0;
 
     doc.setFontSize(16);
-    doc.text('CarWay - RelatÃ³rio de Viagens', 14, 16);
+    doc.text('CarWay - Relatório de Viagens', 14, 16);
     doc.setFontSize(10);
     doc.setTextColor(100);
-    doc.text('OrganizaÃ§Ã£o: ' + ((typeof orgAtual !== 'undefined' && orgAtual && orgAtual.nome) || '-'), 14, 23);
-    var rotuloStatus = { todos: 'Todos os status', andamento: 'Em andamento', planejada: 'Planejadas', concluida: 'ConcluÃ­das' }[Viagens.filtroStatus];
-    doc.text('Filtro: ' + rotuloStatus + ' Â· Emitido em ' + Viagens.fmtData(App.hojeISO()), 14, 28);
+    doc.text('Organização: ' + ((typeof orgAtual !== 'undefined' && orgAtual && orgAtual.nome) || '-'), 14, 23);
+    var rotuloStatus = { todos: 'Todos os status', andamento: 'Em andamento', planejada: 'Planejadas', concluida: 'Concluídas' }[Viagens.filtroStatus];
+    doc.text('Filtro: ' + rotuloStatus + ' · Emitido em ' + Viagens.fmtData(App.hojeISO()), 14, 28);
     doc.setTextColor(0);
 
     var corpo = lista.map(function (v) {
       var t = Viagens.calcularTotais(v.id);
       totalGasto += t.total;
       var veic = Viagens.veiculos.filter(function (x) { return x.id === v.veiculoId; })[0];
-      var status = { andamento: 'Em andamento', planejada: 'Planejada', concluida: 'ConcluÃ­da' }[v.status] || v.status;
+      var status = { andamento: 'Em andamento', planejada: 'Planejada', concluida: 'Concluída' }[v.status] || v.status;
       var km = v.kmFinal > 0 ? (Number(v.kmFinal) - Number(v.kmInicial)) : Number(v.distancia) || 0;
       return [
-        v.titulo || (v.origem + ' â†’ ' + v.destino),
-        veic ? veic.nome : 'â€”',
+        v.titulo || (v.origem + ' → ' + v.destino),
+        veic ? veic.nome : '—',
         Viagens.fmtData(v.dataInicio) + (v.dataFim ? ' a ' + Viagens.fmtData(v.dataFim) : ''),
         status,
         App.fmtNum(km),
@@ -699,7 +699,7 @@ chamarRoutes: function (origem, destino, idaVolta, emissionType) {
       startY: 34,
       styles: { fontSize: 8 },
       headStyles: { fillColor: [59, 130, 246] },
-      head: [['Viagem', 'VeÃ­culo', 'PerÃ­odo', 'Status', 'KM', 'Gasto total']],
+      head: [['Viagem', 'Veículo', 'Período', 'Status', 'KM', 'Gasto total']],
       body: corpo
     });
 
@@ -719,7 +719,7 @@ chamarRoutes: function (origem, destino, idaVolta, emissionType) {
       doc.setPage(i);
       doc.setFontSize(8);
       doc.setTextColor(150);
-      doc.text('PÃ¡gina ' + i + ' de ' + totalPaginas, 196, 290, { align: 'right' });
+      doc.text('Página ' + i + ' de ' + totalPaginas, 196, 290, { align: 'right' });
     }
 
     Viagens._finalizarPDF(doc, 'carway-viagens-' + App.hojeISO() + '.pdf');
@@ -737,7 +737,7 @@ chamarRoutes: function (origem, destino, idaVolta, emissionType) {
     });
     Viagens.despesas.forEach(function (d) { if (d.viagemId === viagemId) { desp += Number(d.valor) || 0; qtdDesp++; } });
     Viagens.manutencoes.forEach(function (m) { if (m.viagemId === viagemId) { manut += Number(m.custo) || 0; qtdManut++; } });
-    var resumo = Object.keys(quantidades).map(function (u) { return App.fmtNum(quantidades[u], 1) + ' ' + u; }).join(' Â· ') || 'â€”';
+    var resumo = Object.keys(quantidades).map(function (u) { return App.fmtNum(quantidades[u], 1) + ' ' + u; }).join(' · ') || '—';
     return { combustivel: Math.round(combustivel * 100) / 100, quantidades: quantidades, unidadeResumo: resumo, litros: 0, despesas: Math.round(desp * 100) / 100, qtdDespesas: qtdDesp, manutencoes: Math.round(manut * 100) / 100, qtdManutencoes: qtdManut, total: Math.round((combustivel + desp + manut) * 100) / 100 };
   },
 
@@ -754,21 +754,21 @@ chamarRoutes: function (origem, destino, idaVolta, emissionType) {
   },
 
   /* Card da lista:  /* Card da lista: PLANEJADA agora tem Ver/Iniciar/Excluir sempre na
-     MESMA LINHA (via flex explÃ­cito), em vez de a lixeira quebrar
-     para uma linha prÃ³pria. */
+     MESMA LINHA (via flex explícito), em vez de a lixeira quebrar
+     para uma linha própria. */
   cardHTML: function (v) {
     var veiculo = Viagens.veiculos.filter(function (x) { return x.id === v.veiculoId; })[0];
     var totais = Viagens.calcularTotais(v.id);
     var status = v.status || 'planejada';
-    var labelStatus = { planejada: 'Planejada', andamento: 'Em curso', concluida: 'ConcluÃ­da' }[status] || status;
+    var labelStatus = { planejada: 'Planejada', andamento: 'Em curso', concluida: 'Concluída' }[status] || status;
     var icoStatus = { planejada: 'schedule', andamento: 'directions_run', concluida: 'check_circle' }[status] || 'schedule';
     var datas = Viagens.fmtData(v.dataInicio);
-    if (v.dataFim) datas += ' â†’ ' + Viagens.fmtData(v.dataFim);
+    if (v.dataFim) datas += ' → ' + Viagens.fmtData(v.dataFim);
     var tags = ['<span class="cv2-tag">' + labelStatus + '</span>'];
     if (String(v.idaVolta).toUpperCase() === 'SIM') tags.push('<span class="cv2-tag ida-volta"><span class="ms" style="font-size:13px">sync_alt</span>Ida e volta</span>');
     if (v.rota) tags.push('<span class="cv2-tag rota"><span class="ms" style="font-size:13px">map</span>Com rota</span>');
-    var veicNome = veiculo ? veiculo.nome : 'VeÃ­culo';
-    var veicPlaca = veiculo && veiculo.placa ? ' Â· ' + veiculo.placa : '';
+    var veicNome = veiculo ? veiculo.nome : 'Veículo';
+    var veicPlaca = veiculo && veiculo.placa ? ' · ' + veiculo.placa : '';
     var km = v.kmFinal > 0 ? (Number(v.kmFinal) - Number(v.kmInicial)) : Number(v.distancia);
     var acoes = '';
     if (status === 'planejada') {
@@ -794,7 +794,7 @@ chamarRoutes: function (origem, destino, idaVolta, emissionType) {
       '<div class="cv2-topo">' +
         '<div class="cv2-icone" style="background:' + corVeic + '22;color:' + corVeic + '"><span class="ms">' + icoStatus + '</span></div>' +
         '<div class="cv2-info">' +
-          '<b>' + App.esc(v.titulo || (v.origem + ' â†’ ' + v.destino)) + '</b>' +
+          '<b>' + App.esc(v.titulo || (v.origem + ' → ' + v.destino)) + '</b>' +
           '<small>' + App.esc(datas) + '</small>' +
           '<small style="display:flex;align-items:center;gap:4px;color:' + corVeic + '">' +
             '<span class="ms" style="font-size:14px">' + icoVeic + '</span>' + App.esc(veicNome + veicPlaca) +
@@ -805,14 +805,14 @@ chamarRoutes: function (origem, destino, idaVolta, emissionType) {
       '<div class="cv2-nums">' +
         '<div class="cv2-num"><b>' + App.fmtNum(km) + '</b><small>KM</small></div>' +
         '<div class="cv2-num"><b>' + totais.unidadeResumo + '</b><small>Energia</small></div>' +
-        '<div class="cv2-num"><b>' + (totais.qtdDespesas + totais.qtdManutencoes) + '</b><small>LanÃ§amentos</small></div>' +
+        '<div class="cv2-num"><b>' + (totais.qtdDespesas + totais.qtdManutencoes) + '</b><small>Lançamentos</small></div>' +
       '</div>' +
       '<div class="cv2-tags">' + tags.join('') + '</div>' +
       '<div class="cv2-acoes">' + acoes + '</div>' +
     '</div>';
   },
   /* =========================================================
-     FORMULÃRIO PLANEJADOR
+     FORMULÁRIO PLANEJADOR
      ========================================================= */
 abrirPlanejador: async function (idExistente) {
     App.fecharModal();
@@ -864,7 +864,7 @@ abrirPlanejador: async function (idExistente) {
     var veic = veiculos.filter(function (x) { return x.id === vSel; })[0] || veiculos[0];
     var veicOpts = veiculos.map(function (x) {
       return '<option value="' + x.id + '"' + (x.id === vSel ? ' selected' : '') + '>' +
-        App.esc(x.nome) + (x.placa ? ' Â· ' + App.esc(x.placa) : '') + '</option>';
+        App.esc(x.nome) + (x.placa ? ' · ' + App.esc(x.placa) : '') + '</option>';
     }).join('');
     var listaEnergeticos = Viagens._energeticosDoVeiculo(veic);
     var energeticoSalvo = v.energetico || null;
@@ -881,28 +881,28 @@ abrirPlanejador: async function (idExistente) {
     var html =
       '<h2 class="form-titulo">' + (v.id ? 'Editar viagem' : 'Planejar viagem') + '</h2>' +
       Viagens._veiculoBlocoHTML(veic, 'cardVeicPlano') +
-      '<div class="campo-form" style="margin-top:14px"><label>VeÃ­culo</label>' +
+      '<div class="campo-form" style="margin-top:14px"><label>Veículo</label>' +
         '<select id="plVeiculo" onchange="Viagens.trocarVeiculoPlano()">' + veicOpts + '</select>' +
       '</div>' +
       '<div class="campo-form"><label>Energia utilizada nesta viagem</label>' +
         '<div id="plEnergeticos" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">' + Viagens._cardsEnergeticosHTML(veic, energeticoSel) + '</div>' +
-        '<small>Somente energÃ©ticos aceitos pelo veÃ­culo.</small></div>' +
+        '<small>Somente energéticos aceitos pelo veículo.</small></div>' +
       '<div class="campo-form">' +
         '<label>Nome da viagem  <small style="text-transform:none;color:var(--txt2);font-weight:400">(opcional)</small></label>' +
-        '<input type="text" id="plNomeViagem" placeholder="' + App.esc((v.origem || '').split(',')[0] + (v.destino ? ' â†’ ' + v.destino.split(',')[0] : '')) + '" value="' + App.esc(v.titulo || '') + '" maxlength="100">' +
+        '<input type="text" id="plNomeViagem" placeholder="' + App.esc((v.origem || '').split(',')[0] + (v.destino ? ' → ' + v.destino.split(',')[0] : '')) + '" value="' + App.esc(v.titulo || '') + '" maxlength="100">' +
       '</div>' +
       '<div class="campo-form">' +
         '<label>Saindo de</label>' +
         '<div class="campo-endereco-com-botoes">' +
           '<div class="campo-endereco">' +
-            '<input type="text" id="plOrigem" placeholder="Cidade, endereÃ§o ou CEP" autocomplete="off" ' +
+            '<input type="text" id="plOrigem" placeholder="Cidade, endereço ou CEP" autocomplete="off" ' +
               'value="' + App.esc(v.origem || '') + '" ' +
               'oninput="Viagens.digitando(\'origem\')" ' +
               'onblur="Viagens.fecharSugestoesAtrasado(\'origem\')">' +
             '<span class="ms lupa">search</span>' +
             '<div class="sugestoes-lista" id="plSugOrigem"></div>' +
           '</div>' +
-          '<button type="button" class="btn-icone-campo" onclick="Viagens.usarLocalizacao()" title="Usar minha localizaÃ§Ã£o">' +
+          '<button type="button" class="btn-icone-campo" onclick="Viagens.usarLocalizacao()" title="Usar minha localização">' +
             '<span class="ms" style="color:#22d3ee">my_location</span>' +
           '</button>' +
           '<button type="button" class="btn-icone-campo" onclick="Viagens.inverterOrdem()" title="Inverter origem e destino">' +
@@ -914,7 +914,7 @@ abrirPlanejador: async function (idExistente) {
         '<label>Indo para</label>' +
         '<div class="campo-endereco-com-botoes">' +
           '<div class="campo-endereco">' +
-            '<input type="text" id="plDestino" placeholder="Cidade, endereÃ§o ou CEP" autocomplete="off" ' +
+            '<input type="text" id="plDestino" placeholder="Cidade, endereço ou CEP" autocomplete="off" ' +
               'value="' + App.esc(v.destino || '') + '" ' +
               'oninput="Viagens.digitando(\'destino\')" ' +
               'onblur="Viagens.fecharSugestoesAtrasado(\'destino\')">' +
@@ -925,7 +925,7 @@ abrirPlanejador: async function (idExistente) {
       '</div>' +
       '<div class="toggle-ida-volta">' +
         '<button type="button" class="iv-btn' + (!Viagens.plano.idaVolta ? ' sel' : '') + '" data-iv="0" onclick="Viagens.setIdaVolta(false)">' +
-          '<span class="ms" style="color:#60a5fa">east</span><b>SÃ³ ida</b><small>trajeto simples</small></button>' +
+          '<span class="ms" style="color:#60a5fa">east</span><b>Só ida</b><small>trajeto simples</small></button>' +
         '<button type="button" class="iv-btn' + (Viagens.plano.idaVolta ? ' sel' : '') + '" data-iv="1" onclick="Viagens.setIdaVolta(true)">' +
           '<span class="ms" style="color:#a78bfa">sync_alt</span><b>Ida e volta</b><small>dobra o custo</small></button>' +
       '</div>' +
@@ -947,7 +947,7 @@ abrirPlanejador: async function (idExistente) {
             '<option value="10"' + (nivelSel === 10 ? ' selected' : '') + '>Reserva</option>' +
           '</select>' +
         '</div>' +
-        '<div class="campo-form"><label>Margem seguranÃ§a</label>' +
+        '<div class="campo-form"><label>Margem segurança</label>' +
           '<select id="plReserva" onchange="Viagens.previewAutonomia()">' +
             '<option value="10"' + (reservaSel === 10 ? ' selected' : '') + '>10% do tanque</option>' +
             '<option value="15"' + (reservaSel === 15 ? ' selected' : '') + '>15%</option>' +
@@ -957,19 +957,19 @@ abrirPlanejador: async function (idExistente) {
         '</div>' +
       '</div>' +
       '<div class="campo-form">' +
-        '<label id="plLabelPreco">PreÃ§o / ' + infoEnergia.unidade + (precoMedio > 0 ? ' <small style="text-transform:none;color:var(--txt2);font-weight:400">(mÃ©dia dos Ãºltimos 5: ' + App.moeda(precoMedio) + ')</small>' : '') + '</label>' +
+        '<label id="plLabelPreco">Preço / ' + infoEnergia.unidade + (precoMedio > 0 ? ' <small style="text-transform:none;color:var(--txt2);font-weight:400">(média dos últimos 5: ' + App.moeda(precoMedio) + ')</small>' : '') + '</label>' +
         '<input type="number" id="plPreco" step="0.01" placeholder="6,29" value="' + precoInicial + '">' +
       '</div>';
 
     if (ehEdicao) {
-      html += '<h3 style="margin:18px 0 10px;font-size:12.5px;color:var(--txt2);text-transform:uppercase;letter-spacing:.5px">OrÃ§amento previsto</h3>' +
+      html += '<h3 style="margin:18px 0 10px;font-size:12.5px;color:var(--txt2);text-transform:uppercase;letter-spacing:.5px">Orçamento previsto</h3>' +
         '<div class="linha-2">' +
-          '<div class="campo-form"><label>AlimentaÃ§Ã£o</label><input type="number" id="plAlim" step="0.01" value="' + (v.alimentacaoPrev || '') + '"></div>' +
+          '<div class="campo-form"><label>Alimentação</label><input type="number" id="plAlim" step="0.01" value="' + (v.alimentacaoPrev || '') + '"></div>' +
           '<div class="campo-form"><label>Hospedagem</label><input type="number" id="plHosp" step="0.01" value="' + (v.hospedagemPrev || '') + '"></div>' +
         '</div>' +
         '<div class="campo-form"><label>Outros gastos</label><input type="number" id="plOutros" step="0.01" value="' + (v.outrosPrev || '') + '"></div>' +
         '<div class="linha-2">' +
-          '<div class="campo-form"><label>Data de saÃ­da</label><input type="date" id="plDataInicio" value="' + (v.dataInicio || '') + '"></div>' +
+          '<div class="campo-form"><label>Data de saída</label><input type="date" id="plDataInicio" value="' + (v.dataInicio || '') + '"></div>' +
           '<div class="campo-form"><label>Data de retorno</label><input type="date" id="plDataFim" value="' + (v.dataFim || '') + '"></div>' +
         '</div>' +
         '<div class="campo-form"><label>KM do painel ao sair</label><input type="number" id="plKmInicialEdicao" value="' + (v.kmInicial || '') + '"></div>';
@@ -977,17 +977,17 @@ abrirPlanejador: async function (idExistente) {
 
     html += '<div class="resumo-autonomia" id="plResumoAut">' +
         '<div class="grid3">' +
-          '<div><b>â€”</b><small>km com capacidade cheia</small></div>' +
-          '<div><b>â€”</b><small>km agora</small></div>' +
-          '<div><b>â€”</b><small>km entre paradas</small></div>' +
+          '<div><b>—</b><small>km com capacidade cheia</small></div>' +
+          '<div><b>—</b><small>km agora</small></div>' +
+          '<div><b>—</b><small>km entre paradas</small></div>' +
         '</div>' +
       '</div>';
 
-    /* DisposiÃ§Ã£o dos botÃµes: Cancelar + Abrir no Maps na mesma linha,
-       botÃ£o principal (Criar viagem / Salvar alteraÃ§Ãµes) abaixo, em
-       largura total â€” mesmo padrÃ£o usado em outras telas do app. */
+    /* Disposição dos botões: Cancelar + Abrir no Maps na mesma linha,
+       botão principal (Criar viagem / Salvar alterações) abaixo, em
+       largura total — mesmo padrão usado em outras telas do app. */
     var acaoPrincipal = ehEdicao
-      ? '<button class="btn-novo btn-bloco-full" id="btnSalvarEdicao" onclick="Viagens.salvarEdicaoInteligente(\'' + v.id + '\')"><span class="ms">check</span> Salvar alteraÃ§Ãµes</button>'
+      ? '<button class="btn-novo btn-bloco-full" id="btnSalvarEdicao" onclick="Viagens.salvarEdicaoInteligente(\'' + v.id + '\')"><span class="ms">check</span> Salvar alterações</button>'
       : '<button class="btn-novo btn-bloco-full" id="btnBuscarRotas" onclick="Viagens.buscarRotas()"><span class="ms">check</span> Criar viagem</button>';
     var acaoCancelar = ehEdicao
       ? '<button class="btn-cancelar-form" onclick="App.irParaDetalheViagem(\'' + v.id + '\')"><span class="ms">close</span> Cancelar</button>'
@@ -1046,7 +1046,7 @@ abrirPlanejador: async function (idExistente) {
     var nivel = Number(document.getElementById('plNivel').value) || 100;
     var reserva = Number(document.getElementById('plReserva').value) || 15;
     if (kmL <= 0 || tanque <= 0) {
-      el.innerHTML = '<div class="grid3"><div><b>â€”</b><small>km com capacidade cheia</small></div><div><b>â€”</b><small>km agora</small></div><div><b>â€”</b><small>km entre paradas</small></div></div>';
+      el.innerHTML = '<div class="grid3"><div><b>—</b><small>km com capacidade cheia</small></div><div><b>—</b><small>km agora</small></div><div><b>—</b><small>km entre paradas</small></div></div>';
       return;
     }
     var lReserva = tanque * (reserva / 100);
@@ -1096,10 +1096,10 @@ abrirPlanejador: async function (idExistente) {
           '<b>' + App.esc(h.endereco) + '</b></div>';
       }).join('') +
       '<div class="sugestao-item" style="opacity:.6;cursor:default;font-size:12px">' +
-      '<i class="mini-loader" style="margin-right:6px"></i>Buscando mais endereÃ§osâ€¦</div>';
+      '<i class="mini-loader" style="margin-right:6px"></i>Buscando mais endereços…</div>';
       el.classList.add('aberto');
     } else {
-      el.innerHTML = '<div class="sugestao-item" style="cursor:default"><i class="mini-loader" style="margin-right:8px"></i>Buscandoâ€¦</div>';
+      el.innerHTML = '<div class="sugestao-item" style="cursor:default"><i class="mini-loader" style="margin-right:8px"></i>Buscando…</div>';
       el.classList.add('aberto');
     }
     Viagens.chamarGeocode({ endereco: texto })
@@ -1107,7 +1107,7 @@ abrirPlanejador: async function (idExistente) {
         if (input.value.trim() !== texto) return;
         st.resultados = resultados;
         if (!resultados.length) {
-          el.innerHTML = '<div class="sugestao-item" style="cursor:default;color:var(--txt2)">Nenhum endereÃ§o encontrado</div>';
+          el.innerHTML = '<div class="sugestao-item" style="cursor:default;color:var(--txt2)">Nenhum endereço encontrado</div>';
           return;
         }
         el.innerHTML = resultados.slice(0, 5).map(function (r, idx) {
@@ -1157,26 +1157,26 @@ abrirPlanejador: async function (idExistente) {
     Viagens._sug[qual].ultimoTexto = '';
   },
   usarLocalizacao: function () {
-    if (!navigator.geolocation) { App.toast('GPS indisponÃ­vel', 'erro'); return; }
+    if (!navigator.geolocation) { App.toast('GPS indisponível', 'erro'); return; }
     var input = document.getElementById('plOrigem');
-    input.value = 'Obtendo localizaÃ§Ã£o...';
+    input.value = 'Obtendo localização...';
     navigator.geolocation.getCurrentPosition(function (pos) {
       var lat = pos.coords.latitude, lon = pos.coords.longitude;
       Viagens.chamarGeocode({ latlng: lat + ',' + lon })
         .then(function (resultados) {
-          var endereco = 'LocalizaÃ§Ã£o atual';
+          var endereco = 'Localização atual';
           if (resultados.length) endereco = resultados[0].endereco;
           input.value = endereco;
           Viagens.plano.origem = { lat: lat, lon: lon, endereco: endereco };
           Viagens.gravarHistorico(endereco);
         })
         .catch(function () {
-          input.value = 'LocalizaÃ§Ã£o atual';
-          Viagens.plano.origem = { lat: lat, lon: lon, endereco: 'LocalizaÃ§Ã£o atual' };
+          input.value = 'Localização atual';
+          Viagens.plano.origem = { lat: lat, lon: lon, endereco: 'Localização atual' };
         });
     }, function () {
       input.value = '';
-      App.toast('NÃ£o foi possÃ­vel obter a localizaÃ§Ã£o', 'erro');
+      App.toast('Não foi possível obter a localização', 'erro');
     }, { enableHighAccuracy: true, timeout: 15000 });
   },
   /* =========================================================
@@ -1191,7 +1191,7 @@ abrirPlanejador: async function (idExistente) {
     if (!textoOrigem && !textoDestino) { App.toast('Informe origem e destino', 'erro'); origemInput.focus(); return; }
     if (!textoOrigem) { App.toast('Informe a origem', 'erro'); origemInput.focus(); return; }
     if (!textoDestino) { App.toast('Informe o destino', 'erro'); destinoInput.focus(); return; }
-    if (textoOrigem === textoDestino) { App.toast('Origem e destino sÃ£o iguais', 'erro'); return; }
+    if (textoOrigem === textoDestino) { App.toast('Origem e destino são iguais', 'erro'); return; }
     var origem = Viagens.plano.origem;
     var destino = Viagens.plano.destino;
     var temOrigemCoord = origem && origem.lat && origem.lon && origem.endereco === textoOrigem;
@@ -1212,7 +1212,7 @@ abrirPlanejador: async function (idExistente) {
       if (btn) btn.disabled = true;
       Promise.all(promessas)
         .then(function () { if (btn) btn.disabled = false; Viagens._continuarAbrirNoMaps(); })
-        .catch(function (e) { if (btn) btn.disabled = false; App.toast(e.message || 'Erro ao buscar endereÃ§o', 'erro'); });
+        .catch(function (e) { if (btn) btn.disabled = false; App.toast(e.message || 'Erro ao buscar endereço', 'erro'); });
       return;
     }
     Viagens._continuarAbrirNoMaps();
@@ -1222,7 +1222,7 @@ abrirPlanejador: async function (idExistente) {
   var destino = Viagens.plano.destino;
 
   if (!origem || !origem.lat || !destino || !destino.lat) {
-    App.toast('NÃ£o foi possÃ­vel localizar os endereÃ§os', 'erro');
+    App.toast('Não foi possível localizar os endereços', 'erro');
     return;
   }
 
@@ -1246,8 +1246,8 @@ abrirPlanejador: async function (idExistente) {
 
   var apps = [
     { id: 'google', nome: 'Google Maps', ico: 'map', cor: '#4285F4', sub: 'Rota completa com origem e destino' },
-    { id: 'waze', nome: 'Waze', ico: 'assistant_navigation', cor: '#33CCFF', sub: 'NavegaÃ§Ã£o a partir de onde vocÃª estÃ¡' },
-    { id: 'uber', nome: 'Uber', ico: 'local_taxi', cor: '#22c55e', sub: 'Pedir corrida atÃ© o destino' }
+    { id: 'waze', nome: 'Waze', ico: 'assistant_navigation', cor: '#33CCFF', sub: 'Navegação a partir de onde você está' },
+    { id: 'uber', nome: 'Uber', ico: 'local_taxi', cor: '#22c55e', sub: 'Pedir corrida até o destino' }
   ];
 
   if (isIOS) {
@@ -1257,7 +1257,7 @@ abrirPlanejador: async function (idExistente) {
   var html =
     '<div class="aviso info" style="margin-bottom:16px">' +
       '<span class="ms">navigation</span>' +
-      '<div><b>Como vocÃª quer ir?</b>Escolha o aplicativo desta vez.</div>' +
+      '<div><b>Como você quer ir?</b>Escolha o aplicativo desta vez.</div>' +
     '</div>' +
     '<div class="apps-nav">' +
       apps.map(function (a) {
@@ -1273,7 +1273,7 @@ abrirPlanejador: async function (idExistente) {
       '<input type="checkbox" id="lembrarApp">' +
     '</label>' +
     '<small style="display:block;margin-top:8px;color:var(--txt2);font-size:11.5px;line-height:1.5">' +
-      'Se marcar, a escolha fica salva em ConfiguraÃ§Ãµes e o app abre direto nas prÃ³ximas viagens.' +
+      'Se marcar, a escolha fica salva em Configurações e o app abre direto nas próximas viagens.' +
     '</small>';
 
   App.abrirModal('Abrir no Maps', html, null);
@@ -1289,7 +1289,7 @@ escolherAppNavegacao: function (app) {
 
     sb.from('usuarios').update({ appNavegacaoPreferido: valorSalvo }).eq('id', usuarioAtual.id).then(function () {
       usuarioAtual.appNavegacaoPreferido = valorSalvo;
-      App.toast('PreferÃªncia salva em ConfiguraÃ§Ãµes', 'ok');
+      App.toast('Preferência salva em Configurações', 'ok');
     }).catch(function () {});
   }
 
@@ -1382,7 +1382,7 @@ nomeApp: function (app) {
 
       aviso.innerHTML = '<span class="ms" style="font-size:18px">route</span>' +
         '<div style="flex:1;min-width:0"><b>Busca anterior preservada</b><br>' +
-        Viagens.plano.rotas.length + ' rota(s) jÃ¡ encontrada(s). VocÃª nÃ£o paga nova consulta.</div>' +
+        Viagens.plano.rotas.length + ' rota(s) já encontrada(s). Você não paga nova consulta.</div>' +
         '<button class="btn-novo-sec" style="flex:none;padding:8px 12px;font-size:12px" onclick="Viagens.mostrarRotas()">Ver rotas</button>';
 
       container.insertBefore(aviso, container.firstChild);
@@ -1406,14 +1406,14 @@ nomeApp: function (app) {
     '<div class="rc-rodape">' +
       '<span class="ms">' + (idaVolta ? 'sync_alt' : 'east') + '</span>' +
       '<div>' + (idaVolta
-        ? '<b style="color:var(--txt)">Ida e volta.</b> DistÃ¢ncia, combustÃ­vel e pedÃ¡gio jÃ¡ incluem o retorno.'
+        ? '<b style="color:var(--txt)">Ida e volta.</b> Distância, combustível e pedágio já incluem o retorno.'
         : '<b style="color:var(--txt)">Somente ida.</b> Os valores consideram apenas o trajeto de ida.') +
       '</div>' +
     '</div>' +
   '</div>';
 },
   /* =========================================================
-     EDIÃ‡ÃƒO INTELIGENTE â€” decide se precisa refazer a busca paga
+     EDIÇÃO INTELIGENTE — decide se precisa refazer a busca paga
      ========================================================= */
   salvarEdicaoInteligente: function (viagemId) {
     var origemInput = document.getElementById('plOrigem');
@@ -1433,7 +1433,7 @@ nomeApp: function (app) {
 
     App.confirmar({
       titulo: 'Refazer busca de rota?',
-      mensagem: 'VocÃª alterou a origem, o destino ou o tipo de percurso. ' +
+      mensagem: 'Você alterou a origem, o destino ou o tipo de percurso. ' +
         'Isso exige uma NOVA busca de rota (usa a API do Google Maps). ' +
         'Deseja continuar?',
       textoBotao: 'Buscar nova rota',
@@ -1482,11 +1482,11 @@ nomeApp: function (app) {
     if (btn) { btn.disabled = true; btn.textContent = 'Salvando...'; }
     sb.from('viagens').update(reg).eq('id', viagemId).then(function (r) {
       if (r.error) {
-        if (btn) { btn.disabled = false; btn.innerHTML = '<span class="ms">check</span> Salvar alteraÃ§Ãµes'; }
+        if (btn) { btn.disabled = false; btn.innerHTML = '<span class="ms">check</span> Salvar alterações'; }
         App.toast('Erro: ' + r.error.message, 'erro');
         return;
       }
-      App.toast('AlteraÃ§Ãµes salvas! (sem custo de nova busca)', 'ok');
+      App.toast('Alterações salvas! (sem custo de nova busca)', 'ok');
       App.irParaDetalheViagem(viagemId);
     });
   },
@@ -1511,8 +1511,8 @@ nomeApp: function (app) {
     var veic = Viagens.veiculos.filter(function (x) { return x.id === veicId; })[0];
     var kmL = Number(document.getElementById('plKmL').value) || 0;
     var tanque = Number(document.getElementById('plTanque').value) || 0;
-    if (kmL <= 0) { App.toast('Informe o consumo do energÃ©tico selecionado', 'erro'); return; }
-    if (tanque <= 0) { App.toast('Informe a capacidade disponÃ­vel', 'erro'); return; }
+    if (kmL <= 0) { App.toast('Informe o consumo do energético selecionado', 'erro'); return; }
+    if (tanque <= 0) { App.toast('Informe a capacidade disponível', 'erro'); return; }
     var nivel = Number(document.getElementById('plNivel').value) || 100;
     var reserva = Number(document.getElementById('plReserva').value) || 15;
     var preco = Number(document.getElementById('plPreco').value) || 0;
@@ -1569,10 +1569,10 @@ nomeApp: function (app) {
           Viagens.mostrarRotas();
         })
         .catch(function (e) {
-          console.warn('Erro em manutenÃ§Ã£o (rota e paradas preservadas):', e);
+          console.warn('Erro em manutenção (rota e paradas preservadas):', e);
           Viagens.plano.paradasPorRota[idx] = { paradas: paradas, manutencao: null, erroParcial: true };
           Viagens.mostrarRotas();
-          App.toast('NÃ£o foi possÃ­vel verificar as revisÃµes. A rota foi mantida.', 'ok');
+          App.toast('Não foi possível verificar as revisões. A rota foi mantida.', 'ok');
         });
     }).catch(function (e) {
       console.error('CarWay - erro ao planejar paradas:', e);
@@ -1875,13 +1875,13 @@ nomeApp: function (app) {
   _geocodificarAntesDeRotas: function (qual, texto) {
     Viagens.chamarGeocode({ endereco: texto })
       .then(function (resultados) {
-        if (!resultados.length) { App.toast('EndereÃ§o nÃ£o encontrado: ' + texto, 'erro'); return; }
+        if (!resultados.length) { App.toast('Endereço não encontrado: ' + texto, 'erro'); return; }
         var r = resultados[0];
         Viagens.plano[qual] = { lat: r.lat, lon: r.lon, endereco: r.endereco };
         document.getElementById(qual === 'origem' ? 'plOrigem' : 'plDestino').value = r.endereco;
         Viagens.buscarRotas();
       })
-      .catch(function (e) { App.toast(e.message || 'Erro ao buscar endereÃ§o', 'erro'); });
+      .catch(function (e) { App.toast(e.message || 'Erro ao buscar endereço', 'erro'); });
   },
   /* =========================================================
      MOSTRAR ROTAS (resultados)
@@ -1903,8 +1903,8 @@ nomeApp: function (app) {
 
     html += Viagens._htmlCabecalhoRota(origemTxt, destinoTxt, idaVolta);
       '<span class="ms">' + (idaVolta ? 'sync_alt' : 'east') + '</span>' +
-      '<div><b>' + App.esc(origemTxt.split(',')[0]) + ' ' + (idaVolta ? 'â‡„' : 'â†’') + ' ' + App.esc(destinoTxt.split(',')[0]) + '</b>' +
-      (idaVolta ? 'Ida e volta. DistÃ¢ncia, combustÃ­vel e pedÃ¡gio jÃ¡ incluem o retorno.' : 'Somente ida') + '</div>' +
+      '<div><b>' + App.esc(origemTxt.split(',')[0]) + ' ' + (idaVolta ? '⇄' : '→') + ' ' + App.esc(destinoTxt.split(',')[0]) + '</b>' +
+      (idaVolta ? 'Ida e volta. Distância, combustível e pedágio já incluem o retorno.' : 'Somente ida') + '</div>' +
     '</div>';
 
     if (p) {
@@ -1920,7 +1920,7 @@ nomeApp: function (app) {
         '</div>' +
         '<div class="grid3">' +
           '<div><b>' + autCheia + '</b><small>km com capacidade cheia</small></div>' +
-          '<div><b>' + autIni + '</b><small>km disponÃ­veis (' + p.nivel + '%)</small></div>' +
+          '<div><b>' + autIni + '</b><small>km disponíveis (' + p.nivel + '%)</small></div>' +
           '<div><b>' + autUtil + '</b><small>km entre paradas</small></div>' +
         '</div>' +
       '</div>';
@@ -1932,7 +1932,7 @@ nomeApp: function (app) {
     if (dadosAtiva && dadosAtiva.erroParcial) {
       html += '<div style="background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.4);border-radius:12px;padding:10px 12px;margin-bottom:14px;font-size:12.5px;color:#fcd34d">' +
         '<span class="ms" style="vertical-align:middle;margin-right:4px">warning</span>' +
-        'NÃ£o conseguimos verificar as revisÃµes agora. A rota foi mantida â€” vocÃª pode tentar de novo depois, sem custo extra de busca de rota.' +
+        'Não conseguimos verificar as revisões agora. A rota foi mantida — você pode tentar de novo depois, sem custo extra de busca de rota.' +
       '</div>';
     }
 
@@ -1942,13 +1942,13 @@ nomeApp: function (app) {
       if (antecipadas.length) {
         html += '<div style="background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.4);border-radius:12px;padding:10px 12px;margin-bottom:14px;font-size:12.5px;color:#fcd34d">' +
           '<span class="ms" style="vertical-align:middle;margin-right:4px">schedule</span>' +
-          antecipadas.length + ' parada(s) antecipada(s) porque nÃ£o havia posto no ponto ideal de autonomia. Veja os detalhes abaixo.' +
+          antecipadas.length + ' parada(s) antecipada(s) porque não havia posto no ponto ideal de autonomia. Veja os detalhes abaixo.' +
         '</div>';
       }
       if (semPostoReal.length) {
         html += '<div style="background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.5);border-radius:12px;padding:10px 12px;margin-bottom:14px;font-size:12.5px;color:#fca5a5">' +
           '<span class="ms" style="vertical-align:middle;margin-right:4px">report</span>' +
-          '<b>' + semPostoReal.length + ' trecho(s) sem nenhum posto mapeado</b> dentro da faixa segura de autonomia. Considere levar combustÃ­vel extra ou verificar localmente antes de seguir viagem.' +
+          '<b>' + semPostoReal.length + ' trecho(s) sem nenhum posto mapeado</b> dentro da faixa segura de autonomia. Considere levar combustível extra ou verificar localmente antes de seguir viagem.' +
         '</div>';
       }
     }
@@ -1959,20 +1959,20 @@ nomeApp: function (app) {
       var ativa = r.indice === idxAtiva;
       var dadosRota = Viagens.plano.paradasPorRota[r.indice];
       var pedagioTxt = '';
-      if (r.temPedagio && r.pedagioDisponivel) pedagioTxt = '<b>' + App.moeda(r.custoPedagio) + '</b><small>pedÃ¡gio</small>';
-      else if (r.temPedagio) pedagioTxt = '<b>â€”</b><small>pedÃ¡gio indisponÃ­vel</small>';
-      else pedagioTxt = '<b>â€”</b><small>sem pedÃ¡gio</small>';
+      if (r.temPedagio && r.pedagioDisponivel) pedagioTxt = '<b>' + App.moeda(r.custoPedagio) + '</b><small>pedágio</small>';
+      else if (r.temPedagio) pedagioTxt = '<b>—</b><small>pedágio indisponível</small>';
+      else pedagioTxt = '<b>—</b><small>sem pedágio</small>';
 
      var selos = '';
 
      if (r.seloRapida) {
         selos += '<div class="rota-selo" style="background:#3b82f6;' + (r.seloEconomica ? 'top:-10px' : '') + '">' +
-          '<span class="ms">bolt</span>Mais rÃ¡pida</div>';
+          '<span class="ms">bolt</span>Mais rápida</div>';
       }
       if (r.seloEconomica) {
         var topoOffset = r.seloRapida ? 'top:20px' : 'top:-10px';
         selos += '<div class="rota-selo" style="background:#22c55e;' + topoOffset + '">' +
-          '<span class="ms">savings</span>Mais econÃ´mica</div>';
+          '<span class="ms">savings</span>Mais econômica</div>';
       }
 
       var paradasBlocoHtml = '';
@@ -2009,13 +2009,13 @@ nomeApp: function (app) {
           selos +
           '<div class="rota-card-topo" style="' + (r.seloRapida && r.seloEconomica ? 'margin-top:20px' : '') + '">' +
             '<div><b style="display:block;font-size:16px">' + App.esc(r.nome) + '</b>' +
-              '<small style="color:var(--txt2);font-size:12px">' + (idaVolta ? 'Ida e volta' : 'SÃ³ ida') + '</small></div>' +
+              '<small style="color:var(--txt2);font-size:12px">' + (idaVolta ? 'Ida e volta' : 'Só ida') + '</small></div>' +
             '<div style="text-align:right"><b style="display:block;font-size:22px;color:#fff">' + App.moeda(r.custoTotal) + '</b>' +
               '<small style="color:var(--txt2);font-size:10px;text-transform:uppercase">Custo previsto</small></div>' +
           '</div>' +
           '<div class="rota-card-grid">' +
             '<div><b>' + r.km + '</b><small>km</small></div>' +
-            '<div><b>' + Viagens.fmtMinutos(r.minutos) + '</b><small>duraÃ§Ã£o</small></div>' +
+            '<div><b>' + Viagens.fmtMinutos(r.minutos) + '</b><small>duração</small></div>' +
             '<div><b>' + App.moeda(r.custoCombustivel) + '</b><small>' + r.litros + ' ' + (p ? p.unidade : 'L') + '</small></div>' +
             '<div>' + pedagioTxt + '</div>' +
           '</div>' +
@@ -2053,9 +2053,9 @@ html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="b
       '</div>';
     }
 
-    return bloco(venc, venc.length + ' revisÃ£o(Ãµes) JÃ VENCIDA(S)', 'error') +
-      bloco(ida, ida.length + ' revisÃ£o(Ãµes) vencem na IDA', 'east') +
-      bloco(volta, volta.length + ' revisÃ£o(Ãµes) vencem na VOLTA', 'west');
+    return bloco(venc, venc.length + ' revisão(ões) JÁ VENCIDA(S)', 'error') +
+      bloco(ida, ida.length + ' revisão(ões) vencem na IDA', 'east') +
+      bloco(volta, volta.length + ' revisão(ões) vencem na VOLTA', 'west');
   },
 
   paradaHTML: function (p) {
@@ -2072,16 +2072,16 @@ html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="b
       corNum = '#ef4444';
       linhaEndereco = '<small style="color:#fca5a5">' +
         '<span class="ms" style="font-size:13px;vertical-align:middle">report</span> ' +
-        'Nenhum posto mapeado em toda a faixa segura desta parada. Considere levar combustÃ­vel extra.</small>';
+        'Nenhum posto mapeado em toda a faixa segura desta parada. Considere levar combustível extra.</small>';
     } else if (p.antecipada) {
       corNum = '#f59e0b';
       linhaEndereco = '<small style="color:#fcd34d">' +
         '<span class="ms" style="font-size:13px;vertical-align:middle">schedule</span> ' +
-        'Antecipada em ' + p.kmAntecipadoEm + ' km â€” nÃ£o havia posto no ponto ideal (km ' + p.kmOriginalPrevisto + ')</small>' +
+        'Antecipada em ' + p.kmAntecipadoEm + ' km — não havia posto no ponto ideal (km ' + p.kmOriginalPrevisto + ')</small>' +
         (p.postoEndereco ? '<small>' + App.esc(p.postoEndereco) + '</small>' : '');
     } else if (p.postoEndereco) {
       linhaEndereco = '<small>' + App.esc(p.postoEndereco) +
-        (p.postoDesvioKm > 0 ? ' Â· ' + p.postoDesvioKm + ' km de desvio' : '') + '</small>';
+        (p.postoDesvioKm > 0 ? ' · ' + p.postoDesvioKm + ' km de desvio' : '') + '</small>';
     }
 
     var unidade = (Viagens.plano.parametrosAutonomia && Viagens.plano.parametrosAutonomia.unidade) || p.unidadeQuantidade || 'L';
@@ -2091,7 +2091,7 @@ html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="b
         '<b>' + App.esc(titulo) + '</b>' + estrelas +
         linhaEndereco +
         '<div class="parada-valores"><span>km ' + p.kmNoTrecho + '</span><span>' + p.litrosPrevisto + ' ' + unidade + '</span>' +
-          (p.ultimaParada ? '<span>sÃ³ o necessÃ¡rio</span>' : '') +
+          (p.ultimaParada ? '<span>só o necessário</span>' : '') +
         '</div>' +
       '</div>' +
     '</div>';
@@ -2123,12 +2123,12 @@ html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="b
         '<button onclick="Viagens.fecharMapaFullscreen()" class="btn-cancelar-form" style="padding:8px 14px">' +
           '<span class="ms">arrow_back</span> Voltar' +
         '</button>' +
-        '<div id="mapaFullTitulo" style="font-size:13px;color:var(--txt2)">' + (rota ? App.esc(rota.nome + ' Â· ' + rota.km + ' km') : '') + '</div>' +
+        '<div id="mapaFullTitulo" style="font-size:13px;color:var(--txt2)">' + (rota ? App.esc(rota.nome + ' · ' + rota.km + ' km') : '') + '</div>' +
       '</div>' +
       '<div id="mapaFullscreenLeaflet" style="flex:1;min-height:0"></div>' +
       '<div style="display:flex;gap:8px;padding:10px 12px;background:var(--card,#16213b);border-top:1px solid var(--linha,#26365c)">' +
-        '<button class="btn-novo-sec" style="flex:1;justify-content:center" onclick="Viagens.buscarPostosNaAreaDoMapa()"><span class="ms" style="color:#ef4444">local_gas_station</span> Postos nesta Ã¡rea</button>' +
-        '<button class="btn-novo" style="flex:1;justify-content:center" onclick="Viagens.fecharMapaFullscreen()"><span class="ms">list</span> Ver opÃ§Ãµes</button>' +
+        '<button class="btn-novo-sec" style="flex:1;justify-content:center" onclick="Viagens.buscarPostosNaAreaDoMapa()"><span class="ms" style="color:#ef4444">local_gas_station</span> Postos nesta área</button>' +
+        '<button class="btn-novo" style="flex:1;justify-content:center" onclick="Viagens.fecharMapaFullscreen()"><span class="ms">list</span> Ver opções</button>' +
       '</div>';
     document.body.appendChild(overlay);
   },
@@ -2155,7 +2155,7 @@ html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="b
     if (!el || typeof L === 'undefined') return;
     if (Viagens._mapaFull) { try { Viagens._mapaFull.remove(); } catch (e) {} }
     Viagens._mapaFull = L.map('mapaFullscreenLeaflet', { zoomControl: true }).setView([-15.78, -47.92], 5);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: 'Â© OpenStreetMap' }).addTo(Viagens._mapaFull);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(Viagens._mapaFull);
     var coords = Viagens._decodificarPolyline(rota.polyline || '');
     if (!coords.length) return;
     var linha = L.polyline(coords, { color: '#3b82f6', weight: 5, opacity: 0.9 }).addTo(Viagens._mapaFull);
@@ -2174,7 +2174,7 @@ html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="b
       var nomeExibido = p.postoNome || ('Parada ' + p.ordem);
       var m = L.marker([p.lat, p.lon], { icon: Viagens._iconePinPosto(cor, p.ordem) }).addTo(Viagens._mapaFull);
       m.bindTooltip(nomeExibido, { permanent: true, direction: 'top', offset: [0, -30], className: 'tooltip-posto-carway' });
-      var popupTxt = '<b>' + App.esc(nomeExibido) + '</b><br>' + p.trecho + ' Â· km ' + p.kmNoTrecho;
+      var popupTxt = '<b>' + App.esc(nomeExibido) + '</b><br>' + p.trecho + ' · km ' + p.kmNoTrecho;
       if (p.antecipada) popupTxt += '<br><span style="color:#f59e0b">Antecipada em ' + p.kmAntecipadoEm + ' km</span>';
       if (p.semPosto) popupTxt += '<br><span style="color:#ef4444">Sem posto mapeado nesta faixa</span>';
       m.bindPopup(popupTxt);
@@ -2197,7 +2197,7 @@ html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="b
       var d = Viagens._haversine(centro.lat, centro.lng, p.lat, p.lon);
       if (d < menorDist) { menorDist = d; maisProxima = p; }
     });
-    if (!maisProxima) { App.toast('NÃ£o hÃ¡ paradas com localizaÃ§Ã£o definida nesta rota', 'erro'); return; }
+    if (!maisProxima) { App.toast('Não há paradas com localização definida nesta rota', 'erro'); return; }
 
     var veic = Viagens.plano.veiculoSelecionado;
     var categoria = veic ? Viagens._categoriaCombustivel((Viagens.plano.parametrosAutonomia && Viagens.plano.parametrosAutonomia.energetico) || Viagens.plano.energeticoSelecionado || veic.combustivel) : 'combustivel';
@@ -2210,7 +2210,7 @@ html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="b
     busca.then(function (locais) {
       Viagens._adicionarMarcadoresExtras(locais, categoria);
     }).catch(function () {
-      App.toast('Erro ao buscar postos nesta Ã¡rea', 'erro');
+      App.toast('Erro ao buscar postos nesta área', 'erro');
     });
   },
   _adicionarMarcadoresExtras: function (locais, categoria) {
@@ -2234,7 +2234,7 @@ html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="b
       m.bindPopup('<b>' + App.esc(p.nome) + '</b>' + (p.endereco ? '<br>' + App.esc(p.endereco) : '') + (p.distanciaKm != null ? '<br>' + p.distanciaKm + ' km' : ''));
       Viagens._marcadoresExtras.push(m);
     });
-    App.toast(locais.length + ' posto(s) encontrado(s) nesta Ã¡rea', 'ok');
+    App.toast(locais.length + ' posto(s) encontrado(s) nesta área', 'ok');
   },
   _decodificarPolyline: function (encoded) {
     if (!encoded) return [];
@@ -2271,7 +2271,7 @@ html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="b
     var origemTxt = Viagens.plano.origem.endereco.split(',')[0];
     var destinoTxt = Viagens.plano.destino.endereco.split(',')[0];
     var hoje = App.hojeISO();
-    var tituloPadrao = origemTxt + ' â†’ ' + destinoTxt;
+    var tituloPadrao = origemTxt + ' → ' + destinoTxt;
     var tituloInicial = document.getElementById('plNomeViagem') ? document.getElementById('plNomeViagem').value.trim() : '';
 
     var html =
@@ -2279,30 +2279,30 @@ html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="b
       Viagens._veiculoBlocoHTML(veic) +
       '<div style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.4);border-radius:12px;padding:12px 14px;margin:14px 0 16px">' +
         '<div style="display:flex;align-items:center;gap:8px;color:#86efac;font-weight:700;font-size:13.5px">' +
-          '<span class="ms">check_circle</span>' + App.esc(r.nome) + ' Â· ' + (idaVolta ? 'ida e volta' : 'sÃ³ ida') +
+          '<span class="ms">check_circle</span>' + App.esc(r.nome) + ' · ' + (idaVolta ? 'ida e volta' : 'só ida') +
         '</div>' +
         '<div style="font-size:12.5px;color:var(--txt2);margin-top:4px">' +
-          r.km + ' km Â· ' + (dados ? dados.paradas.length : 0) + ' parada(s) Â· previsÃ£o de ' + App.moeda(r.custoTotal) +
+          r.km + ' km · ' + (dados ? dados.paradas.length : 0) + ' parada(s) · previsão de ' + App.moeda(r.custoTotal) +
         '</div>' +
       '</div>' +
       '<div class="campo-form"><label>Nome da viagem <small style="text-transform:none;color:var(--txt2);font-weight:400">(opcional)</small></label>' +
         '<input type="text" id="crTitulo" value="' + App.esc(tituloInicial) + '" placeholder="' + App.esc(tituloPadrao) + '" maxlength="100">' +
       '</div>' +
       '<div class="linha-2">' +
-        '<div class="campo-form"><label>SaÃ­da</label><input type="date" id="crDataInicio" value="' + hoje + '"></div>' +
+        '<div class="campo-form"><label>Saída</label><input type="date" id="crDataInicio" value="' + hoje + '"></div>' +
         '<div class="campo-form"><label>Retorno</label><input type="date" id="crDataFim"></div>' +
       '</div>' +
       '<div class="campo-form"><label>KM do painel</label><input type="number" id="crKmInicial" placeholder="0"></div>' +
-      '<h3 style="margin:18px 0 10px;font-size:12.5px;color:var(--txt2);text-transform:uppercase;letter-spacing:.5px">OrÃ§amento previsto</h3>' +
+      '<h3 style="margin:18px 0 10px;font-size:12.5px;color:var(--txt2);text-transform:uppercase;letter-spacing:.5px">Orçamento previsto</h3>' +
       '<div class="linha-2">' +
-        '<div class="campo-form"><label>AlimentaÃ§Ã£o</label><input type="number" id="crAlim" step="0.01" placeholder="0,00"></div>' +
+        '<div class="campo-form"><label>Alimentação</label><input type="number" id="crAlim" step="0.01" placeholder="0,00"></div>' +
         '<div class="campo-form"><label>Hospedagem</label><input type="number" id="crHosp" step="0.01" placeholder="0,00"></div>' +
       '</div>' +
       '<div class="campo-form"><label>Outros gastos</label><input type="number" id="crOutros" step="0.01" placeholder="0,00"></div>' +
       '<small style="display:block;margin:-8px 0 16px;color:var(--txt2);font-size:12px">' +
-        'CombustÃ­vel (' + App.moeda(r.custoCombustivel) + ') e pedÃ¡gio (' + App.moeda(r.custoPedagio) + ') jÃ¡ entram no orÃ§amento.' +
+        'Combustível (' + App.moeda(r.custoCombustivel) + ') e pedágio (' + App.moeda(r.custoPedagio) + ') já entram no orçamento.' +
       '</small>' +
-      '<div class="campo-form"><label>ObservaÃ§Ãµes</label>' +
+      '<div class="campo-form"><label>Observações</label>' +
         '<textarea id="crObs" rows="2" style="width:100%;background:var(--bg2);border:1px solid var(--linha);border-radius:11px;padding:12px;color:var(--txt);font-family:inherit;font-size:14px;resize:vertical"></textarea>' +
       '</div>' +
       '<div class="form-acoes-viagem">' +
@@ -2324,7 +2324,7 @@ html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="b
     var origemCurta = Viagens.plano.origem.endereco.split(',')[0];
     var destinoCurto = Viagens.plano.destino.endereco.split(',')[0];
     var tituloDigitado = document.getElementById('crTitulo').value.trim();
-    var tituloFinal = tituloDigitado || (origemCurta + ' â†’ ' + destinoCurto);
+    var tituloFinal = tituloDigitado || (origemCurta + ' → ' + destinoCurto);
     var dataInicio = document.getElementById('crDataInicio').value;
     var dataFim = document.getElementById('crDataFim').value || null;
     var kmInicial = Number(document.getElementById('crKmInicial').value) || 0;
@@ -2417,7 +2417,7 @@ html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="b
     }).then(function (res) {
       Viagens._salvando = false;
       if (res.error) {
-        console.error('CarWay - erro na RPC de criaÃ§Ã£o:', res.error);
+        console.error('CarWay - erro na RPC de criação:', res.error);
         return Viagens._criarViagemModoAntigo(reg, paradasReg, btn);
       }
       if (App._painelRaw) App._painelRaw = null;
@@ -2425,7 +2425,7 @@ html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="b
       App.irPara('viagens');
     }).catch(function (e) {
       Viagens._salvando = false;
-      console.error('CarWay - falha na RPC de criaÃ§Ã£o:', e);
+      console.error('CarWay - falha na RPC de criação:', e);
       return Viagens._criarViagemModoAntigo(reg, paradasReg, btn);
     });
   },
@@ -2452,11 +2452,11 @@ html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="b
           App.abrirModal(
             'Viagem criada sem paradas',
             '<div style="background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.4);border-radius:12px;padding:12px 14px;font-size:13px;color:#fcd34d;line-height:1.6">' +
-              '<b><span class="ms" style="vertical-align:middle;font-size:17px">warning</span> A viagem foi salva, mas as paradas nÃ£o.</b><br>' +
+              '<b><span class="ms" style="vertical-align:middle;font-size:17px">warning</span> A viagem foi salva, mas as paradas não.</b><br>' +
               'Motivo: ' + App.esc(rp.error.message || 'erro desconhecido') +
             '</div>' +
             '<p style="font-size:12.5px;color:var(--txt2);line-height:1.6;margin-top:12px">' +
-              'Exclua esta viagem e crie novamente apÃ³s resolver o problema.' +
+              'Exclua esta viagem e crie novamente após resolver o problema.' +
             '</p>',
             function () { App.fecharModal(); App.irPara('viagens'); },
             'Entendi'
@@ -2485,17 +2485,17 @@ html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="b
   _haversineKm: function (lat1, lon1, lat2, lon2) { return Viagens._haversine(lat1, lon1, lat2, lon2); },
   _categoriaCombustivel: function (combustivel) {
     var c = String(combustivel || '').toUpperCase();
-    if (c.indexOf('ELÃ‰TR') > -1 || c.indexOf('ELETR') > -1) return 'eletrico';
+    if (c.indexOf('ELÉTR') > -1 || c.indexOf('ELETR') > -1) return 'eletrico';
     if (c.indexOf('GNV') > -1) return 'gnv';
     return 'combustivel';
   },
   _obterLocalizacaoAtual: function () {
     return new Promise(function (resolve, reject) {
-      if (!navigator.geolocation) { reject(new Error('GPS indisponÃ­vel')); return; }
+      if (!navigator.geolocation) { reject(new Error('GPS indisponível')); return; }
       navigator.geolocation.getCurrentPosition(function (pos) {
         resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude });
       }, function () {
-        reject(new Error('NÃ£o foi possÃ­vel obter sua localizaÃ§Ã£o'));
+        reject(new Error('Não foi possível obter sua localização'));
       }, { enableHighAccuracy: true, timeout: 15000 });
     });
   },
@@ -2524,7 +2524,7 @@ html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="b
     var query = '[out:json][timeout:15];(node["amenity"="fuel"](around:' + raio + ',' + lat + ',' + lon + '););out center 15;';
     var tentar = function (idx) {
       if (idx >= Viagens._OVERPASS_MIRRORS.length) {
-        return Promise.reject(new Error('Servidores de mapas indisponÃ­veis no momento'));
+        return Promise.reject(new Error('Servidores de mapas indisponíveis no momento'));
       }
       var url = Viagens._OVERPASS_MIRRORS[idx] + '?data=' + encodeURIComponent(query);
       var controller = (typeof AbortController !== 'undefined') ? new AbortController() : null;
@@ -2576,21 +2576,21 @@ html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="b
     }
     var html = '<div style="display:flex;flex-direction:column;gap:10px">' +
       '<button class="app-nav-item" onclick="App.fecharModal();Viagens._buscarPostosPara(\'combustivel\')">' +
-        '<span class="ms" style="color:#ef4444">local_gas_station</span><b>Postos de combustÃ­vel</b>' +
+        '<span class="ms" style="color:#ef4444">local_gas_station</span><b>Postos de combustível</b>' +
       '</button>' +
       '<button class="app-nav-item" onclick="App.fecharModal();Viagens._buscarPostosPara(\'eletrico\')">' +
-        '<span class="ms" style="color:#22c55e">ev_station</span><b>Pontos de recarga elÃ©trica</b>' +
+        '<span class="ms" style="color:#22c55e">ev_station</span><b>Pontos de recarga elétrica</b>' +
       '</button>' +
       '<button class="app-nav-item" onclick="App.fecharModal();Viagens._buscarPostosPara(\'gnv\')">' +
         '<span class="ms" style="color:#3b82f6">local_gas_station</span><b>Postos de GNV</b>' +
       '</button>' +
     '</div>';
-    App.abrirModal('O que vocÃª procura?', html, null);
+    App.abrirModal('O que você procura?', html, null);
   },
   _buscarPostosPara: function (categoria) {
-    App.abrirModal(categoria === 'eletrico' ? 'Pontos de recarga prÃ³ximos' : 'Postos prÃ³ximos',
+    App.abrirModal(categoria === 'eletrico' ? 'Pontos de recarga próximos' : 'Postos próximos',
       '<div style="text-align:center;padding:20px 0"><span class="ms" style="font-size:36px;opacity:.5">hourglass_top</span>' +
-      '<p style="color:var(--txt2);margin-top:10px">Obtendo sua localizaÃ§Ã£o...</p></div>', null);
+      '<p style="color:var(--txt2);margin-top:10px">Obtendo sua localização...</p></div>', null);
     Viagens._obterLocalizacaoAtual().then(function (loc) {
       var busca = categoria === 'eletrico'
         ? Viagens._buscarPontosRecargaOCM(loc.lat, loc.lon)
@@ -2598,23 +2598,23 @@ html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="b
       busca.then(function (locais) {
         Viagens._mostrarListaPostos(categoria, locais, loc);
       }).catch(function () {
-        var termo = categoria === 'eletrico' ? 'carregador para carro elÃ©trico' : (categoria === 'gnv' ? 'posto de GNV' : 'posto de combustÃ­vel');
+        var termo = categoria === 'eletrico' ? 'carregador para carro elétrico' : (categoria === 'gnv' ? 'posto de GNV' : 'posto de combustível');
         window.open(Viagens._linkBuscaMaps(termo, loc.lat, loc.lon), '_blank', 'noopener');
         App.fecharModal();
-        App.toast('Busca detalhada indisponÃ­vel â€” abrindo Google Maps', 'ok');
+        App.toast('Busca detalhada indisponível — abrindo Google Maps', 'ok');
       });
     }).catch(function () {
-      var termo = categoria === 'eletrico' ? 'carregador para carro elÃ©trico' : (categoria === 'gnv' ? 'posto de GNV' : 'posto de combustÃ­vel');
+      var termo = categoria === 'eletrico' ? 'carregador para carro elétrico' : (categoria === 'gnv' ? 'posto de GNV' : 'posto de combustível');
       window.open(Viagens._linkBuscaMaps(termo, null, null), '_blank', 'noopener');
       App.fecharModal();
-      App.toast('LocalizaÃ§Ã£o nÃ£o disponÃ­vel â€” abrindo busca geral no Maps', 'ok');
+      App.toast('Localização não disponível — abrindo busca geral no Maps', 'ok');
     });
   },
   _mostrarListaPostos: function (categoria, locais, loc) {
-    var termo = categoria === 'eletrico' ? 'carregador para carro elÃ©trico' : (categoria === 'gnv' ? 'posto de GNV' : 'posto de combustÃ­vel');
+    var termo = categoria === 'eletrico' ? 'carregador para carro elétrico' : (categoria === 'gnv' ? 'posto de GNV' : 'posto de combustível');
     var linkGenerico = Viagens._linkBuscaMaps(termo, loc.lat, loc.lon);
     if (!locais || !locais.length) {
-      App.abrirModal(categoria === 'eletrico' ? 'Pontos de recarga prÃ³ximos' : 'Postos prÃ³ximos',
+      App.abrirModal(categoria === 'eletrico' ? 'Pontos de recarga próximos' : 'Postos próximos',
         '<div style="text-align:center;padding:10px 0;color:var(--txt2)">' +
           '<span class="ms" style="font-size:44px;opacity:.5">location_off</span>' +
           '<p style="margin-top:10px">Nenhum resultado encontrado nas proximidades.</p>' +
@@ -2645,7 +2645,7 @@ html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="b
         '<span class="ms">map</span> Ver todos no Google Maps' +
       '</button>' +
     '</div>';
-    App.abrirModal(categoria === 'eletrico' ? 'Pontos de recarga prÃ³ximos' : 'Postos prÃ³ximos', html, null);
+    App.abrirModal(categoria === 'eletrico' ? 'Pontos de recarga próximos' : 'Postos próximos', html, null);
   },
   /* =========================================================
      DETALHE DA VIAGEM
@@ -2662,7 +2662,7 @@ html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="b
       sb.from('paradas_viagem').select('*').eq('viagemId', id).order('ordem'),
       sb.from('veiculos').select('id, nome, placa, tipo, cor, combustivel, energeticos, plugIn, tanque, capacidadeGnv, capacidadeBateria').eq('organizacaoId', orgAtual.id)
     ]).then(function (r) {
-      if (r[0].error || !r[0].data) { el.innerHTML = '<div class="vazio-veiculo"><p>Viagem nÃ£o encontrada.</p></div>'; return; }
+      if (r[0].error || !r[0].data) { el.innerHTML = '<div class="vazio-veiculo"><p>Viagem não encontrada.</p></div>'; return; }
       Viagens._detalheAtual = {
         viagem: r[0].data,
         abastecimentos: r[1].data || [],
@@ -2698,15 +2698,15 @@ html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="b
     var custoKm = kmReal > 0 ? total / kmReal : 0;
 
     /* CORRIGIDO (6.3): separa o valor REAL gasto por categoria de
-       despesa (AlimentaÃ§Ã£o/Hospedagem/PedÃ¡gio/Outros), em vez de
-       jogar tudo dentro de "Outros" â€” bug que fazia a barra "Outros"
-       crescer sempre, nÃ£o importa a categoria realmente lanÃ§ada. */
+       despesa (Alimentação/Hospedagem/Pedágio/Outros), em vez de
+       jogar tudo dentro de "Outros" — bug que fazia a barra "Outros"
+       crescer sempre, não importa a categoria realmente lançada. */
     var realPedagio = 0, realAlim = 0, realHosp = 0, realOutros = 0;
     desp.forEach(function (x) {
       var val = Number(x.valor) || 0;
-      if (x.categoria === 'AlimentaÃ§Ã£o') realAlim += val;
+      if (x.categoria === 'Alimentação') realAlim += val;
       else if (x.categoria === 'Hospedagem') realHosp += val;
-      else if (x.categoria === 'PedÃ¡gio') realPedagio += val;
+      else if (x.categoria === 'Pedágio') realPedagio += val;
       else realOutros += val;
     });
     realOutros += totManut;
@@ -2716,41 +2716,41 @@ html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="b
 
     var html =
       '<div class="detalhe-cab">' +
-        '<h2>' + App.esc(v.titulo || (v.origem + ' â†’ ' + v.destino)) + '</h2>' +
+        '<h2>' + App.esc(v.titulo || (v.origem + ' → ' + v.destino)) + '</h2>' +
         '<div class="rota"><span class="ms" style="color:#22c55e">trip_origin</span>' + App.esc(v.origem) +
           '<span class="ms" style="color:#60a5fa">' + (String(v.idaVolta).toUpperCase() === 'SIM' ? 'sync_alt' : 'east') + '</span>' + App.esc(v.destino) + '</div>' +
         '<div class="rota" style="margin-top:6px"><span class="ms" style="color:#f59e0b">event</span>' + Viagens.fmtData(v.dataInicio) +
-          (v.dataFim ? ' â†’ ' + Viagens.fmtData(v.dataFim) : '') + '</div>' +
-        (veiculo ? '<div class="rota" style="margin-top:6px;color:' + corVeic + '"><span class="ms" style="color:' + corVeic + '">' + icoVeic + '</span>' + App.esc(veiculo.nome) + ' Â· ' + App.esc(veiculo.placa || 'sem placa') + '</div>' : '') +
+          (v.dataFim ? ' → ' + Viagens.fmtData(v.dataFim) : '') + '</div>' +
+        (veiculo ? '<div class="rota" style="margin-top:6px;color:' + corVeic + '"><span class="ms" style="color:' + corVeic + '">' + icoVeic + '</span>' + App.esc(veiculo.nome) + ' · ' + App.esc(veiculo.placa || 'sem placa') + '</div>' : '') +
         '<div class="detalhe-nums">' +
           '<div class="detalhe-num"><b>' + App.fmtNum(kmReal) + '</b><small>KM</small></div>' +
           '<div class="detalhe-num"><b>' + App.moeda(total) + '</b><small>Gasto total</small></div>' +
           '<div class="detalhe-num"><b>' + App.moeda(custoKm) + '</b><small>Custo/km</small></div>' +
         '</div>' +
-        /* CORRIGIDO (6.1): botÃµes no padrÃ£o visual do app (btn-novo-sec
+        /* CORRIGIDO (6.1): botões no padrão visual do app (btn-novo-sec
            uniformes, em grade de 4 colunas iguais) em vez de pilulas
-           pequenas fora do padrÃ£o. */
+           pequenas fora do padrão. */
         '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px">' +
           (v.status !== 'concluida'
             ? '<button class="btn-novo-sec" style="justify-content:center;padding:9px 4px;font-size:12px" onclick="App.irParaEncerrarViagem(\'' + v.id + '\')"><span class="ms" style="color:#22c55e;font-size:17px">stop_circle</span> Encerrar</button>'
             : '<div></div>') +
           '<button class="btn-novo-sec" style="justify-content:center;padding:9px 4px;font-size:12px" onclick="App.irParaFormViagem(\'' + v.id + '\')"><span class="ms" style="color:#60a5fa;font-size:17px">edit</span> Editar</button>' +
-          '<button class="btn-novo-sec" style="justify-content:center;padding:9px 4px;font-size:12px" onclick="Viagens.formOrcamento(\'' + v.id + '\')"><span class="ms" style="color:#a78bfa;font-size:17px">savings</span> OrÃ§amento</button>' +
+          '<button class="btn-novo-sec" style="justify-content:center;padding:9px 4px;font-size:12px" onclick="Viagens.formOrcamento(\'' + v.id + '\')"><span class="ms" style="color:#a78bfa;font-size:17px">savings</span> Orçamento</button>' +
           '<button class="btn-novo-sec" style="justify-content:center;padding:9px 4px;font-size:12px;color:#ef4444;border-color:#ef444455" onclick="Viagens.excluir(\'' + v.id + '\')"><span class="ms" style="font-size:17px">delete</span> Excluir</button>' +
         '</div>' +
       '</div>';
 
     html += '<div class="bloco">' +
-      '<div class="bloco-titulo"><h3><span class="ms" style="color:#f59e0b">bolt</span> LanÃ§ar agora</h3></div>' +
+      '<div class="bloco-titulo"><h3><span class="ms" style="color:#f59e0b">bolt</span> Lançar agora</h3></div>' +
       '<div class="atalhos" style="display:grid;grid-template-columns:repeat(4,1fr);gap:9px">' +
         '<button onclick="Viagens.lancarAbastecimentoViagem(\'' + v.id + '\',\'' + v.veiculoId + '\')" style="background:var(--card,#16213b);border:1px solid var(--linha,#26365c);border-radius:14px;padding:13px 4px;color:var(--txt,#e8eefc);display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer">' +
           '<span class="ms" style="font-size:24px;color:#ef4444">local_gas_station</span><small style="font-size:10.5px">Abastecer</small></button>' +
-        '<button onclick="Viagens.lancarDespesaViagem(\'' + v.id + '\',\'' + v.veiculoId + '\',\'AlimentaÃ§Ã£o\')" style="background:var(--card,#16213b);border:1px solid var(--linha,#26365c);border-radius:14px;padding:13px 4px;color:var(--txt,#e8eefc);display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer">' +
-          '<span class="ms" style="font-size:24px;color:#22c55e">restaurant</span><small style="font-size:10.5px">AlimentaÃ§Ã£o</small></button>' +
+        '<button onclick="Viagens.lancarDespesaViagem(\'' + v.id + '\',\'' + v.veiculoId + '\',\'Alimentação\')" style="background:var(--card,#16213b);border:1px solid var(--linha,#26365c);border-radius:14px;padding:13px 4px;color:var(--txt,#e8eefc);display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer">' +
+          '<span class="ms" style="font-size:24px;color:#22c55e">restaurant</span><small style="font-size:10.5px">Alimentação</small></button>' +
         '<button onclick="Viagens.lancarDespesaViagem(\'' + v.id + '\',\'' + v.veiculoId + '\',\'Hospedagem\')" style="background:var(--card,#16213b);border:1px solid var(--linha,#26365c);border-radius:14px;padding:13px 4px;color:var(--txt,#e8eefc);display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer">' +
           '<span class="ms" style="font-size:24px;color:#a78bfa">hotel</span><small style="font-size:10.5px">Estadia</small></button>' +
-        '<button onclick="Viagens.lancarDespesaViagem(\'' + v.id + '\',\'' + v.veiculoId + '\',\'PedÃ¡gio\')" style="background:var(--card,#16213b);border:1px solid var(--linha,#26365c);border-radius:14px;padding:13px 4px;color:var(--txt,#e8eefc);display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer">' +
-          '<span class="ms" style="font-size:24px;color:#f59e0b">toll</span><small style="font-size:10.5px">PedÃ¡gio</small></button>' +
+        '<button onclick="Viagens.lancarDespesaViagem(\'' + v.id + '\',\'' + v.veiculoId + '\',\'Pedágio\')" style="background:var(--card,#16213b);border:1px solid var(--linha,#26365c);border-radius:14px;padding:13px 4px;color:var(--txt,#e8eefc);display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer">' +
+          '<span class="ms" style="font-size:24px;color:#f59e0b">toll</span><small style="font-size:10.5px">Pedágio</small></button>' +
       '</div>' +
     '</div>';
 
@@ -2760,10 +2760,10 @@ html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="b
 
     if (paradas.length) html += Viagens.renderParadasPlanejadas(paradas);
 
-    /* REMOVIDO (redundÃ¢ncia): a lista de "Abastecimentos" sÃ³ aparece
-       quando a viagem NÃƒO tem paradas planejadas â€” quando hÃ¡ paradas,
-       os abastecimentos vinculados jÃ¡ aparecem dentro de cada parada
-       concluÃ­da, entÃ£o repetir a lista aqui embaixo era informaÃ§Ã£o
+    /* REMOVIDO (redundância): a lista de "Abastecimentos" só aparece
+       quando a viagem NÃO tem paradas planejadas — quando há paradas,
+       os abastecimentos vinculados já aparecem dentro de cada parada
+       concluída, então repetir a lista aqui embaixo era informação
        duplicada. */
     if (abs.length && !paradas.length) {
       html += '<h2 class="secao-titulo"><span class="ms" style="color:#ef4444">local_gas_station</span> Abastecimentos (' + abs.length + ')</h2>' +
@@ -2771,7 +2771,7 @@ html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="b
     }
     if (desp.length) html += '<h2 class="secao-titulo"><span class="ms" style="color:#22c55e">receipt_long</span> Despesas (' + desp.length + ')</h2>' +
       '<div class="lista-abastecimentos">' + desp.map(Viagens.itemDespesa).join('') + '</div>';
-    if (manut.length) html += '<h2 class="secao-titulo"><span class="ms" style="color:#f59e0b">build</span> ManutenÃ§Ãµes (' + manut.length + ')</h2>' +
+    if (manut.length) html += '<h2 class="secao-titulo"><span class="ms" style="color:#f59e0b">build</span> Manutenções (' + manut.length + ')</h2>' +
       '<div class="lista-abastecimentos">' + manut.map(Viagens.itemManutencao).join('') + '</div>';
 
     html += '<div id="blocoMapaViagemDetalhe"></div>';
@@ -2842,7 +2842,7 @@ html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="b
       chips += '<span class="trecho-chip" style="color:#bfdbfe;border-color:rgba(96,165,250,.4)"><span class="ms" style="color:#60a5fa">link</span>' + qtdVinculada + ' vinculada(s)</span>';
     }
     if (qtdIgnorada > 0) {
-      chips += '<span class="trecho-chip"><span class="ms">block</span>' + qtdIgnorada + ' nÃ£o parei</span>';
+      chips += '<span class="trecho-chip"><span class="ms">block</span>' + qtdIgnorada + ' não parei</span>';
     }
     if (qtdPendente > 0) {
       chips += '<span class="trecho-chip" style="color:#fcd34d;border-color:rgba(245,158,11,.4)"><span class="ms" style="color:#f59e0b">schedule</span>' + qtdPendente + ' pendente(s)</span>';
@@ -2857,7 +2857,7 @@ html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="b
           '<div class="trecho-resumo">' +
             '<div><b>' + App.moeda(previstoGrupo) + '</b><small>previsto</small></div>' +
             '<div><b style="color:' + (realizadoGrupo > 0 ? '#e8eefc' : 'var(--txt2)') + '">' + App.moeda(realizadoGrupo) + '</b><small>gasto</small></div>' +
-            '<div><b style="color:' + corDif + '">' + (realizadoGrupo > 0 ? App.moeda(Math.abs(diferenca)) : 'â€”') + '</b><small>' + textoDif + '</small></div>' +
+            '<div><b style="color:' + corDif + '">' + (realizadoGrupo > 0 ? App.moeda(Math.abs(diferenca)) : '—') + '</b><small>' + textoDif + '</small></div>' +
           '</div>' +
         '</div>' +
         '<span class="ms" style="color:var(--txt2);margin-top:2px">' + (aberto ? 'expand_less' : 'expand_more') + '</span>' +
@@ -2880,8 +2880,8 @@ html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="b
     }
   },
 
-  /* CORRIGIDO (print8): botÃµes "Abasteci aqui" / "JÃ¡ lancei" / "NÃ£o
-     parei" agora seguem o padrÃ£o visual do app, com os 3 na mesma
+  /* CORRIGIDO (print8): botões "Abasteci aqui" / "Já lancei" / "Não
+     parei" agora seguem o padrão visual do app, com os 3 na mesma
      largura/estilo (btn-novo-sec), em vez de pilulas pequenas
      inconsistentes. */
 paradaSalvaHTML: function (p) {
@@ -2902,7 +2902,7 @@ paradaSalvaHTML: function (p) {
     selo =
       '<span class="parada-selo" style="color:#60a5fa;border-color:#60a5fa;background:rgba(96,165,250,.10)">' +
         '<span class="ms" style="color:#60a5fa">link</span>' +
-        '<b>JÃ LANCEI</b>' +
+        '<b>JÁ LANCEI</b>' +
       '</span>';
 
   } else if (concluida) {
@@ -2922,7 +2922,7 @@ paradaSalvaHTML: function (p) {
     selo =
       '<span class="parada-selo" style="color:#94a3b8;border-color:#94a3b8;background:rgba(148,163,184,.10)">' +
         '<span class="ms" style="color:#94a3b8">block</span>' +
-        '<b>NÃƒO PAREI</b>' +
+        '<b>NÃO PAREI</b>' +
       '</span>';
 
   } else if (semPosto) {
@@ -3007,7 +3007,7 @@ if (concluida) {
 
     textoDif =
       '<div style="color:#22c55e;font-weight:700">' +
-        'ðŸŸ¢ Economia: ' +
+        '🟢 Economia: ' +
         App.moeda(diferenca) +
       '</div>';
 
@@ -3015,7 +3015,7 @@ if (concluida) {
 
     textoDif =
       '<div style="color:#ef4444;font-weight:700">' +
-        'ðŸ”´ Acima do previsto: ' +
+        '🔴 Acima do previsto: ' +
         App.moeda(Math.abs(diferenca)) +
       '</div>';
 
@@ -3023,28 +3023,28 @@ if (concluida) {
 
     textoDif =
       '<div style="color:#60a5fa;font-weight:700">' +
-        'ðŸ”µ Dentro do previsto' +
+        '🔵 Dentro do previsto' +
       '</div>';
   }
 
   linhaValores =
     '<div class="parada-valores" style="display:flex;flex-direction:column;gap:6px;margin-top:10px">' +
 
-      '<div>ðŸ“ <b>KM:</b> ' +
+      '<div>📍 <b>KM:</b> ' +
       App.fmtNum(p.kmPrevisto) +
       '</div>' +
 
-      '<div>â›½ <b>Previsto:</b> ' +
+      '<div>⛽ <b>Previsto:</b> ' +
       App.fmtNum(p.litrosPrevisto,1) +
-      ' ' + unidadeParada + ' â€¢ ' +
+      ' ' + unidadeParada + ' • ' +
       App.moeda(previsto) +
       '</div>' +
 
-      '<div>â›½ <b>Realizado:</b> ' +
+      '<div>⛽ <b>Realizado:</b> ' +
       App.fmtNum(p.litrosReal,1) +
       ' ' + unidadeParada + '</div>' +
 
-      '<div>ðŸ’° <b>Gasto:</b> ' +
+      '<div>💰 <b>Gasto:</b> ' +
       App.moeda(real) +
       '</div>' +
 
@@ -3057,13 +3057,13 @@ if (concluida) {
   linhaValores =
     '<div class="parada-valores" style="display:flex;flex-direction:column;gap:6px;margin-top:10px">' +
 
-      '<div>ðŸ“ <b>KM:</b> ' +
+      '<div>📍 <b>KM:</b> ' +
       App.fmtNum(p.kmPrevisto) +
       '</div>' +
 
-      '<div>â›½ <b>Previsto:</b> ' +
+      '<div>⛽ <b>Previsto:</b> ' +
       App.fmtNum(p.litrosPrevisto,1) +
-      ' ' + unidadeParada + ' â€¢ ' +
+      ' ' + unidadeParada + ' • ' +
       App.moeda(p.valorPrevisto) +
       '</div>' +
 
@@ -3080,10 +3080,10 @@ if (concluida) {
           '<span class="ms" style="color:#22c55e">local_gas_station</span> Abasteci' +
         '</button>' +
         '<button class="btn-novo-sec" onclick="Viagens.vincularAbastParada(\'' + p.id + '\')">' +
-          '<span class="ms" style="color:#60a5fa">link</span> JÃ¡ lancei' +
+          '<span class="ms" style="color:#60a5fa">link</span> Já lancei' +
         '</button>' +
         '<button class="btn-novo-sec" onclick="Viagens.ignorarParada(\'' + p.id + '\')">' +
-          '<span class="ms" style="color:#94a3b8">block</span> NÃ£o parei' +
+          '<span class="ms" style="color:#94a3b8">block</span> Não parei' +
         '</button>' +
       '</div>';
 
@@ -3129,13 +3129,13 @@ if (concluida) {
       '<div class="aviso info" style="margin-bottom:16px">' +
         '<span class="ms" style="color:#ef4444">local_gas_station</span>' +
         '<div><b>' + App.esc(p.postoNome || ('Parada ' + p.ordem)) + '</b>' +
-        'Previsto: ' + App.fmtNum(p.litrosPrevisto, 1) + ' ' + unidade + ' Â· ' + App.moeda(p.valorPrevisto) + '</div>' +
+        'Previsto: ' + App.fmtNum(p.litrosPrevisto, 1) + ' ' + unidade + ' · ' + App.moeda(p.valorPrevisto) + '</div>' +
       '</div>' +
       '<div class="campo-form"><label>Data</label><input type="date" id="cpData" value="' + App.hojeISO() + '"></div>' +
       '<div class="campo-form"><label>KM do painel</label><input type="number" id="cpKm" placeholder="0"></div>' +
       '<div class="linha-2">' +
         '<div class="campo-form"><label>Quantidade (' + unidade + ')</label><input type="number" id="cpLitros" step="0.01" value="' + (p.litrosPrevisto || '') + '" oninput="Viagens._calcParadaConclusao()"></div>' +
-        '<div class="campo-form"><label>PreÃ§o / ' + unidade + '</label><input type="number" id="cpPreco" step="0.001" value="' + (p.precoLitroPrevisto || '') + '" oninput="Viagens._calcParadaConclusao()"></div>' +
+        '<div class="campo-form"><label>Preço / ' + unidade + '</label><input type="number" id="cpPreco" step="0.001" value="' + (p.precoLitroPrevisto || '') + '" oninput="Viagens._calcParadaConclusao()"></div>' +
       '</div>' +
       '<div class="campo-form"><label>Valor total</label><input type="number" id="cpTotal" step="0.01" value="' + (p.valorPrevisto || '') + '" oninput="Viagens._calcParadaConclusaoInverso()"></div>' +
       '<div class="campo-form"><label>Posto</label><input type="text" id="cpPosto" value="' + App.esc(p.postoNome || '') + '"></div>';
@@ -3265,15 +3265,15 @@ if (concluida) {
       if (!lista.length) {
         App.abrirModal('Vincular abastecimento',
           '<div style="text-align:center;padding:16px 0;color:var(--txt2)"><span class="ms" style="font-size:44px;opacity:.5">local_gas_station</span>' +
-          '<p style="margin-top:10px">Nenhum abastecimento desta viagem estÃ¡ livre.<br>Use "Abasteci aqui" para lanÃ§ar um novo.</p></div>', null);
+          '<p style="margin-top:10px">Nenhum abastecimento desta viagem está livre.<br>Use "Abasteci aqui" para lançar um novo.</p></div>', null);
         return;
       }
       var html = '<div style="display:flex;flex-direction:column;gap:10px">' +
         lista.map(function (a) {
           return '<button onclick="Viagens.confirmarVinculoParada(\'' + paradaId + '\',\'' + a.id + '\')" style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:12px;background:var(--bg2,#111c33);border:1px solid var(--linha,#26365c);text-align:left;cursor:pointer;font-family:inherit;color:var(--txt,#e8eefc);width:100%">' +
             '<span class="ms" style="color:#ef4444">local_gas_station</span>' +
-            '<div style="flex:1"><b>' + App.fmtNum(a.litros, 2) + ' ' + (a.unidade || Viagens._infoEnergetico(a.combustivel).unidade) + ' Â· ' + App.moeda(a.valorTotal) + '</b>' +
-            '<small style="display:block;color:var(--txt2)">' + Viagens.fmtData(a.data) + ' Â· ' + App.fmtNum(a.km) + ' km Â· ' + App.esc(a.posto || 'Posto') + '</small></div>' +
+            '<div style="flex:1"><b>' + App.fmtNum(a.litros, 2) + ' ' + (a.unidade || Viagens._infoEnergetico(a.combustivel).unidade) + ' · ' + App.moeda(a.valorTotal) + '</b>' +
+            '<small style="display:block;color:var(--txt2)">' + Viagens.fmtData(a.data) + ' · ' + App.fmtNum(a.km) + ' km · ' + App.esc(a.posto || 'Posto') + '</small></div>' +
           '</button>';
         }).join('') +
       '</div>';
@@ -3308,14 +3308,14 @@ if (concluida) {
   ignorarParada: function (paradaId) {
     var d = Viagens._detalheAtual;
     App.confirmar({
-      titulo: 'Marcar como nÃ£o realizada',
-      mensagem: 'Esta parada serÃ¡ marcada como nÃ£o realizada. VocÃª pode reativÃ¡-la depois.',
-      textoBotao: 'Marcar como nÃ£o realizada',
+      titulo: 'Marcar como não realizada',
+      mensagem: 'Esta parada será marcada como não realizada. Você pode reativá-la depois.',
+      textoBotao: 'Marcar como não realizada',
       tipo: 'aviso',
       icone: 'block',
       aoConfirmar: function () {
         sb.from('paradas_viagem').update({ status: 'IGNORADA' }).eq('id', paradaId).then(function () {
-          App.toast('Parada marcada como nÃ£o realizada', 'ok');
+          App.toast('Parada marcada como não realizada', 'ok');
           Viagens.abrirDetalhe(d.viagem.id);
         });
       }
@@ -3326,10 +3326,10 @@ if (concluida) {
     var d = Viagens._detalheAtual;
     var p = d.paradas.filter(function (x) { return x.id === paradaId; })[0];
     var temAbastecimento = p && p.abastecimentoId;
-    var html = '<div class="aviso"><span class="ms">undo</span><div><b>Desfazer esta parada?</b>A parada voltarÃ¡ para o estado pendente.</div></div>';
+    var html = '<div class="aviso"><span class="ms">undo</span><div><b>Desfazer esta parada?</b>A parada voltará para o estado pendente.</div></div>';
     if (temAbastecimento) {
       html += '<div class="campo-form"><label style="display:flex;align-items:center;gap:10px;cursor:pointer;text-transform:none">' +
-        '<input type="checkbox" id="rpExcluir" checked style="width:auto;transform:scale(1.3)"> Excluir tambÃ©m o abastecimento lanÃ§ado' +
+        '<input type="checkbox" id="rpExcluir" checked style="width:auto;transform:scale(1.3)"> Excluir também o abastecimento lançado' +
       '</label></div>';
     }
     App.abrirModal('Desfazer parada', html, function () {
@@ -3357,18 +3357,18 @@ if (concluida) {
     }, 'Desfazer');
   },
   /* =========================================================
-     LANÃ‡AR AGORA (atalhos vinculados Ã  viagem)
+     LANÇAR AGORA (atalhos vinculados à viagem)
      ========================================================= */
   lancarAbastecimentoViagem: function (viagemId, veiculoId) {
     window.CARWAY_VIAGEM_HINT = viagemId;
     App.irParaFormAbastecimento(null, veiculoId);
   },
   lancarDespesaViagem: function (viagemId, veiculoId, categoriaPre) {
-    var icones = { 'AlimentaÃ§Ã£o': 'restaurant', 'Hospedagem': 'hotel', 'PedÃ¡gio': 'toll', 'CombustÃ­vel': 'local_gas_station', 'Estacionamento': 'local_parking', 'Lavagem': 'local_car_wash', 'ManutenÃ§Ã£o': 'build', 'Multa': 'gavel', 'Outros': 'receipt_long' };
-    var cores = { 'AlimentaÃ§Ã£o': '#22c55e', 'Hospedagem': '#a78bfa', 'PedÃ¡gio': '#f59e0b', 'CombustÃ­vel': '#ef4444', 'Estacionamento': '#3b82f6', 'Lavagem': '#22d3ee', 'ManutenÃ§Ã£o': '#f59e0b', 'Multa': '#ef4444', 'Outros': '#94a3b8' };
-    var categorias = ['AlimentaÃ§Ã£o', 'Hospedagem', 'PedÃ¡gio', 'Estacionamento', 'Lavagem', 'ManutenÃ§Ã£o', 'Multa', 'Outros'];
+    var icones = { 'Alimentação': 'restaurant', 'Hospedagem': 'hotel', 'Pedágio': 'toll', 'Combustível': 'local_gas_station', 'Estacionamento': 'local_parking', 'Lavagem': 'local_car_wash', 'Manutenção': 'build', 'Multa': 'gavel', 'Outros': 'receipt_long' };
+    var cores = { 'Alimentação': '#22c55e', 'Hospedagem': '#a78bfa', 'Pedágio': '#f59e0b', 'Combustível': '#ef4444', 'Estacionamento': '#3b82f6', 'Lavagem': '#22d3ee', 'Manutenção': '#f59e0b', 'Multa': '#ef4444', 'Outros': '#94a3b8' };
+    var categorias = ['Alimentação', 'Hospedagem', 'Pedágio', 'Estacionamento', 'Lavagem', 'Manutenção', 'Multa', 'Outros'];
     var v = Viagens.lista.filter(function (x) { return x.id === viagemId; })[0] || (Viagens._detalheAtual ? Viagens._detalheAtual.viagem : {});
-    var tituloViagem = v.titulo || (v.origem + ' â†’ ' + v.destino);
+    var tituloViagem = v.titulo || (v.origem + ' → ' + v.destino);
 
     var chipsCat = categorias.map(function (c) {
       var sel = c === categoriaPre;
@@ -3383,7 +3383,7 @@ if (concluida) {
     var html =
       '<div style="background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.35);border-radius:12px;padding:10px 12px;margin-bottom:14px;font-size:13px;color:#bfdbfe">' +
         '<span class="ms" style="font-size:16px;vertical-align:middle;margin-right:4px">luggage</span>' +
-        'Vinculado Ã  viagem: <b>' + App.esc(tituloViagem) + '</b>' +
+        'Vinculado à viagem: <b>' + App.esc(tituloViagem) + '</b>' +
       '</div>' +
       '<div class="campo-form"><label>Categoria</label>' +
         '<div id="chipsCatDespesa" style="display:flex;gap:8px;flex-wrap:wrap">' + chipsCat + '</div>' +
@@ -3394,7 +3394,7 @@ if (concluida) {
         '<div class="campo-form"><label>Data</label><input type="date" id="dvData" value="' + App.hojeISO() + '"></div>' +
       '</div>' +
       '<div class="campo-form"><label>Local <small style="text-transform:none;color:var(--txt2);font-weight:400">(opcional)</small></label><input type="text" id="dvLocal" placeholder="Cidade / local"></div>' +
-      '<div class="campo-form"><label>DescriÃ§Ã£o <small style="text-transform:none;color:var(--txt2);font-weight:400">(opcional)</small></label><input type="text" id="dvDesc" placeholder="Ex.: almoÃ§o na rodovia"></div>';
+      '<div class="campo-form"><label>Descrição <small style="text-transform:none;color:var(--txt2);font-weight:400">(opcional)</small></label><input type="text" id="dvDesc" placeholder="Ex.: almoço na rodovia"></div>';
 
     App.abrirModal('Nova despesa', html, function () {
       var valor = Number(document.getElementById('dvValor').value) || 0;
@@ -3466,7 +3466,7 @@ if (concluida) {
   },
   _selCatDespesa: function (el) {
     document.getElementById('dvCategoria').value = el.getAttribute('data-cat');
-    var cores = { 'AlimentaÃ§Ã£o': '#22c55e', 'Hospedagem': '#a78bfa', 'PedÃ¡gio': '#f59e0b', 'CombustÃ­vel': '#ef4444', 'Estacionamento': '#3b82f6', 'Lavagem': '#22d3ee', 'ManutenÃ§Ã£o': '#f59e0b', 'Multa': '#ef4444', 'Outros': '#94a3b8' };
+    var cores = { 'Alimentação': '#22c55e', 'Hospedagem': '#a78bfa', 'Pedágio': '#f59e0b', 'Combustível': '#ef4444', 'Estacionamento': '#3b82f6', 'Lavagem': '#22d3ee', 'Manutenção': '#f59e0b', 'Multa': '#ef4444', 'Outros': '#94a3b8' };
     var todos = document.querySelectorAll('#chipsCatDespesa button');
     for (var j = 0; j < todos.length; j++) {
       var cat = todos[j].getAttribute('data-cat');
@@ -3479,19 +3479,19 @@ if (concluida) {
   },
 
   /* =========================================================
-     ORÃ‡AMENTO
+     ORÇAMENTO
      ========================================================= */
   formOrcamento: function (id) {
     var d = Viagens._detalheAtual;
     var v = (d && d.viagem && d.viagem.id === id) ? d.viagem : null;
     if (!v) return;
     var html =
-      '<div class="campo-form"><label>CombustÃ­vel</label><input type="number" id="orComb" step="0.01" value="' + (v.combustivelPrev || '') + '"></div>' +
-      '<div class="campo-form"><label>PedÃ¡gio</label><input type="number" id="orPed" step="0.01" value="' + (v.pedagioPrev || '') + '"></div>' +
-      '<div class="campo-form"><label>AlimentaÃ§Ã£o</label><input type="number" id="orAlim" step="0.01" value="' + (v.alimentacaoPrev || '') + '"></div>' +
+      '<div class="campo-form"><label>Combustível</label><input type="number" id="orComb" step="0.01" value="' + (v.combustivelPrev || '') + '"></div>' +
+      '<div class="campo-form"><label>Pedágio</label><input type="number" id="orPed" step="0.01" value="' + (v.pedagioPrev || '') + '"></div>' +
+      '<div class="campo-form"><label>Alimentação</label><input type="number" id="orAlim" step="0.01" value="' + (v.alimentacaoPrev || '') + '"></div>' +
       '<div class="campo-form"><label>Hospedagem</label><input type="number" id="orHosp" step="0.01" value="' + (v.hospedagemPrev || '') + '"></div>' +
       '<div class="campo-form"><label>Outros</label><input type="number" id="orOutros" step="0.01" value="' + (v.outrosPrev || '') + '"></div>';
-    App.abrirModal('OrÃ§amento da viagem', html, function () {
+    App.abrirModal('Orçamento da viagem', html, function () {
       var comb = Number(document.getElementById('orComb').value) || 0;
       var ped = Number(document.getElementById('orPed').value) || 0;
       var alim = Number(document.getElementById('orAlim').value) || 0;
@@ -3504,13 +3504,13 @@ if (concluida) {
       App.fecharModal();
       sb.from('viagens').update(reg).eq('id', id).then(function (r) {
         if (r.error) { App.toast('Erro: ' + r.error.message, 'erro'); return; }
-        App.toast('OrÃ§amento atualizado', 'ok');
+        App.toast('Orçamento atualizado', 'ok');
         Viagens.abrirDetalhe(id);
       });
-    }, 'Salvar orÃ§amento');
+    }, 'Salvar orçamento');
   },
 
-  /* CORRIGIDO (6.3): agora recebe os valores REAIS jÃ¡ separados por
+  /* CORRIGIDO (6.3): agora recebe os valores REAIS já separados por
      categoria (realizado.pedagio, .alimentacao, .hospedagem, .outros)
      em vez de recalcular tudo junto e jogar em "Outros". Cada barra
      agora cresce com o valor certo. */
@@ -3526,19 +3526,19 @@ if (concluida) {
   var totalPrev = prev.combustivel + prev.pedagio + prev.alimentacao + prev.hospedagem + prev.outros;
 
   if (totalPrev === 0 && realizado.total === 0) {
-    return '<div class="orcamento"><div class="orc-titulo"><span class="ms">savings</span> OrÃ§ado x Realizado</div>' +
-      '<p style="color:var(--txt2);font-size:13px;text-align:center;padding:20px 0">Sem orÃ§amento definido. Toque em "OrÃ§amento" acima.</p></div>';
+    return '<div class="orcamento"><div class="orc-titulo"><span class="ms">savings</span> Orçado x Realizado</div>' +
+      '<p style="color:var(--txt2);font-size:13px;text-align:center;padding:20px 0">Sem orçamento definido. Toque em "Orçamento" acima.</p></div>';
   }
 
   var cats = [
-    { nome: 'CombustÃ­vel', cor: '#ef4444', prev: prev.combustivel, real: realizado.combustivel },
-    { nome: 'PedÃ¡gio', cor: '#f59e0b', prev: prev.pedagio, real: realizado.pedagio },
-    { nome: 'AlimentaÃ§Ã£o', cor: '#22c55e', prev: prev.alimentacao, real: realizado.alimentacao },
+    { nome: 'Combustível', cor: '#ef4444', prev: prev.combustivel, real: realizado.combustivel },
+    { nome: 'Pedágio', cor: '#f59e0b', prev: prev.pedagio, real: realizado.pedagio },
+    { nome: 'Alimentação', cor: '#22c55e', prev: prev.alimentacao, real: realizado.alimentacao },
     { nome: 'Hospedagem', cor: '#a78bfa', prev: prev.hospedagem, real: realizado.hospedagem },
     { nome: 'Outros', cor: '#94a3b8', prev: prev.outros, real: realizado.outros }
   ];
 
-  var html = '<div class="orcamento"><div class="orc-titulo"><span class="ms">savings</span> OrÃ§ado x Realizado</div>';
+  var html = '<div class="orcamento"><div class="orc-titulo"><span class="ms">savings</span> Orçado x Realizado</div>';
 
   cats.forEach(function (c) {
     if (c.prev === 0 && c.real === 0) return;
@@ -3550,7 +3550,7 @@ if (concluida) {
       '<div class="orc-cat-topo">' +
         '<div class="orc-cat-nome"><span class="cor" style="background:' + c.cor + '"></span>' + c.nome + '</div>' +
         '<div class="orc-cat-val"><b>' + App.moeda(c.real) + '</b>' +
-          (c.prev > 0 ? '<small>de ' + App.moeda(c.prev) + '</small>' : '<small>sem orÃ§amento</small>') +
+          (c.prev > 0 ? '<small>de ' + App.moeda(c.prev) + '</small>' : '<small>sem orçamento</small>') +
         '</div></div>' +
       '<div class="orc-barra"><i class="' + (estouro ? 'estouro' : '') + '" style="width:' + pct + '%;background:' + c.cor + '"></i></div>' +
     '</div>';
@@ -3562,12 +3562,12 @@ if (concluida) {
   if (totalPrev > 0) {
     if (realizado.total <= 0) {
       linhaFinal = '<div class="orc-linha destaque neutro"><span>Ainda sem gastos</span><b>' + App.moeda(totalPrev) + '</b></div>' +
-        '<small class="orc-nota">Nenhum lanÃ§amento registrado nesta viagem. Todo o orÃ§amento previsto continua disponÃ­vel.</small>';
+        '<small class="orc-nota">Nenhum lançamento registrado nesta viagem. Todo o orçamento previsto continua disponível.</small>';
     } else if (dif > 0) {
-      linhaFinal = '<div class="orc-linha destaque ruim"><span>Acima do orÃ§amento</span><b>' + App.moeda(dif) + '</b></div>' +
-        '<small class="orc-nota ruim">VocÃª jÃ¡ gastou ' + App.moeda(dif) + ' a mais do que o previsto.</small>';
+      linhaFinal = '<div class="orc-linha destaque ruim"><span>Acima do orçamento</span><b>' + App.moeda(dif) + '</b></div>' +
+        '<small class="orc-nota ruim">Você já gastou ' + App.moeda(dif) + ' a mais do que o previsto.</small>';
     } else if (dif < 0) {
-      linhaFinal = '<div class="orc-linha destaque bom"><span>Dentro do orÃ§amento</span><b>' + App.moeda(Math.abs(dif)) + '</b></div>' +
+      linhaFinal = '<div class="orc-linha destaque bom"><span>Dentro do orçamento</span><b>' + App.moeda(Math.abs(dif)) + '</b></div>' +
         '<small class="orc-nota bom">Ainda restam ' + App.moeda(Math.abs(dif)) + ' do valor previsto.</small>';
     } else {
       linhaFinal = '<div class="orc-linha destaque"><span>Exatamente no previsto</span><b>' + App.moeda(0) + '</b></div>';
@@ -3587,28 +3587,28 @@ if (concluida) {
     var val = Number(a.valorTotal) || (Number(a.litros) || 0) * (Number(a.precoLitro) || 0);
     return '<div class="card-desp"><div class="cd-topo">' +
       '<div class="cat-ico" style="background:rgba(239,68,68,.15);color:#ef4444"><span class="ms">local_gas_station</span></div>' +
-      '<div class="cd-info"><b>' + App.fmtNum(a.litros, 2) + ' ' + (a.unidade || Viagens._infoEnergetico(a.combustivel).unidade) + ' Â· ' + App.moeda(val) + '</b>' +
-      '<small>' + Viagens.fmtData(a.data) + ' Â· ' + App.fmtNum(a.km) + ' km Â· ' + App.esc(a.posto || 'Posto') + '</small></div>' +
+      '<div class="cd-info"><b>' + App.fmtNum(a.litros, 2) + ' ' + (a.unidade || Viagens._infoEnergetico(a.combustivel).unidade) + ' · ' + App.moeda(val) + '</b>' +
+      '<small>' + Viagens.fmtData(a.data) + ' · ' + App.fmtNum(a.km) + ' km · ' + App.esc(a.posto || 'Posto') + '</small></div>' +
     '</div></div>';
   },
   itemDespesa: function (d) {
     return '<div class="card-desp"><div class="cd-topo">' +
       '<div class="cat-ico cat-outros"><span class="ms">receipt_long</span></div>' +
       '<div class="cd-info"><b>' + App.esc(d.descricao || d.categoria) + '</b>' +
-      '<small>' + Viagens.fmtData(d.data) + ' Â· ' + App.esc(d.categoria) + (d.local ? ' Â· ' + App.esc(d.local) : '') + '</small></div>' +
+      '<small>' + Viagens.fmtData(d.data) + ' · ' + App.esc(d.categoria) + (d.local ? ' · ' + App.esc(d.local) : '') + '</small></div>' +
       '<div class="cd-valor">' + App.moeda(d.valor) + '</div></div></div>';
   },
   itemManutencao: function (m) {
     return '<div class="card-desp"><div class="cd-topo">' +
       '<div class="cat-ico cat-manutencao"><span class="ms">build</span></div>' +
-      '<div class="cd-info"><b>' + App.esc(m.item || 'ManutenÃ§Ã£o') + '</b>' +
-      '<small>' + Viagens.fmtData(m.data) + ' Â· ' + App.fmtNum(m.km) + ' km Â· ' + App.esc(m.oficina || '') + '</small></div>' +
+      '<div class="cd-info"><b>' + App.esc(m.item || 'Manutenção') + '</b>' +
+      '<small>' + Viagens.fmtData(m.data) + ' · ' + App.fmtNum(m.km) + ' km · ' + App.esc(m.oficina || '') + '</small></div>' +
       '<div class="cd-valor">' + App.moeda(m.custo) + '</div></div></div>';
   },
 
   /* =========================================================
      MAPA DO DETALHE
-     CORRIGIDO (print7): removido botÃ£o "Refazer" (redundante, jÃ¡
+     CORRIGIDO (print7): removido botão "Refazer" (redundante, já
      existe "Editar" no topo). "Tela cheia" e "Postos" ficam lado a
      lado; "Exportar viagem em PDF" fica abaixo, centralizado e em
      largura total.
@@ -3665,7 +3665,7 @@ if (concluida) {
     if (Viagens._mapaDetalhe) Viagens._mapaDetalhe.invalidateSize();
     var el = document.getElementById('mapaDetalheViagem');
     if (el && el.requestFullscreen) el.requestFullscreen();
-    else App.toast('Tela cheia nÃ£o suportada neste navegador', 'erro');
+    else App.toast('Tela cheia não suportada neste navegador', 'erro');
   },
 
   /* =========================================================
@@ -3673,7 +3673,7 @@ if (concluida) {
      ========================================================= */
   exportarPDFViagem: function (viagemId) {
     if (!window.jspdf || !window.jspdf.jsPDF) {
-      App.toast('Biblioteca de PDF nÃ£o carregada. Atualize a pÃ¡gina (Ctrl+F5).', 'erro');
+      App.toast('Biblioteca de PDF não carregada. Atualize a página (Ctrl+F5).', 'erro');
       return;
     }
     var d = Viagens._detalheAtual;
@@ -3687,27 +3687,27 @@ if (concluida) {
     var kmReal = v.kmFinal > 0 ? (Number(v.kmFinal) - Number(v.kmInicial)) : Number(v.distancia);
     var custoKm = kmReal > 0 ? total / kmReal : 0;
     var qtdPorUnidade = {}; d.abastecimentos.forEach(function (a) { var u = a.unidade || Viagens._infoEnergetico(a.combustivel).unidade; qtdPorUnidade[u] = (qtdPorUnidade[u] || 0) + (Number(a.litros) || 0); });
-    var resumoEnergiaPdf = Object.keys(qtdPorUnidade).map(function (u) { return App.fmtNum(qtdPorUnidade[u], 1) + ' ' + u; }).join(' Â· ') || 'â€”';
+    var resumoEnergiaPdf = Object.keys(qtdPorUnidade).map(function (u) { return App.fmtNum(qtdPorUnidade[u], 1) + ' ' + u; }).join(' · ') || '—';
 
     var realPedagio = 0, realAlim = 0, realHosp = 0, realOutros = 0;
     d.despesas.forEach(function (x) {
       var val = Number(x.valor) || 0;
-      if (x.categoria === 'AlimentaÃ§Ã£o') realAlim += val;
+      if (x.categoria === 'Alimentação') realAlim += val;
       else if (x.categoria === 'Hospedagem') realHosp += val;
-      else if (x.categoria === 'PedÃ¡gio') realPedagio += val;
+      else if (x.categoria === 'Pedágio') realPedagio += val;
       else realOutros += val;
     });
     realOutros += totManut;
 
     var doc = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4' });
-    var tituloViagem = v.titulo || (v.origem + ' â†’ ' + v.destino);
-    var subtitulo = v.origem + ' â†’ ' + v.destino + ' - ' +
-      (String(v.idaVolta).toUpperCase() === 'SIM' ? 'ida e volta' : 'sÃ³ ida') + ' - ' +
+    var tituloViagem = v.titulo || (v.origem + ' → ' + v.destino);
+    var subtitulo = v.origem + ' → ' + v.destino + ' - ' +
+      (String(v.idaVolta).toUpperCase() === 'SIM' ? 'ida e volta' : 'só ida') + ' - ' +
       Viagens.fmtData(v.dataInicio) + (v.dataFim ? ' a ' + Viagens.fmtData(v.dataFim) : '') +
       (veiculo ? ' - ' + veiculo.nome + (veiculo.placa ? ' ' + veiculo.placa : '') : '');
 
     doc.setFontSize(16);
-    doc.text('RelatÃ³rio de Viagem', 14, 16);
+    doc.text('Relatório de Viagem', 14, 16);
     doc.setFontSize(9);
     doc.setTextColor(100);
     doc.text(subtitulo, 14, 22);
@@ -3717,17 +3717,17 @@ if (concluida) {
       startY: 28,
       theme: 'grid',
       styles: { fontSize: 9 },
-      head: [['DistÃ¢ncia', 'CombustÃ­vel', 'Gasto total', 'Custo por km']],
+      head: [['Distância', 'Combustível', 'Gasto total', 'Custo por km']],
       body: [[App.fmtNum(kmReal) + ' km', resumoEnergiaPdf, App.moeda(total), App.moeda(custoKm)]]
     });
     var y = doc.lastAutoTable.finalY + 10;
 
     doc.setFontSize(12);
-    doc.text('OrÃ§ado x Realizado', 14, y);
+    doc.text('Orçado x Realizado', 14, y);
     var linhasOrc = [
-      ['CombustÃ­vel', App.moeda(v.combustivelPrev || 0), App.moeda(totComb), App.moeda(totComb - (v.combustivelPrev || 0))],
-      ['PedÃ¡gio', App.moeda(v.pedagioPrev || 0), App.moeda(realPedagio), App.moeda(realPedagio - (v.pedagioPrev || 0))],
-      ['AlimentaÃ§Ã£o', App.moeda(v.alimentacaoPrev || 0), App.moeda(realAlim), App.moeda(realAlim - (v.alimentacaoPrev || 0))],
+      ['Combustível', App.moeda(v.combustivelPrev || 0), App.moeda(totComb), App.moeda(totComb - (v.combustivelPrev || 0))],
+      ['Pedágio', App.moeda(v.pedagioPrev || 0), App.moeda(realPedagio), App.moeda(realPedagio - (v.pedagioPrev || 0))],
+      ['Alimentação', App.moeda(v.alimentacaoPrev || 0), App.moeda(realAlim), App.moeda(realAlim - (v.alimentacaoPrev || 0))],
       ['Hospedagem', App.moeda(v.hospedagemPrev || 0), App.moeda(realHosp), App.moeda(realHosp - (v.hospedagemPrev || 0))],
       ['Outros', App.moeda(v.outrosPrev || 0), App.moeda(realOutros), App.moeda(realOutros - (v.outrosPrev || 0))]
     ];
@@ -3737,7 +3737,7 @@ if (concluida) {
       startY: y + 3,
       styles: { fontSize: 8.5 },
       headStyles: { fillColor: [59, 130, 246] },
-      head: [['Categoria', 'Previsto', 'Realizado', 'DiferenÃ§a']],
+      head: [['Categoria', 'Previsto', 'Realizado', 'Diferença']],
       body: linhasOrc,
       didParseCell: function (dataCell) {
         if (dataCell.column.index === 3 && dataCell.row.section === 'body') {
@@ -3758,11 +3758,11 @@ if (concluida) {
         startY: y + 3,
         styles: { fontSize: 8 },
         headStyles: { fillColor: [167, 139, 250] },
-        head: [['#', 'KM', 'Posto sugerido', 'EndereÃ§o', 'Status']],
+        head: [['#', 'KM', 'Posto sugerido', 'Endereço', 'Status']],
         body: d.paradas.map(function (p) {
           var statusTxt = p.status || 'PENDENTE';
           if (p.antecipada) statusTxt += ' (antecipada ' + Math.round((p.kmOriginalPrevisto - p.kmPrevisto)*10)/10 + 'km)';
-          return ['#' + p.ordem, App.fmtNum(p.kmPrevisto), p.postoNome || 'â€”', p.postoEndereco || 'â€”', statusTxt];
+          return ['#' + p.ordem, App.fmtNum(p.kmPrevisto), p.postoNome || '—', p.postoEndereco || '—', statusTxt];
         })
       });
       y = doc.lastAutoTable.finalY + 10;
@@ -3777,7 +3777,7 @@ if (concluida) {
         headStyles: { fillColor: [239, 68, 68] },
         head: [['Data', 'Quantidade', 'Km', 'Posto', 'Valor']],
         body: d.abastecimentos.map(function (a) {
-          return [Viagens.fmtData(a.data), App.fmtNum(a.litros, 2) + ' ' + (a.unidade || Viagens._infoEnergetico(a.combustivel).unidade), App.fmtNum(a.km), a.posto || 'â€”', App.moeda(a.valorTotal)];
+          return [Viagens.fmtData(a.data), App.fmtNum(a.litros, 2) + ' ' + (a.unidade || Viagens._infoEnergetico(a.combustivel).unidade), App.fmtNum(a.km), a.posto || '—', App.moeda(a.valorTotal)];
         })
       });
       y = doc.lastAutoTable.finalY + 10;
@@ -3790,9 +3790,9 @@ if (concluida) {
         startY: y + 3,
         styles: { fontSize: 8 },
         headStyles: { fillColor: [34, 197, 94] },
-        head: [['Data', 'Categoria', 'DescriÃ§Ã£o', 'Local', 'Valor']],
+        head: [['Data', 'Categoria', 'Descrição', 'Local', 'Valor']],
         body: d.despesas.map(function (x) {
-          return [Viagens.fmtData(x.data), x.categoria || '', x.descricao || '', x.local || 'â€”', App.moeda(x.valor)];
+          return [Viagens.fmtData(x.data), x.categoria || '', x.descricao || '', x.local || '—', App.moeda(x.valor)];
         })
       });
     }
@@ -3803,7 +3803,7 @@ if (concluida) {
       doc.setFontSize(8);
       doc.setTextColor(150);
       doc.text('Gerado pelo CarWay em ' + new Date().toLocaleString('pt-BR'), 14, 290);
-      doc.text('PÃ¡gina ' + i + ' de ' + totalPaginas, 196, 290, { align: 'right' });
+      doc.text('Página ' + i + ' de ' + totalPaginas, 196, 290, { align: 'right' });
     }
 
     var nomeArquivo = 'Viagem_' + tituloViagem.replace(/[^a-zA-Z0-9]/g, '') + '_' + App.hojeISO() + '.pdf';
@@ -3851,11 +3851,11 @@ if (concluida) {
     if (!Viagens._ultimoPdfBlob) return;
     var file = new File([Viagens._ultimoPdfBlob], Viagens._ultimoPdfNome || 'carway.pdf', { type: 'application/pdf' });
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      navigator.share({ files: [file], title: 'CarWay', text: 'RelatÃ³rio CarWay' }).catch(function () {});
+      navigator.share({ files: [file], title: 'CarWay', text: 'Relatório CarWay' }).catch(function () {});
       return;
     }
     window.open('https://drive.google.com/drive/my-drive', '_blank', 'noopener');
-    App.toast('Compartilhamento direto nÃ£o suportado neste navegador. Salve o PDF e envie manualmente ao Drive.', 'ok');
+    App.toast('Compartilhamento direto não suportado neste navegador. Salve o PDF e envie manualmente ao Drive.', 'ok');
   },
 
   /* =========================================================
@@ -3863,7 +3863,7 @@ if (concluida) {
      ========================================================= */
   abrirEncerrar: function (id) {
     sb.from('viagens').select('*').eq('id', id).single().then(function (r) {
-      if (r.error || !r.data) { App.toast('Viagem nÃ£o encontrada', 'erro'); return; }
+      if (r.error || !r.data) { App.toast('Viagem não encontrada', 'erro'); return; }
       Viagens.renderEncerrar(r.data);
     });
   },
@@ -3874,7 +3874,7 @@ if (concluida) {
 
   var resumo = ehIniciar
     ? '<div style="display:flex;justify-content:space-between;font-size:13px;padding:4px 0">' +
-        '<span style="color:var(--txt2)">DistÃ¢ncia planejada</span><b>' + App.fmtNum(distanciaPlanejada) + ' km</b>' +
+        '<span style="color:var(--txt2)">Distância planejada</span><b>' + App.fmtNum(distanciaPlanejada) + ' km</b>' +
       '</div>' +
       '<div style="display:flex;justify-content:space-between;font-size:13px;padding:4px 0;border-top:1px solid var(--linha);margin-top:4px;padding-top:8px">' +
         '<span style="color:var(--txt2)">Percurso</span><b>' + (String(v.idaVolta).toUpperCase() === 'SIM' ? 'Ida e volta' : 'Somente ida') + '</b>' +
@@ -3883,28 +3883,28 @@ if (concluida) {
         '<span style="color:var(--txt2)">KM ao sair</span><b>' + App.fmtNum(v.kmInicial || 0) + ' km</b>' +
       '</div>' +
       '<div style="display:flex;justify-content:space-between;font-size:13px;padding:4px 0">' +
-        '<span style="color:var(--txt2)">DistÃ¢ncia planejada</span><b>' + App.fmtNum(distanciaPlanejada) + ' km</b>' +
+        '<span style="color:var(--txt2)">Distância planejada</span><b>' + App.fmtNum(distanciaPlanejada) + ' km</b>' +
       '</div>' +
       '<div style="display:flex;justify-content:space-between;font-size:13px;padding:4px 0;border-top:1px solid var(--linha);margin-top:4px;padding-top:8px">' +
-        '<span style="color:var(--txt2)">DistÃ¢ncia percorrida</span><b id="encDist">â€”</b>' +
+        '<span style="color:var(--txt2)">Distância percorrida</span><b id="encDist">—</b>' +
       '</div>';
 
   var html =
     '<h2 class="form-titulo">' + (ehIniciar ? 'Iniciar viagem' : 'Encerrar viagem') + '</h2>' +
     '<div class="aviso info" style="margin-bottom:18px">' +
       '<span class="ms">' + (ehIniciar ? 'play_arrow' : 'stop_circle') + '</span>' +
-      '<div><b>' + App.esc(v.titulo || (v.origem + ' â†’ ' + v.destino)) + '</b>' +
+      '<div><b>' + App.esc(v.titulo || (v.origem + ' → ' + v.destino)) + '</b>' +
       (ehIniciar ? 'Registre o KM do painel antes de sair.' : 'Registre o KM do painel ao chegar.') + '</div>' +
     '</div>' +
     '<div class="campo-form"><label>KM do painel ' + (ehIniciar ? 'ao sair' : 'ao voltar') + '</label>' +
       '<input type="number" id="encKm" placeholder="0" value="' + (v.kmInicial || '') + '" oninput="Viagens.calcEncerrar(' + (v.kmInicial || 0) + ')">' +
     '</div>' +
-    '<div class="campo-form"><label>Data ' + (ehIniciar ? 'de saÃ­da' : 'de retorno') + '</label>' +
+    '<div class="campo-form"><label>Data ' + (ehIniciar ? 'de saída' : 'de retorno') + '</label>' +
       '<input type="date" id="encData" value="' + (ehIniciar ? (v.dataInicio || dataHoje) : (v.dataFim || dataHoje)) + '">' +
     '</div>' +
     '<div style="background:var(--bg2);border:1px solid var(--linha);border-radius:11px;padding:12px;margin-bottom:16px">' + resumo + '</div>' +
     (ehIniciar
-      ? '<label class="switch" style="margin-bottom:16px"><span>Abrir navegaÃ§Ã£o ao iniciar</span><input type="checkbox" id="encAbrirNav" checked></label>'
+      ? '<label class="switch" style="margin-bottom:16px"><span>Abrir navegação ao iniciar</span><input type="checkbox" id="encAbrirNav" checked></label>'
       : '') +
     '<div class="form-acoes-viagem">' +
       '<button class="btn-cancelar-form" onclick="App.irPara(\'viagens\')"><span class="ms">close</span> Cancelar</button>' +
@@ -3923,8 +3923,8 @@ if (concluida) {
     var el = document.getElementById('encDist');
     if (!el) return;
     if (km > kmIni && kmIni > 0) { el.textContent = App.fmtNum(km - kmIni) + ' km'; el.style.color = '#86efac'; }
-    else if (km > 0 && km <= kmIni) { el.textContent = 'KM invÃ¡lido'; el.style.color = '#fca5a5'; }
-    else { el.textContent = 'â€”'; el.style.color = ''; }
+    else if (km > 0 && km <= kmIni) { el.textContent = 'KM inválido'; el.style.color = '#fca5a5'; }
+    else { el.textContent = '—'; el.style.color = ''; }
   },
 confirmarEncerrar: function (id, ehIniciar) {
   var km = Number(document.getElementById('encKm').value) || 0;
@@ -3944,7 +3944,7 @@ confirmarEncerrar: function (id, ehIniciar) {
     if (r.error) { App.toast('Erro: ' + r.error.message, 'erro'); return; }
 
     if (App._painelRaw) App._painelRaw = null;
-    App.toast(ehIniciar ? 'Viagem iniciada!' : 'Viagem concluÃ­da!', 'ok');
+    App.toast(ehIniciar ? 'Viagem iniciada!' : 'Viagem concluída!', 'ok');
 
     if (abrirNavegacao) {
       Viagens.abrirNavegacaoDaViagem(id);
@@ -3964,7 +3964,7 @@ confirmarEncerrar: function (id, ehIniciar) {
     var rParadas = resultados[1];
 
     if (rViagem.error || !rViagem.data || !rViagem.data.rota) {
-      App.toast('Rota nÃ£o encontrada', 'erro');
+      App.toast('Rota não encontrada', 'erro');
       App.irPara('viagens');
       return;
     }
@@ -3972,7 +3972,7 @@ confirmarEncerrar: function (id, ehIniciar) {
     var rota;
 
     try { rota = JSON.parse(rViagem.data.rota); }
-    catch (e) { App.toast('Rota invÃ¡lida', 'erro'); App.irPara('viagens'); return; }
+    catch (e) { App.toast('Rota inválida', 'erro'); App.irPara('viagens'); return; }
 
     if (!rota.origem || !rota.destino) {
       App.toast('Rota sem coordenadas', 'erro');
@@ -3989,7 +3989,7 @@ confirmarEncerrar: function (id, ehIniciar) {
     Viagens._continuarAbrirNoMaps();
     setTimeout(function () { App.irParaDetalheViagem(viagemId); }, 1200);
   }).catch(function (e) {
-    console.error('CarWay - erro ao abrir navegaÃ§Ã£o:', e);
+    console.error('CarWay - erro ao abrir navegação:', e);
     App.irPara('viagens');
   });
 },
@@ -4018,18 +4018,18 @@ _urlMapsComParadas: function (origem, destino) {
   excluir: function (id) {
     var v = Viagens.lista.filter(function (x) { return x.id === id; })[0] ||
       (Viagens._detalheAtual && Viagens._detalheAtual.viagem.id === id ? Viagens._detalheAtual.viagem : {});
-    var titulo = v.titulo || (v.origem + ' â†’ ' + v.destino);
+    var titulo = v.titulo || (v.origem + ' → ' + v.destino);
     App.confirmar({
       titulo: 'Excluir viagem',
-      mensagem: 'A viagem <b>' + App.esc(titulo) + '</b> serÃ¡ excluÃ­da permanentemente. ' +
-        'Os abastecimentos, despesas e manutenÃ§Ãµes vinculados a ela <b>NÃƒO</b> serÃ£o apagados (ficarÃ£o como gastos do dia a dia).',
+      mensagem: 'A viagem <b>' + App.esc(titulo) + '</b> será excluída permanentemente. ' +
+        'Os abastecimentos, despesas e manutenções vinculados a ela <b>NÃO</b> serão apagados (ficarão como gastos do dia a dia).',
       textoBotao: 'Excluir viagem',
       tipo: 'perigo',
       icone: 'luggage',
       aoConfirmar: function () {
         sb.from('viagens').delete().eq('id', id).then(function (r) {
           if (r.error) { App.toast('Erro: ' + r.error.message, 'erro'); return; }
-          App.toast('Viagem excluÃ­da', 'ok');
+          App.toast('Viagem excluída', 'ok');
           App.irPara('viagens');
         });
       }
@@ -4037,7 +4037,7 @@ _urlMapsComParadas: function (origem, destino) {
   },
 
   fmtData: function (s) {
-    if (!s) return 'â€”';
+    if (!s) return '—';
     var p = String(s).substring(0, 10).split('-');
     return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : s;
   }
