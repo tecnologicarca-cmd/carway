@@ -699,3 +699,45 @@ body.tema-claro button.excluir { color: #fff !important; }
 .orc-nota.bom { color: #86efac; }
 .orc-nota.ruim { color: #fca5a5; }
 .orc-linha.destaque.neutro b { color: var(--azul2, #60a5fa); }
+
+.form-acoes-viagem .btn-cancelar-form,
+.form-acoes-viagem .btn-novo-sec {
+  flex: 1 !important;
+  width: 100% !important;
+  justify-content: center !important;
+}
+
+/* ==========================================================
+   TEMA CLARO REAL
+   ========================================================== */
+
+body.tema-claro {
+
+  --bg: #eef2f7;
+  --bg2: #f8fafc;
+
+  --card: #ffffff;
+  --card2: #f1f5f9;
+
+  --linha: #dbe3ef;
+
+  --txt: #172033;
+  --txt2: #64748b;
+
+  --azul: #2563eb;
+  --azul2: #3b82f6;
+
+  color-scheme: light;
+}
+
+body.tema-claro .topbar {
+  background: rgba(255,255,255,.92);
+}
+
+body.tema-claro .tabbar {
+  background: rgba(255,255,255,.95);
+}
+
+body.tema-claro .modal {
+  background: rgba(15,23,42,.35);
+}
