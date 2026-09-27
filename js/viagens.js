@@ -993,14 +993,29 @@ abrirPlanejador: async function (idExistente) {
       ? '<button class="btn-cancelar-form" onclick="App.irParaDetalheViagem(\'' + v.id + '\')"><span class="ms">close</span> Cancelar</button>'
       : '<button class="btn-cancelar-form" onclick="App.irPara(\'viagens\')"><span class="ms">close</span> Cancelar</button>';
 
-    html +=
-      '<div class="form-acoes-viagem">' +
-        '<div style="display:flex;gap:8px;width:100%">' +
-          '<div style="flex:1;display:flex">' + acaoCancelar.replace( 'class="btn-cancelar-form"', 'class="btn-cancelar-form" style="width:100%;justify-content:center"') +'</div>'
-          '<div style="flex:1"><button class="btn-novo-sec" style="width:100%;justify-content:center" onclick="Viagens.abrirNoMaps()"><span class="ms">navigation</span> Abrir no Maps</button></div>' +
-        '</div>' +
-        acaoPrincipal +
-      '</div>';
+html +=
+  '<div class="form-acoes-viagem">' +
+    '<div style="display:flex;gap:8px;width:100%">' +
+
+      '<button class="btn-cancelar-form" ' +
+        'style="flex:1;width:100%;justify-content:center" ' +
+        'onclick="' + (ehEdicao
+          ? "App.irParaDetalheViagem('" + v.id + "')"
+          : "App.irPara('viagens')") + '">' +
+        '<span class="ms">close</span> Cancelar' +
+      '</button>' +
+
+      '<button class="btn-novo-sec" ' +
+        'style="flex:1;width:100%;justify-content:center" ' +
+        'onclick="Viagens.abrirNoMaps()">' +
+        '<span class="ms">navigation</span> Abrir no Maps' +
+      '</button>' +
+
+    '</div>' +
+
+    acaoPrincipal +
+
+  '</div>';
 
     document.getElementById('formPlanoViagemContainer').innerHTML = html;
     Viagens._aplicarEnergeticoNoFormulario(veic, energeticoSel, false);
