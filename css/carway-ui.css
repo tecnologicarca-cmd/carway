@@ -710,23 +710,16 @@ body.tema-claro button.excluir { color: #fff !important; }
 /* ==========================================================
    TEMA CLARO REAL
    ========================================================== */
-
 body.tema-claro {
-
   --bg: #eef2f7;
   --bg2: #f8fafc;
-
   --card: #ffffff;
   --card2: #f1f5f9;
-
   --linha: #dbe3ef;
-
   --txt: #172033;
   --txt2: #64748b;
-
   --azul: #2563eb;
   --azul2: #3b82f6;
-
   color-scheme: light;
 }
 
