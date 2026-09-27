@@ -1,4 +1,4 @@
-/* APP_VERSION: v3.5 - offline com formulários locais */
+/* APP_VERSION: v3.7 - leitura e gravação offline - offline com formulários locais */
 /* =====================================================================
    CARWAY - DESPESAS v3.2
    - Conectado ao seletor global de veiculo (App.veiculoAtivoId).
@@ -63,33 +63,37 @@ var Despesas = {
     });
   },
 
-  carregarLista: function () {
+  carregarLista: async function () {
     var el = document.getElementById('listaDespesas');
     if (!el) return;
-
     Despesas._registrarListenerVeiculoGlobal();
+    if (!Despesas.veiculos.length) {
+      Despesas.veiculos = await Offline.obterColecao('veiculos', []);
+    }
+    if (!Despesas.viagens.length) {
+      Despesas.viagens = await Offline.obterColecao('viagens', []);
+    }
     el.innerHTML = '<div class="vazio-veiculo"><span class="ms">hourglass_top</span><p>Carregando...</p></div>';
-
-    sb.from('despesas')
-      .select('*')
-      .eq('organizacaoId', orgAtual.id)
-      .order('data', { ascending: false })
-      .then(function (r) {
-        if (r.error) {
-          console.error('CarWay despesas - erro ao carregar lista:', r.error);
-          el.innerHTML = '<div class="vazio-veiculo"><p>Erro ao carregar.</p></div>';
-          return;
-        }
-
-        Despesas.lista = r.data || [];
-        Despesas.renderKpis();
-        Despesas.renderLista();
-      })
-      .catch(function (erro) {
-        console.error('CarWay despesas - falha ao carregar lista:', erro);
-        el.innerHTML = '<div class="vazio-veiculo"><p>Erro ao carregar.</p></div>';
-      });
+    function aplicar(lista) {
+      Despesas.lista = Array.isArray(lista) ? lista : [];
+      Despesas.renderKpis();
+      Despesas.renderLista();
+    }
+    if (!navigator.onLine) {
+      aplicar(await Offline.obterColecao('despesas', Despesas.lista || []));
+      return;
+    }
+    try {
+      var r = await sb.from('despesas').select('*').eq('organizacaoId', orgAtual.id).order('data', { ascending: false });
+      if (r.error) throw r.error;
+      aplicar(r.data || []);
+      await Offline.salvarColecao('despesas', Despesas.lista);
+    } catch (erro) {
+      console.warn('CarWay despesas - rede falhou, usando cache:', erro);
+      aplicar(await Offline.obterColecao('despesas', Despesas.lista || []));
+    }
   },
+
 
   renderKpis: function () {
     var lista = Despesas._listaDoVeiculoAtivo();
@@ -546,6 +550,7 @@ var Despesas = {
 
       if (App._painelRaw) App._painelRaw = null;
       Despesas.editando = null;
+      await Offline.salvarColecao('despesas', Despesas.lista || []);
       App.irPara('despesas');
 
     } catch (erro) {
