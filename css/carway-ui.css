@@ -301,7 +301,7 @@ button.editar .ms,
 .cat-pedagio { --cat-cor: #f59e0b; }
 .cat-estacionamento { --cat-cor: #22d3ee; }
 .cat-lavagem { --cat-cor: #06b6d4; }
-.cat-manutencao { --cat-cor: #ec4899; }
+.cat-manutencao { --cat-cor: #f59e0b; }
 .cat-multa { --cat-cor: #ef4444; }
 .cat-outros { --cat-cor: #94a3b8; }
 
@@ -451,30 +451,6 @@ button.editar .ms,
   .cv2-acoes button.pri,
   .cv2-acoes button.encerrar { font-size: 11px; }
 }
-
-/* =====================================================================
-   9. TEMA CLARO - COMPATIBILIDADE
-   ===================================================================== */
-body.tema-claro {
-  --cw-bg: var(--bg, #eef2f7);
-  --cw-bg-2: var(--bg2, #f8fafc);
-  --cw-card: var(--card, #fff);
-  --cw-card-2: var(--card2, #f1f5f9);
-  --cw-border: var(--linha, #dbe3ef);
-  --cw-text: var(--txt, #172033);
-  --cw-muted: var(--txt2, #64748b);
-}
-
-body.tema-claro .btn-novo-sec,
-body.tema-claro .btn-admin-share { background: var(--cw-card) !important; }
-
-body.tema-claro .btn-cancelar-form,
-body.tema-claro .btn-cancelar-vermelho,
-body.tema-claro .btn-cancelar,
-body.tema-claro .btn-voltar,
-body.tema-claro .btn-excluir,
-body.tema-claro button.excluir { color: #fff !important; }
-
 /* =====================================================================
    CARWAY UI v1.1
    Correção das cores na tela Nova despesa
@@ -502,7 +478,7 @@ body.tema-claro button.excluir { color: #fff !important; }
 }
 
 .cat-opcao[data-cat="Manutenção"] {
-  --cat-cor: #ec4899;
+  --cat-cor: #f59e0b;
 }
 
 .cat-opcao[data-cat="Multa"] {
@@ -707,30 +683,3 @@ body.tema-claro button.excluir { color: #fff !important; }
   justify-content: center !important;
 }
 
-/* ==========================================================
-   TEMA CLARO REAL
-   ========================================================== */
-body.tema-claro {
-  --bg: #eef2f7;
-  --bg2: #f8fafc;
-  --card: #ffffff;
-  --card2: #f1f5f9;
-  --linha: #dbe3ef;
-  --txt: #172033;
-  --txt2: #64748b;
-  --azul: #2563eb;
-  --azul2: #3b82f6;
-  color-scheme: light;
-}
-
-body.tema-claro .topbar {
-  background: rgba(255,255,255,.92);
-}
-
-body.tema-claro .tabbar {
-  background: rgba(255,255,255,.95);
-}
-
-body.tema-claro .modal {
-  background: rgba(15,23,42,.35);
-}
