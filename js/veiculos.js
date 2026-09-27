@@ -1,4 +1,4 @@
-/* APP_VERSION: v2.5 - energeticos inteligentes */
+/* APP_VERSION: v2.7 - leitura offline - energeticos inteligentes */
 /* =====================================================================
    CARWAY - VEICULOS
    v2.3 (esta versao)
@@ -171,69 +171,80 @@ var Veiculos = {
     });
   },
 
-  carregarLista: function () {
+  carregarLista: async function () {
     var lista = document.getElementById('listaVeiculos');
     var aviso = document.getElementById('avisoPlanoVeiculos');
     var btnNovo = document.getElementById('btnNovoVeiculo');
+    if (!lista) return;
     lista.innerHTML = '<div class="vazio-veiculo"><span class="ms">hourglass_top</span><p>Carregando...</p></div>';
-    aviso.innerHTML = '';
-
+    if (aviso) aviso.innerHTML = '';
     Veiculos._registrarListenerVeiculoGlobal();
 
-    Promise.all([
-      sb.from('veiculos').select('*').eq('organizacaoId', orgAtual.id).order('criadoEm', { ascending: false }),
-      sb.from('abastecimentos').select('veiculoId, km, litros, tanqueCheio, data').eq('organizacaoId', orgAtual.id),
-      sb.from('manutencoes').select('veiculoId').eq('organizacaoId', orgAtual.id),
-      sb.from('viagens').select('veiculoId').eq('organizacaoId', orgAtual.id)
-    ]).then(function (r) {
-      if (r[0].error) {
-        lista.innerHTML = '<div class="vazio-veiculo"><p>Erro ao carregar.</p></div>';
-        return;
-      }
-      Veiculos.lista = r[0].data || [];
-      var abastecimentos = r[1].data || [];
-      var manutencoes = r[2].data || [];
-      var viagens = r[3].data || [];
-
-      /* Se o veiculo filtrado na barra global foi excluido nesse meio
-         tempo, volta para "Todos" para nao deixar a tela vazia/quebrada. */
-      if (App.veiculoAtivoId && !Veiculos.lista.some(function (v) { return v.id === App.veiculoAtivoId; })) {
-        App.veiculoAtivoId = null;
-        App._salvarVeiculoAtivo();
-        App._renderConteudoBarraVeiculoGlobal();
-      }
-
-      /* PrÃ©-calcula, por veÃ­culo, contadores reais, consumo (km/L,
-         km/Tanque) e o ULTIMO ABASTECIMENTO (km + data) â€” este ultimo
-         e usado no card como o "km atual" real, no lugar do km do
-         cadastro (que nunca muda depois de criado). */
+    function aplicar(dados) {
+      dados = dados || {};
+      Veiculos.lista = Array.isArray(dados.veiculos) ? dados.veiculos : [];
+      var abastecimentos = Array.isArray(dados.abastecimentos) ? dados.abastecimentos : [];
+      var manutencoes = Array.isArray(dados.manutencoes) ? dados.manutencoes : [];
+      var viagens = Array.isArray(dados.viagens) ? dados.viagens : [];
       Veiculos._stats = {};
       Veiculos.lista.forEach(function (v) {
         var absDoVeic = abastecimentos.filter(function (a) { return a.veiculoId === v.id; });
-        var qtdManut = manutencoes.filter(function (m) { return m.veiculoId === v.id; }).length;
-        var qtdViagens = viagens.filter(function (vi) { return vi.veiculoId === v.id; }).length;
         var consumo = App.calcularConsumo(absDoVeic, v.tanque);
         Veiculos._stats[v.id] = {
           qtdAbastecimentos: absDoVeic.length,
-          qtdManutencoes: qtdManut,
-          qtdViagens: qtdViagens,
-          kmL: consumo.kmL,
-          kmTanque: consumo.kmTanque,
-          temConsumo: consumo.temDados,
+          qtdManutencoes: manutencoes.filter(function (m) { return m.veiculoId === v.id; }).length,
+          qtdViagens: viagens.filter(function (vi) { return vi.veiculoId === v.id; }).length,
+          kmL: consumo.kmL, kmTanque: consumo.kmTanque, temConsumo: consumo.temDados,
           ultimoAbastecimento: Veiculos._ultimoAbastecimento(absDoVeic)
         };
       });
-
       var maxV = orgAtual.maxVeiculos || 1;
-      if (Veiculos.lista.length >= maxV) {
-        btnNovo.disabled = true;
+      if (btnNovo) btnNovo.disabled = Veiculos.lista.length >= maxV;
+      if (aviso && Veiculos.lista.length >= maxV) {
         aviso.innerHTML = '<div class="aviso-plano"><b>Limite do plano ' + App.nomePlano(orgAtual.tipoPlano) + '</b>' +
-          'VocÃª jÃ¡ tem ' + Veiculos.lista.length + ' de ' + maxV + ' veÃ­culo(s).</div>';
-      } else btnNovo.disabled = false;
-
+          'Você já tem ' + Veiculos.lista.length + ' de ' + maxV + ' veículo(s).</div>';
+      }
       Veiculos._renderLista();
-    });
+    }
+
+    if (!navigator.onLine) {
+      try {
+        var cache = await Offline.obterColecao('veiculos-pagina', null);
+        if (!cache || !Array.isArray(cache.veiculos) || !cache.veiculos.length) {
+          cache = { veiculos: await Offline.obterColecao('veiculos', []) };
+        }
+        aplicar(cache);
+      } catch (erroCache) {
+        console.error('CarWay veículos - erro no cache local:', erroCache);
+        aplicar({ veiculos: [] });
+      }
+      return;
+    }
+
+    try {
+      var r = await Promise.all([
+        sb.from('veiculos').select('*').eq('organizacaoId', orgAtual.id).order('criadoEm', { ascending: false }),
+        sb.from('abastecimentos').select('veiculoId, km, litros, tanqueCheio, data').eq('organizacaoId', orgAtual.id),
+        sb.from('manutencoes').select('veiculoId').eq('organizacaoId', orgAtual.id),
+        sb.from('viagens').select('veiculoId').eq('organizacaoId', orgAtual.id)
+      ]);
+      if (r[0].error) throw r[0].error;
+      var dados = {
+        veiculos: r[0].data || [], abastecimentos: r[1].data || [],
+        manutencoes: r[2].data || [], viagens: r[3].data || []
+      };
+      aplicar(dados);
+      await Promise.all([
+        Offline.salvarColecao('veiculos', dados.veiculos),
+        Offline.salvarColecao('veiculos-pagina', dados)
+      ]);
+    } catch (erro) {
+      console.warn('CarWay veículos - rede falhou, usando cache:', erro);
+      var cacheFalha = await Offline.obterColecao('veiculos-pagina', { veiculos: Veiculos.lista || [] });
+      aplicar(cacheFalha);
+    }
   },
+
 
   /* Maior km entre os abastecimentos do veiculo (empate resolvido pela
      data mais recente) â€” mesmo criterio ja usado em Manutencoes. */
