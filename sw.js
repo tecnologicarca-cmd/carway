@@ -5,7 +5,7 @@
 
 'use strict';
 
-const CACHE_VERSION = 'carway-shell-v1.0.4';
+const CACHE_VERSION = 'carway-shell-v1.0.6';
 const OFFLINE_PAGE = './index.html';
 
 /*
@@ -18,8 +18,10 @@ const APP_SHELL = [
   './index.html',
   './manifest.json',
 
-  './css/estilo.css?v=17.6',
-  './css/carway-ui.css?v=1.4',
+   /* './css/estilo.css?v=17.6',
+'./css/carway-ui.css?v=1.4',*/
+
+   './css/estilo.css?v=18.0',
 
   './fonts/material-symbols-rounded.woff2',
 
