@@ -3433,3 +3433,172 @@ body.tema-claro .tema-btn .ms {
   transition: transform .3s;
 }
 
+
+/* =====================================================================
+   CARWAY v18.1 - TEMA CLARO ACOLHEDOR E CONSISTENTE
+   Corrige as variaveis --cw-* que permaneciam presas ao tema escuro.
+   Mantem a barra de veiculos escura para contraste e identidade visual.
+   ===================================================================== */
+body.tema-claro {
+  --bg: #f4f1eb;
+  --bg2: #fffaf3;
+  --card: #fffdfa;
+  --card2: #f7f1e7;
+  --linha: #ddcfbd;
+  --txt: #273247;
+  --txt2: #667085;
+
+  --azul: #2f6fed;
+  --azul2: #4d7ff0;
+  --verde: #159447;
+  --amarelo: #d88708;
+  --vermelho: #d92d32;
+  --roxo: #7c3aed;
+  --ciano: #0787a5;
+
+  /* A camada visual consolidada usava valores calculados no :root.
+     Eles precisam ser redefinidos no proprio body.tema-claro. */
+  --cw-bg: #f4f1eb;
+  --cw-bg-2: #fffaf3;
+  --cw-card: #fffdfa;
+  --cw-card-2: #f7f1e7;
+  --cw-border: #ddcfbd;
+  --cw-text: #273247;
+  --cw-muted: #667085;
+
+  --cw-primary: #2f6fed;
+  --cw-edit: #4d7ff0;
+  --cw-success: #159447;
+  --cw-warning: #d88708;
+  --cw-danger: #d92d32;
+  --cw-trip: #7c3aed;
+  --cw-info: #0787a5;
+  --cw-neutral: #7b8798;
+}
+
+body.tema-claro .topbar,
+body.tema-claro #topbar,
+body.tema-claro .tabbar,
+body.tema-claro #tabbar {
+  background: rgba(255, 253, 250, .96);
+}
+
+/* A barra de selecao dos veiculos permanece escura e legivel. */
+body.tema-claro .barra-veic {
+  background: #121b30;
+  border-color: #263754;
+}
+
+body.tema-claro .barra-veic button,
+body.tema-claro .barra-veic .chip-veic,
+body.tema-claro .veic-chip {
+  box-shadow: none;
+}
+
+/* Cards claros, quentes e com separacao nitida. */
+body.tema-claro .menu-card,
+body.tema-claro .painel-resumo,
+body.tema-claro .lancar-item,
+body.tema-claro .hub,
+body.tema-claro .card-veiculo,
+body.tema-claro .form-container,
+body.tema-claro .config-item,
+body.tema-claro .modal-caixa,
+body.tema-claro .fipe-compacto,
+body.tema-claro .abas-filtro,
+body.tema-claro .kpi-abast,
+body.tema-claro .card-abast,
+body.tema-claro .abas-manut,
+body.tema-claro .card-manut,
+body.tema-claro .card-historico,
+body.tema-claro .card-plano,
+body.tema-claro .card-desp,
+body.tema-claro .card-viagem,
+body.tema-claro .detalhe-cab,
+body.tema-claro .orcamento,
+body.tema-claro .rota-card,
+body.tema-claro .bloco-viagens,
+body.tema-claro .rota-cabecalho,
+body.tema-claro .app-nav-item,
+body.tema-claro .btn-admin-share {
+  background-color: var(--card);
+  border-color: var(--linha);
+  color: var(--txt);
+  box-shadow: 0 4px 14px rgba(75, 57, 35, .08);
+}
+
+body.tema-claro .card-abast,
+body.tema-claro .card-manut,
+body.tema-claro .card-desp,
+body.tema-claro .card-viagem,
+body.tema-claro .card-veiculo {
+  background: linear-gradient(145deg, #fffdfa 0%, #fffaf3 100%);
+}
+
+body.tema-claro .card-abast b,
+body.tema-claro .card-manut b,
+body.tema-claro .card-desp b,
+body.tema-claro .card-viagem b,
+body.tema-claro .card-veiculo b,
+body.tema-claro .menu-card b,
+body.tema-claro .saudacao h1,
+body.tema-claro .topbar-info b,
+body.tema-claro .topbar-texto b {
+  color: var(--txt) !important;
+}
+
+body.tema-claro .card-abast small,
+body.tema-claro .card-manut small,
+body.tema-claro .card-desp small,
+body.tema-claro .card-viagem small,
+body.tema-claro .card-veiculo small,
+body.tema-claro .menu-card small,
+body.tema-claro .saudacao p {
+  color: var(--txt2) !important;
+}
+
+/* Campos e filtros menos frios que o branco puro. */
+body.tema-claro input,
+body.tema-claro select,
+body.tema-claro textarea,
+body.tema-claro .filtro-item,
+body.tema-claro .mes-seletor,
+body.tema-claro .ano-seletor {
+  background-color: #fffdfa;
+  border-color: #d9ccbb;
+  color: var(--txt);
+}
+
+/* Secundarios claros; botoes primarios e destrutivos mantem suas cores. */
+body.tema-claro .btn-novo-sec,
+body.tema-claro .btn-admin-share {
+  background: #fffaf3 !important;
+  border-color: #d9ccbb !important;
+  color: var(--txt) !important;
+}
+
+body.tema-claro .btn-novo-sec .ms,
+body.tema-claro .btn-admin-share .ms {
+  color: inherit;
+}
+
+/* Navegacao inferior com destaque suave, sem o tom acinzentado frio. */
+body.tema-claro .tab.ativa {
+  background: rgba(47, 111, 237, .10);
+}
+
+body.tema-claro .tabbar {
+  box-shadow: 0 -4px 18px rgba(75, 57, 35, .08);
+}
+
+body.tema-claro .modal-caixa {
+  background: #fffdfa;
+  box-shadow: 0 24px 60px rgba(75, 57, 35, .18);
+}
+
+body.tema-claro .vazio,
+body.tema-claro .vazio-veiculo,
+body.tema-claro .sem-registros {
+  color: var(--txt2);
+  border-color: #d9ccbb;
+}
