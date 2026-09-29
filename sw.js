@@ -1,10 +1,10 @@
 /* =====================================================================
    CARWAY - SERVICE WORKER
    Shell offline da versão Supabase / Play Store
-   Release 18.2.1 - Lote 02 (sessão offline + isolamento por usuário)
+   Release 18.2.2 - Lote 03 (abastecimentos, manutenções e documentos offline)
    ===================================================================== */
 'use strict';
-const CACHE_VERSION = 'carway-shell-18.2.1';
+const CACHE_VERSION = 'carway-shell-18.2.2';
 const OFFLINE_PAGE = './index.html';
 /*
  * Recursos locais essenciais.
@@ -27,10 +27,10 @@ const APP_SHELL = [
   './js/app.js?v=24.9',
   './js/offline.js?v=1.2',
   './js/veiculos.js?v=2.8',
-  './js/abastecimentos.js?v=3.8',
-  './js/manutencoes.js?v=3.0',
+  './js/abastecimentos.js?v=3.9',
+  './js/manutencoes.js?v=3.1',
   './js/despesas.js?v=3.8',
-  './js/documentos.js?v=1.0',
+  './js/documentos.js?v=1.1',
   './js/equipe.js?v=1.0',
   './js/conta.js?v=1.1',
   './js/paineladmin.js?v=3.0',
