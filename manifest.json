@@ -1,0 +1,85 @@
+{
+  "id": "/",
+  "name": "CarWay",
+  "short_name": "CarWay",
+  "description": "Controle veicular inteligente para abastecimentos, manutenções, viagens, despesas e documentos.",
+  "lang": "pt-BR",
+  "dir": "ltr",
+
+  "start_url": "/?source=pwa",
+  "scope": "/",
+
+  "display": "standalone",
+  "orientation": "portrait-primary",
+
+  "background_color": "#0b1120",
+  "theme_color": "#0b1120",
+
+  "categories": [
+    "business",
+    "productivity",
+    "utilities",
+    "travel"
+  ],
+
+  "icons": [
+    {
+      "src": "icones/carway-32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "icones/carway-180.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "icones/carway-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icones/carway-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+
+  "shortcuts": [
+    {
+      "name": "Novo abastecimento",
+      "short_name": "Abastecer",
+      "url": "/?atalho=abastecimento",
+      "icons": [
+        {
+          "src": "icones/carway-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Nova viagem",
+      "short_name": "Viagem",
+      "url": "/?atalho=viagem",
+      "icons": [
+        {
+          "src": "icones/carway-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Nova manutenção",
+      "short_name": "Manutenção",
+      "url": "/?atalho=manutencao",
+      "icons": [
+        {
+          "src": "icones/carway-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ]
+}
