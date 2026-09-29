@@ -1,39 +1,31 @@
 /* =====================================================================
-   CARWAY - SERVICE WORKER v1.0
+   CARWAY - SERVICE WORKER
    Shell offline da versão Supabase / Play Store
+   Release 18.2.1 - Lote 02 (sessão offline + isolamento por usuário)
    ===================================================================== */
-
 'use strict';
-
-const CACHE_VERSION = 'carway-shell-18.2.0';
+const CACHE_VERSION = 'carway-shell-18.2.1';
 const OFFLINE_PAGE = './index.html';
-
 /*
  * Recursos locais essenciais.
- * O carregamento é tolerante: se um arquivo opcional ainda não existir,
+ * O carregamento é tolerante: se um arquivo ainda não existir,
  * a instalação do Service Worker não é cancelada.
+ * As URLs precisam ser IDÊNTICAS às do index.html (incluindo ?v=).
  */
 const APP_SHELL = [
   './',
   './index.html',
   './manifest.json?v=18.2.0',
-
-   /* './css/estilo.css?v=17.6',
-'./css/carway-ui.css?v=1.4',*/
-
-   './css/estilo.css?v=18.2.0',
-
+  './css/estilo.css?v=18.2.0',
   './fonts/material-symbols-rounded.woff2',
-
   './icones/carway-32.png',
   './icones/carway-180.png',
   './icones/carway-192.png',
   './icones/carway-512.png',
-
   './js/carway-startup.js?v=1.0',
   './js/config.js?v=2',
-  './js/app.js?v=24.8',
-  './js/offline.js?v=1.1',
+  './js/app.js?v=24.9',
+  './js/offline.js?v=1.2',
   './js/veiculos.js?v=2.8',
   './js/abastecimentos.js?v=3.8',
   './js/manutencoes.js?v=3.0',
@@ -44,17 +36,13 @@ const APP_SHELL = [
   './js/paineladmin.js?v=3.0',
   './js/viagens.js?v=10.13'
 ];
-
 /* Arquivos que podem ser acrescentados nas próximas etapas. */
 const OPTIONAL_SHELL = [];
-
 function isSameOrigin(url) {
   return url.origin === self.location.origin;
 }
-
 function isStaticAsset(request, url) {
   if (!isSameOrigin(url)) return false;
-
   return (
     request.destination === 'style' ||
     request.destination === 'script' ||
@@ -63,33 +51,26 @@ function isStaticAsset(request, url) {
     /\.(?:css|js|woff2?|ttf|png|jpg|jpeg|webp|svg|ico)$/i.test(url.pathname)
   );
 }
-
 async function putIfValid(cache, request, response) {
   if (!response || !response.ok) return response;
-
   try {
     await cache.put(request, response.clone());
   } catch (error) {
     console.warn('CarWay SW: não foi possível atualizar o cache:', error);
   }
-
   return response;
 }
-
 async function cacheShellTolerante() {
   const cache = await caches.open(CACHE_VERSION);
   const recursos = APP_SHELL.concat(OPTIONAL_SHELL);
-
   await Promise.allSettled(
     recursos.map(async function (recurso) {
       try {
         const request = new Request(recurso, { cache: 'reload' });
         const response = await fetch(request);
-
         if (!response.ok) {
           throw new Error('HTTP ' + response.status + ' em ' + recurso);
         }
-
         await cache.put(request, response);
       } catch (error) {
         console.warn('CarWay SW: recurso não armazenado:', recurso, error.message);
@@ -97,7 +78,6 @@ async function cacheShellTolerante() {
     })
   );
 }
-
 self.addEventListener('install', function (event) {
   event.waitUntil(
     cacheShellTolerante().then(function () {
@@ -105,7 +85,6 @@ self.addEventListener('install', function (event) {
     })
   );
 });
-
 self.addEventListener('activate', function (event) {
   event.waitUntil(
     caches.keys()
@@ -124,15 +103,11 @@ self.addEventListener('activate', function (event) {
       })
   );
 });
-
 self.addEventListener('fetch', function (event) {
   const request = event.request;
-
   /* Nunca interceptar gravações, autenticação ou chamadas de API. */
   if (request.method !== 'GET') return;
-
   const url = new URL(request.url);
-
   /*
    * Navegação: tenta a rede primeiro para receber a versão mais nova.
    * Sem conexão: abre o index.html armazenado.
@@ -155,7 +130,6 @@ self.addEventListener('fetch', function (event) {
     );
     return;
   }
-
   /*
    * Recursos estáticos locais: usa cache imediatamente e atualiza ao fundo.
    * Se ainda não estiver no cache, busca na rede e armazena.
@@ -171,26 +145,22 @@ self.addEventListener('fetch', function (event) {
           .catch(function () {
             return cachedResponse;
           });
-
         return cachedResponse || networkResponse;
       })
     );
     return;
   }
-
   /*
    * Supabase, mapas, FIPE e demais serviços externos continuam na rede.
    * Dados privados não são armazenados indiscriminadamente no Cache Storage.
    */
 });
-
 /*
  * Background Sync é complemento, não dependência.
- * O processamento real da fila ficará no js/offline.js, com a sessão Supabase.
+ * O processamento real da fila fica no js/offline.js, com a sessão Supabase.
  */
 self.addEventListener('sync', function (event) {
   if (event.tag !== 'carway-sync-pendentes') return;
-
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true })
       .then(function (clientes) {
@@ -200,15 +170,12 @@ self.addEventListener('sync', function (event) {
       })
   );
 });
-
 self.addEventListener('message', function (event) {
   const mensagem = event.data || {};
-
   if (mensagem.tipo === 'CARWAY_SKIP_WAITING') {
     self.skipWaiting();
     return;
   }
-
   if (mensagem.tipo === 'CARWAY_LIMPAR_CACHE') {
     event.waitUntil(
       caches.keys().then(function (nomes) {
