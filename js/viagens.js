@@ -1,4 +1,4 @@
-/* APP_VERSION: v10.17 - edicao compativel com colunas reais da tabela viagens */
+/* APP_VERSION: v10.18 - viagens em andamento visiveis em qualquer periodo */
 /* =====================================================================
    CARWAY v16 - VIAGENS
    Planejador completo com Google Routes + Geocoding + Places
@@ -589,6 +589,15 @@ chamarRoutes: function (origem, destino, idaVolta, emissionType) {
   },
   navAno: function (d) { Viagens.periodo.ano += d; Viagens.renderFiltroPeriodo(); Viagens.renderChipsStatus(); Viagens.renderKpis(); Viagens.renderTudo(); },
   _noPeriodo: function (v) {
+    /*
+     * Viagens em andamento representam uma operacao atual e precisam
+     * continuar visiveis mesmo quando a data de inicio pertence a um
+     * mes ou ano anterior. Isso tambem cobre viagens antigas importadas
+     * que permaneceram abertas, como a viagem Nordeste do Pablo.
+     */
+    var status = String((v && v.status) || '').trim().toLowerCase();
+    if (status === 'andamento' || status === 'em_andamento') return true;
+
     var modo = Viagens.periodo.modo;
     if (modo === 'tudo') return true;
     var ref = v.dataInicio || v.dataFim;
@@ -4347,5 +4356,3 @@ _urlMapsComParadas: function (origem, destino) {
     return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : s;
   }
 };
-
-
