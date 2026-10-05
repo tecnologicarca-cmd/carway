@@ -1,8 +1,10 @@
-/* APP_VERSION: v3.0 */
+/* APP_VERSION: v3.1-limite-rotas */
 /* =====================================================================
-   CARWAY - PAINEL ADMINISTRATIVO V3 (somente master)
+   CARWAY - PAINEL ADMINISTRATIVO V3.1 - LIMITE DE ROTAS (somente master)
    Novidades desta versao:
    - Precos dos planos editaveis pelo master
+   - Limite mensal de solicitacoes de rota editavel por plano
+   - Valor -1 representa rotas ilimitadas; valor 0 bloqueia solicitacoes
    - Solicitacao de plano FREE e aprovada automaticamente (ver tambem o
      trigger auto_aprovar_solicitacao_free no banco; aqui existe uma
      rotina de reforco para resolver pendencias antigas)
@@ -19,6 +21,7 @@ var PainelAdmin = {
   convitesPendentes: 0,
   precos: [],
   precosIndisponiveis: false,
+  _salvandoPreco: false,
 
   /* ---- estado da tela (filtros e secoes recolhidas) ---- */
   _abertoOrganizacoes: false,
@@ -38,7 +41,7 @@ var PainelAdmin = {
     if (!el) return;
 
     if (!App.souMaster()) {
-      el.innerHTML = '<div class="vazio-veiculo"><span class="ms">lock</span><b>Acesso restrito</b><p>Esta área é exclusiva do administrador do CarWay.</p></div>';
+      el.innerHTML = '<div class="vazio-veiculo"><span class="ms">lock</span><b>Acesso restrito</b><p>Esta Ã¡rea Ã© exclusiva do administrador do CarWay.</p></div>';
       return;
     }
 
@@ -172,16 +175,16 @@ var PainelAdmin = {
     var cortesias = PainelAdmin.organizacoes.filter(function (o) { return o.cortesia === true; }).length;
 
     var itens = [
-      { icone: 'group', cor: '#3b82f6', fundo: 'rgba(59,130,246,.15)', valor: PainelAdmin.usuarios.length, titulo: 'Usuários', fn: "PainelAdmin.abrirSecaoUsuarios(null)" },
+      { icone: 'group', cor: '#3b82f6', fundo: 'rgba(59,130,246,.15)', valor: PainelAdmin.usuarios.length, titulo: 'UsuÃ¡rios', fn: "PainelAdmin.abrirSecaoUsuarios(null)" },
       { icone: 'check_circle', cor: '#22c55e', fundo: 'rgba(34,197,94,.15)', valor: ativos, titulo: 'Ativos', fn: "PainelAdmin.abrirSecaoUsuarios('ATIVO')" },
       { icone: 'person_off', cor: '#94a3b8', fundo: 'rgba(148,163,184,.15)', valor: inativos, titulo: 'Inativos', fn: "PainelAdmin.abrirSecaoUsuarios('INATIVO')" },
-      { icone: 'apartment', cor: '#22d3ee', fundo: 'rgba(34,211,238,.15)', valor: PainelAdmin.organizacoes.length, titulo: 'Organizações', fn: "PainelAdmin.abrirSecaoOrganizacoes(null,null)" },
+      { icone: 'apartment', cor: '#22d3ee', fundo: 'rgba(34,211,238,.15)', valor: PainelAdmin.organizacoes.length, titulo: 'OrganizaÃ§Ãµes', fn: "PainelAdmin.abrirSecaoOrganizacoes(null,null)" },
       { icone: 'redeem', cor: '#a78bfa', fundo: 'rgba(167,139,250,.15)', valor: cortesias, titulo: 'Cortesias', fn: "PainelAdmin.abrirSecaoOrganizacoes(null,true)" },
-      { icone: 'upgrade', cor: '#f59e0b', fundo: 'rgba(245,158,11,.15)', valor: PainelAdmin.solicitacoes.length, titulo: 'Solicitações', fn: "PainelAdmin.rolarPara('painelSecaoSolicitacoes')" },
+      { icone: 'upgrade', cor: '#f59e0b', fundo: 'rgba(245,158,11,.15)', valor: PainelAdmin.solicitacoes.length, titulo: 'SolicitaÃ§Ãµes', fn: "PainelAdmin.rolarPara('painelSecaoSolicitacoes')" },
       { icone: 'mail', cor: '#60a5fa', fundo: 'rgba(96,165,250,.15)', valor: PainelAdmin.convitesPendentes, titulo: 'Convites', fn: "PainelAdmin.abrirConvitesPendentes()" }
     ];
 
-    return '<div class="secao-titulo"><span class="ms">dashboard</span>Visão geral</div>' +
+    return '<div class="secao-titulo"><span class="ms">dashboard</span>VisÃ£o geral</div>' +
       '<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:22px">' +
       itens.map(function (item) {
         return '<button onclick="' + item.fn + '" class="kpi-abast" ' +
@@ -210,7 +213,7 @@ var PainelAdmin = {
     var aberto = PainelAdmin._abertoPlanos;
 
     return '<div class="secao-titulo" style="cursor:pointer;justify-content:space-between" onclick="PainelAdmin.toggleSecao(\'planos\')">' +
-        '<span style="display:flex;align-items:center;gap:8px"><span class="ms" style="color:#a78bfa">workspace_premium</span>Organizações por plano</span>' +
+        '<span style="display:flex;align-items:center;gap:8px"><span class="ms" style="color:#a78bfa">workspace_premium</span>OrganizaÃ§Ãµes por plano</span>' +
         '<span class="ms">' + (aberto ? 'expand_less' : 'expand_more') + '</span>' +
       '</div>' +
       '<div style="' + (aberto ? '' : 'display:none') + ';flex-direction:column;gap:8px;margin-bottom:22px">' +
@@ -235,12 +238,20 @@ var PainelAdmin = {
     PainelAdmin.rolarPara('painelSecaoOrganizacoes');
   },
 
-  /* ============ PRECOS DOS PLANOS (editavel, recolhido por padrao) ============ */
+  /* ============ PRECOS E LIMITES DOS PLANOS (editavel, recolhido por padrao) ============ */
+
+  _textoLimiteRotas: function (limite) {
+    var valor = Number(limite);
+    if (valor === -1) return 'Rotas ilimitadas';
+    if (!isFinite(valor) || valor <= 0) return 'Sem solicitaÃ§Ã£o de rota';
+    if (valor === 1) return '1 rota por mÃªs';
+    return Math.floor(valor) + ' rotas por mÃªs';
+  },
 
   _htmlPrecos: function () {
     var aberto = PainelAdmin._abertoPrecos;
     var titulo = '<div class="secao-titulo" style="cursor:pointer;justify-content:space-between" onclick="PainelAdmin.toggleSecao(\'precos\')">' +
-        '<span style="display:flex;align-items:center;gap:8px"><span class="ms" style="color:#22c55e">payments</span>Preços dos planos</span>' +
+        '<span style="display:flex;align-items:center;gap:8px"><span class="ms" style="color:#22c55e">payments</span>PreÃ§os e limites dos planos</span>' +
         '<span class="ms">' + (aberto ? 'expand_less' : 'expand_more') + '</span>' +
       '</div>';
 
@@ -250,8 +261,8 @@ var PainelAdmin = {
 
     if (PainelAdmin.precosIndisponiveis) {
       return titulo + '<div class="aviso-plano" style="margin-bottom:22px">' +
-        '<b>Tabela de preços não encontrada</b>' +
-        'Execute o script SQL "planos_precos" no Supabase para habilitar a edição de preços diretamente por aqui.' +
+        '<b>Tabela de preÃ§os nÃ£o encontrada</b>' +
+        'Execute o script SQL "planos_precos" no Supabase para habilitar a ediÃ§Ã£o de preÃ§os diretamente por aqui.' +
       '</div>';
     }
 
@@ -260,12 +271,18 @@ var PainelAdmin = {
         var preco = PainelAdmin._precoPorId(p.id);
         var mensal = preco ? Number(preco.precoMensal) || 0 : 0;
         var anual = preco && preco.precoAnual !== null && preco.precoAnual !== undefined ? Number(preco.precoAnual) : null;
+        var limiteRotas = preco && preco.limiteRotasMes !== null && preco.limiteRotasMes !== undefined
+          ? Number(preco.limiteRotasMes)
+          : 0;
         return '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:11px 14px;' +
           'background:var(--bg2,#111c33);border:1px solid var(--linha,#26365c);border-radius:10px">' +
           '<div style="min-width:0">' +
             '<b style="display:block;font-size:13px">' + App.esc(p.nome) + '</b>' +
             '<small style="display:block;color:var(--txt2);font-size:11.5px">' +
-              App.moeda(mensal) + '/mês' + (anual ? ' · ' + App.moeda(anual) + '/ano' : '') +
+              App.moeda(mensal) + '/mÃªs' + (anual !== null ? ' Â· ' + App.moeda(anual) + '/ano' : '') +
+            '</small>' +
+            '<small style="display:block;color:#60a5fa;font-size:11.5px;margin-top:3px">' +
+              PainelAdmin._textoLimiteRotas(limiteRotas) +
             '</small>' +
           '</div>' +
           '<button class="btn-admin-share" style="flex:none;padding:8px 12px" onclick="PainelAdmin.abrirEditarPreco(\'' + p.id + '\')">' +
@@ -282,6 +299,13 @@ var PainelAdmin = {
     var preco = PainelAdmin._precoPorId(planoId);
     var mensal = preco ? Number(preco.precoMensal) || 0 : 0;
     var anual = preco && preco.precoAnual !== null && preco.precoAnual !== undefined ? Number(preco.precoAnual) : '';
+    var limiteRotas = preco && preco.limiteRotasMes !== null && preco.limiteRotasMes !== undefined
+      ? Number(preco.limiteRotasMes)
+      : 0;
+    var rotasIlimitadas = limiteRotas === -1;
+    var limiteExibido = rotasIlimitadas ? 0 : Math.max(0, Math.floor(limiteRotas));
+
+    PainelAdmin._salvandoPreco = false;
 
     var html = '<div class="campo-form">' +
         '<label>Plano</label>' +
@@ -289,38 +313,83 @@ var PainelAdmin = {
       '</div>' +
       '<div class="linha-2">' +
         '<div class="campo-form">' +
-          '<label>Preço mensal (R$)</label>' +
+          '<label>PreÃ§o mensal (R$)</label>' +
           '<input type="number" id="adminPrecoMensal" min="0" step="0.01" value="' + mensal + '">' +
         '</div>' +
         '<div class="campo-form">' +
-          '<label>Preço anual (R$)</label>' +
+          '<label>PreÃ§o anual (R$)</label>' +
           '<input type="number" id="adminPrecoAnual" min="0" step="0.01" value="' + anual + '">' +
         '</div>' +
       '</div>' +
       '<small style="display:block;color:var(--txt2);font-size:12px;line-height:1.5">' +
-        'O preço anual é opcional. Deixe em branco se este plano não tiver opção anual.' +
-      '</small>';
+        'O preÃ§o anual Ã© opcional. Deixe em branco se este plano nÃ£o tiver opÃ§Ã£o anual.' +
+      '</small>' +
+      '<div class="campo-form" style="margin-top:14px">' +
+        '<label>Limite mensal de solicitaÃ§Ãµes de rota</label>' +
+        '<input type="number" id="adminLimiteRotasMes" min="0" step="1" inputmode="numeric" value="' + limiteExibido + '"' +
+          (rotasIlimitadas ? ' disabled' : '') + '>' +
+        '<small>Use 0 para bloquear solicitaÃ§Ãµes de rota. Informe apenas nÃºmeros inteiros.</small>' +
+      '</div>' +
+      '<label style="display:flex;align-items:center;gap:9px;margin-top:10px;cursor:pointer">' +
+        '<input type="checkbox" id="adminRotasIlimitadas" onchange="PainelAdmin.alternarRotasIlimitadas()"' +
+          (rotasIlimitadas ? ' checked' : '') + '>' +
+        '<span>Rotas ilimitadas</span>' +
+      '</label>';
 
-    App.abrirModal('Editar preço · ' + plano.nome, html, function () {
+    App.abrirModal('Editar preÃ§o e limite Â· ' + plano.nome, html, function () {
       PainelAdmin.salvarPrecoPlano(planoId, plano.nome);
-    }, 'Salvar preço');
+    }, 'Salvar alteraÃ§Ãµes');
+  },
+
+  alternarRotasIlimitadas: function () {
+    var elLimite = document.getElementById('adminLimiteRotasMes');
+    var elIlimitadas = document.getElementById('adminRotasIlimitadas');
+    if (!elLimite || !elIlimitadas) return;
+    elLimite.disabled = elIlimitadas.checked;
+    if (!elIlimitadas.checked) {
+      elLimite.focus();
+      elLimite.select();
+    }
   },
 
   salvarPrecoPlano: function (planoId, nomePlano) {
     var elMensal = document.getElementById('adminPrecoMensal');
     var elAnual = document.getElementById('adminPrecoAnual');
-    if (!elMensal) return;
+    var elLimite = document.getElementById('adminLimiteRotasMes');
+    var elIlimitadas = document.getElementById('adminRotasIlimitadas');
+    if (!elMensal || !elAnual || !elLimite || !elIlimitadas) return;
+    if (PainelAdmin._salvandoPreco) return;
 
     var mensal = parseFloat(elMensal.value);
     if (isNaN(mensal) || mensal < 0) {
-      App.toast('Informe um preço mensal válido', 'erro');
+      App.toast('Informe um preÃ§o mensal vÃ¡lido', 'erro');
       return;
     }
     var anualTxt = (elAnual.value || '').trim();
     var anual = anualTxt === '' ? null : parseFloat(anualTxt);
     if (anual !== null && (isNaN(anual) || anual < 0)) {
-      App.toast('Informe um preço anual válido ou deixe em branco', 'erro');
+      App.toast('Informe um preÃ§o anual vÃ¡lido ou deixe em branco', 'erro');
       return;
+    }
+
+    var ilimitadas = elIlimitadas.checked;
+    var limiteRotas = -1;
+    if (!ilimitadas) {
+      var limiteTxt = (elLimite.value || '').trim();
+      limiteRotas = Number(limiteTxt);
+      if (limiteTxt === '' || !/^\d+$/.test(limiteTxt) || !isFinite(limiteRotas) || limiteRotas < 0) {
+        App.toast('Informe um limite mensal inteiro igual ou maior que 0, ou marque Rotas ilimitadas', 'erro');
+        return;
+      }
+    }
+
+    PainelAdmin._salvandoPreco = true;
+    var btnSalvar = document.getElementById('btnModalSalvar');
+    var textoBotao = btnSalvar ? btnSalvar.textContent : '';
+    if (btnSalvar) {
+      btnSalvar.disabled = true;
+      btnSalvar.setAttribute('aria-busy', 'true');
+      btnSalvar.textContent = 'Salvando...';
     }
 
     sb.from('planos_precos').upsert({
@@ -328,17 +397,31 @@ var PainelAdmin = {
       nome: nomePlano,
       precoMensal: mensal,
       precoAnual: anual,
+      limiteRotasMes: limiteRotas,
       atualizadoEm: new Date().toISOString(),
       atualizadoPor: (typeof usuarioAtual !== 'undefined' && usuarioAtual) ? usuarioAtual.id : 'MASTER'
     }, { onConflict: 'id' }).then(function (r) {
       if (r.error) {
+        PainelAdmin._liberarSalvamentoPreco(btnSalvar, textoBotao);
         App.toast('Erro: ' + r.error.message, 'erro');
         return;
       }
+      PainelAdmin._salvandoPreco = false;
       App.fecharModal();
-      App.toast('Preço atualizado!', 'ok');
+      App.toast('PreÃ§o e limite atualizados!', 'ok');
       PainelAdmin.carregarDados();
+    }).catch(function (erro) {
+      PainelAdmin._liberarSalvamentoPreco(btnSalvar, textoBotao);
+      App.toast('Erro: ' + ((erro && erro.message) || 'NÃ£o foi possÃ­vel salvar as alteraÃ§Ãµes'), 'erro');
     });
+  },
+
+  _liberarSalvamentoPreco: function (btnSalvar, textoBotao) {
+    PainelAdmin._salvandoPreco = false;
+    if (!btnSalvar) return;
+    btnSalvar.disabled = false;
+    btnSalvar.removeAttribute('aria-busy');
+    btnSalvar.textContent = textoBotao || 'Salvar alteraÃ§Ãµes';
   },
 
   /* ============ CONVIDAR NOVO CLIENTE ============ */
@@ -347,7 +430,7 @@ var PainelAdmin = {
     return '<div class="secao-titulo"><span class="ms" style="color:#60a5fa">person_add</span>Convidar novo cliente</div>' +
       '<div style="background:var(--bg2,#111c33);border:1px solid var(--linha,#26365c);border-radius:12px;padding:14px;margin-bottom:22px">' +
         '<p style="font-size:12.5px;color:var(--txt2);line-height:1.6;margin:0 0 12px">' +
-          'O link abre o cadastro comum. O cliente cria a própria organização e mantém seus dados isolados.' +
+          'O link abre o cadastro comum. O cliente cria a prÃ³pria organizaÃ§Ã£o e mantÃ©m seus dados isolados.' +
         '</p>' +
         '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">' +
           '<button onclick="PainelAdmin.copiarLinkConvite()" class="btn-admin-share"><span class="ms" style="color:#60a5fa">content_copy</span>Copiar</button>' +
@@ -361,11 +444,11 @@ var PainelAdmin = {
   /* ============ SOLICITACOES DE MUDANCA DE PLANO ============ */
 
   _htmlSolicitacoes: function () {
-    var titulo = '<div id="painelSecaoSolicitacoes" class="secao-titulo"><span class="ms" style="color:#f59e0b">upgrade</span>Solicitações de mudança de plano</div>';
+    var titulo = '<div id="painelSecaoSolicitacoes" class="secao-titulo"><span class="ms" style="color:#f59e0b">upgrade</span>SolicitaÃ§Ãµes de mudanÃ§a de plano</div>';
 
     if (!PainelAdmin.solicitacoes.length) {
       return titulo + '<div class="vazio-veiculo" style="padding:22px 12px;margin-bottom:22px">' +
-        '<span class="ms" style="color:#22c55e">check_circle</span><p>Nenhuma solicitação pendente. Solicitações para o plano Free são aprovadas automaticamente.</p></div>';
+        '<span class="ms" style="color:#22c55e">check_circle</span><p>Nenhuma solicitaÃ§Ã£o pendente. SolicitaÃ§Ãµes para o plano Free sÃ£o aprovadas automaticamente.</p></div>';
     }
 
     return titulo + '<div style="display:flex;flex-direction:column;gap:10px;margin-bottom:22px">' +
@@ -375,9 +458,9 @@ var PainelAdmin = {
 
   _cardSolicitacao: function (s) {
     return '<div style="border:1px solid rgba(245,158,11,.35);background:rgba(245,158,11,.08);border-radius:12px;padding:12px 14px">' +
-      '<div style="font-size:13.5px"><b>' + App.esc(App.nomePlano(s.planoAtual)) + '</b> → ' +
+      '<div style="font-size:13.5px"><b>' + App.esc(App.nomePlano(s.planoAtual)) + '</b> â†’ ' +
         '<b style="color:#fcd34d">' + App.esc(App.nomePlano(s.planoSolicitado)) + '</b></div>' +
-      '<small style="color:var(--txt2)">Organização: ' + App.esc(s.organizacaoId) + '</small>' +
+      '<small style="color:var(--txt2)">OrganizaÃ§Ã£o: ' + App.esc(s.organizacaoId) + '</small>' +
       '<div style="display:flex;gap:8px;margin-top:10px">' +
         '<button onclick="PainelAdmin.resolverSolicitacao(\'' + App.esc(s.id) + '\',\'APROVADA\')" ' +
           'style="flex:1;background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.4);color:#86efac;border-radius:8px;padding:9px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit">' +
@@ -411,7 +494,7 @@ var PainelAdmin = {
         App.toast('Erro: ' + erro.message, 'erro');
         return;
       }
-      App.toast(novoStatus === 'APROVADA' ? 'Plano aprovado!' : 'Solicitação recusada', 'ok');
+      App.toast(novoStatus === 'APROVADA' ? 'Plano aprovado!' : 'SolicitaÃ§Ã£o recusada', 'ok');
       PainelAdmin.carregarDados();
     });
   },
@@ -455,12 +538,12 @@ var PainelAdmin = {
     }
 
     return '<div id="painelSecaoOrganizacoes" class="secao-titulo" style="cursor:pointer;justify-content:space-between" onclick="PainelAdmin.toggleSecao(\'organizacoes\')">' +
-        '<span style="display:flex;align-items:center;gap:8px"><span class="ms" style="color:#22d3ee">apartment</span>Gestão de organizações (' + total + ')</span>' +
+        '<span style="display:flex;align-items:center;gap:8px"><span class="ms" style="color:#22d3ee">apartment</span>GestÃ£o de organizaÃ§Ãµes (' + total + ')</span>' +
         '<span class="ms">' + (aberto ? 'expand_less' : 'expand_more') + '</span>' +
       '</div>' +
       '<div style="' + (aberto ? '' : 'display:none') + ';margin-bottom:22px">' +
         (chips.length ? '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">' + chips.join('') + '</div>' : '') +
-        '<input type="text" placeholder="Buscar organização por nome ou ID..." value="' + App.esc(PainelAdmin._buscaOrg) + '" ' +
+        '<input type="text" placeholder="Buscar organizaÃ§Ã£o por nome ou ID..." value="' + App.esc(PainelAdmin._buscaOrg) + '" ' +
           'oninput="PainelAdmin.buscarOrganizacoes(this.value)" ' +
           'style="width:100%;background:var(--bg2,#111c33);border:1px solid var(--linha,#26365c);color:var(--txt,#e8eefc);' +
           'border-radius:10px;padding:10px 12px;font-size:13.5px;font-family:inherit;margin-bottom:10px">' +
@@ -508,7 +591,7 @@ var PainelAdmin = {
   _renderOrganizacoesListaHtml: function () {
     var lista = PainelAdmin._organizacoesFiltradas();
     if (!lista.length) {
-      return '<div class="vazio-veiculo"><p>Nenhuma organização encontrada com esse filtro.</p></div>';
+      return '<div class="vazio-veiculo"><p>Nenhuma organizaÃ§Ã£o encontrada com esse filtro.</p></div>';
     }
     return '<div style="display:flex;flex-direction:column;gap:12px">' +
       lista.map(PainelAdmin._cardOrganizacao).join('') +
@@ -539,7 +622,7 @@ var PainelAdmin = {
         '</div>' +
         '<div style="background:var(--bg2,#111c33);border-radius:9px;padding:9px 10px">' +
           '<small style="display:block;color:var(--txt2);font-size:10px;text-transform:uppercase">Cortesia</small>' +
-          '<b style="font-size:12.5px;color:' + (cortesia ? '#86efac' : 'var(--txt2)') + '">' + (cortesia ? 'SIM' : 'NÃO') + '</b>' +
+          '<b style="font-size:12.5px;color:' + (cortesia ? '#86efac' : 'var(--txt2)') + '">' + (cortesia ? 'SIM' : 'NÃƒO') + '</b>' +
         '</div>' +
       '</div>' +
 
@@ -570,13 +653,13 @@ var PainelAdmin = {
     }).join('');
 
     var html = '<div class="campo-form">' +
-      '<label>Organização</label>' +
+      '<label>OrganizaÃ§Ã£o</label>' +
       '<input value="' + App.esc(org.nome || org.id) + '" disabled>' +
       '</div>' +
       '<div class="campo-form">' +
       '<label>Novo plano</label>' +
       '<select id="adminNovoPlano">' + opcoes + '</select>' +
-      '<small>Se o novo plano for Free, a organização não precisa de aprovação: fica ativo imediatamente.</small>' +
+      '<small>Se o novo plano for Free, a organizaÃ§Ã£o nÃ£o precisa de aprovaÃ§Ã£o: fica ativo imediatamente.</small>' +
       '</div>';
 
     App.abrirModal('Alterar plano', html, function () {
@@ -610,7 +693,7 @@ var PainelAdmin = {
     if (org.cortesia === true) {
       App.confirmar({
         titulo: 'Remover cortesia',
-        mensagem: 'A organização continuará no plano atual, mas deixará de ter isenção de cobrança.',
+        mensagem: 'A organizaÃ§Ã£o continuarÃ¡ no plano atual, mas deixarÃ¡ de ter isenÃ§Ã£o de cobranÃ§a.',
         textoBotao: 'Remover cortesia',
         tipo: 'perigo',
         icone: 'card_giftcard_off',
@@ -622,13 +705,13 @@ var PainelAdmin = {
     }
 
     var html = '<div class="campo-form">' +
-      '<label>Organização</label>' +
+      '<label>OrganizaÃ§Ã£o</label>' +
       '<input value="' + App.esc(org.nome || org.id) + '" disabled>' +
       '</div>' +
       '<div class="campo-form">' +
       '<label>Motivo da cortesia</label>' +
-      '<input id="adminCortesiaMotivo" maxlength="180" placeholder="Ex.: parceiro, teste beta, família">' +
-      '<small>A organização poderá usar gratuitamente todos os recursos do plano selecionado.</small>' +
+      '<input id="adminCortesiaMotivo" maxlength="180" placeholder="Ex.: parceiro, teste beta, famÃ­lia">' +
+      '<small>A organizaÃ§Ã£o poderÃ¡ usar gratuitamente todos os recursos do plano selecionado.</small>' +
       '</div>';
 
     App.abrirModal('Conceder cortesia', html, function () {
@@ -697,14 +780,14 @@ var PainelAdmin = {
     }
 
     return '<div id="painelSecaoUsuarios" class="secao-titulo" style="cursor:pointer;justify-content:space-between" onclick="PainelAdmin.toggleSecao(\'usuarios\')">' +
-        '<span style="display:flex;align-items:center;gap:8px"><span class="ms" style="color:#3b82f6">group</span>Usuários (' + total + ')</span>' +
+        '<span style="display:flex;align-items:center;gap:8px"><span class="ms" style="color:#3b82f6">group</span>UsuÃ¡rios (' + total + ')</span>' +
         '<span class="ms">' + (aberto ? 'expand_less' : 'expand_more') + '</span>' +
       '</div>' +
       '<div style="' + (aberto ? '' : 'display:none') + '">' +
         '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">' +
           chipStatus(null, 'Todos') + chipStatus('ATIVO', 'Ativos') + chipStatus('INATIVO', 'Inativos') +
         '</div>' +
-        '<input type="text" placeholder="Buscar usuário por nome ou e-mail..." value="' + App.esc(PainelAdmin._buscaUsuario) + '" ' +
+        '<input type="text" placeholder="Buscar usuÃ¡rio por nome ou e-mail..." value="' + App.esc(PainelAdmin._buscaUsuario) + '" ' +
           'oninput="PainelAdmin.buscarUsuarios(this.value)" ' +
           'style="width:100%;background:var(--bg2,#111c33);border:1px solid var(--linha,#26365c);color:var(--txt,#e8eefc);' +
           'border-radius:10px;padding:10px 12px;font-size:13.5px;font-family:inherit;margin-bottom:10px">' +
@@ -738,14 +821,14 @@ var PainelAdmin = {
   _renderUsuariosListaHtml: function () {
     var lista = PainelAdmin._usuariosFiltrados();
     if (!lista.length) {
-      return '<div class="vazio-veiculo"><p>Nenhum usuário encontrado com esse filtro.</p></div>';
+      return '<div class="vazio-veiculo"><p>Nenhum usuÃ¡rio encontrado com esse filtro.</p></div>';
     }
     return '<div style="display:flex;flex-direction:column;gap:8px">' +
       lista.map(function (u) {
         var ativo = String(u.status || '').toUpperCase() === 'ATIVO';
         return '<div style="display:flex;align-items:center;gap:10px;background:var(--bg2,#111c33);border:1px solid var(--linha,#26365c);border-radius:11px;padding:11px 12px">' +
           '<span class="ms" style="color:' + (u.isMaster ? '#a78bfa' : '#3b82f6') + '">' + (u.isMaster ? 'admin_panel_settings' : 'person') + '</span>' +
-          '<div style="flex:1;min-width:0"><b style="display:block;font-size:13.5px">' + App.esc(u.nome || 'Usuário') + '</b>' +
+          '<div style="flex:1;min-width:0"><b style="display:block;font-size:13.5px">' + App.esc(u.nome || 'UsuÃ¡rio') + '</b>' +
           '<small style="display:block;color:var(--txt2);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + App.esc(u.email || '') + '</small></div>' +
           '<span style="font-size:9.5px;font-weight:700;color:' + (ativo ? '#86efac' : '#cbd5e1') + '">' + (ativo ? 'ATIVO' : App.esc(u.status || '')) + '</span>' +
         '</div>';
@@ -773,7 +856,7 @@ var PainelAdmin = {
       var html = '<div style="display:flex;flex-direction:column;gap:10px">' +
         itens.map(function (c) {
           var titulo = c.email || c.nome || c.id;
-          var sub = [c.perfil, c.organizacaoId].filter(Boolean).join(' · ');
+          var sub = [c.perfil, c.organizacaoId].filter(Boolean).join(' Â· ');
           return '<div style="background:var(--bg2,#111c33);border:1px solid var(--linha,#26365c);border-radius:11px;padding:11px 12px">' +
             '<b style="display:block;font-size:13.5px">' + App.esc(titulo) + '</b>' +
             (sub ? '<small style="display:block;color:var(--txt2);font-size:11.5px;margin-top:2px">' + App.esc(sub) + '</small>' : '') +
@@ -827,11 +910,11 @@ var PainelAdmin = {
     var link = PainelAdmin._linkCadastro();
     var assunto = encodeURIComponent('Convite para usar o CarWay');
     var corpo = encodeURIComponent(
-      'Olá!\n\n' +
-      'Você foi convidado para conhecer o CarWay.\n\n' +
+      'OlÃ¡!\n\n' +
+      'VocÃª foi convidado para conhecer o CarWay.\n\n' +
       'Crie sua conta gratuitamente pelo link abaixo:\n' +
       link + '\n\n' +
-      'No CarWay, você poderá organizar veículos, abastecimentos, manutenções, despesas e viagens.'
+      'No CarWay, vocÃª poderÃ¡ organizar veÃ­culos, abastecimentos, manutenÃ§Ãµes, despesas e viagens.'
     );
 
     window.location.href = 'mailto:?subject=' + assunto + '&body=' + corpo;
@@ -840,8 +923,8 @@ var PainelAdmin = {
   enviarWhatsApp: function () {
     var link = PainelAdmin._linkCadastro();
     var mensagem = encodeURIComponent(
-      'Olá! 🚗\n\n' +
-      'Você foi convidado para conhecer o CarWay.\n' +
+      'OlÃ¡! ðŸš—\n\n' +
+      'VocÃª foi convidado para conhecer o CarWay.\n' +
       'Crie sua conta gratuitamente:\n' + link
     );
 
@@ -865,4 +948,3 @@ var PainelAdmin = {
     PainelAdmin.copiarLinkConvite();
   }
 };
-
