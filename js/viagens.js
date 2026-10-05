@@ -1,4 +1,4 @@
-/* APP_VERSION: v10.18 - viagens em andamento visiveis em qualquer periodo */
+/* APP_VERSION: v10.19 - lista progressiva e leve para iPhone */
 /* =====================================================================
    CARWAY v16 - VIAGENS
    Planejador completo com Google Routes + Geocoding + Places
@@ -66,6 +66,7 @@ var Viagens = {
   _salvando: false,
   _buscandoRotas: false,
   _limiteRotasAtual: null,
+  _carregandoLista: false,
   _mapaFull: null,
   _marcadoresExtras: [],
   periodo: { modo: 'mes', ano: 0, mes: 0 },
@@ -407,47 +408,122 @@ chamarRoutes: function (origem, destino, idaVolta, emissionType) {
      LISTA DE VIAGENS
      ========================================================= */
   carregarLista: async function () {
+    if (Viagens._carregandoLista) return;
+    Viagens._carregandoLista = true;
+
     var el = document.getElementById('blocoEmAndamento');
-    if (el) el.innerHTML = '<div class="bloco-vazio">Carregando...</div>';
     var hoje = new Date();
-    if (!Viagens.periodo.ano) { Viagens.periodo.ano = hoje.getFullYear(); Viagens.periodo.mes = hoje.getMonth() + 1; }
+    if (!Viagens.periodo.ano) {
+      Viagens.periodo.ano = hoje.getFullYear();
+      Viagens.periodo.mes = hoje.getMonth() + 1;
+    }
     Viagens._registrarListenerVeiculoGlobal();
+
     function aplicar(d) {
       d = d || {};
-      Viagens.lista = Array.isArray(d.viagens) ? d.viagens : [];
-      Viagens.veiculos = Array.isArray(d.veiculos) ? d.veiculos : [];
-      Viagens.abastecimentos = Array.isArray(d.abastecimentos) ? d.abastecimentos : [];
-      Viagens.despesas = Array.isArray(d.despesas) ? d.despesas : [];
-      Viagens.manutencoes = Array.isArray(d.manutencoes) ? d.manutencoes : [];
-      Viagens._garantirContainersTopo(); Viagens.renderFiltroPeriodo(); Viagens.renderChipsStatus();
-      Viagens.renderKpis(); Viagens.renderTudo(); Viagens._organizarTopoViagens();
+      if (Array.isArray(d.viagens)) Viagens.lista = d.viagens;
+      if (Array.isArray(d.veiculos)) Viagens.veiculos = d.veiculos;
+      if (Array.isArray(d.abastecimentos)) Viagens.abastecimentos = d.abastecimentos;
+      if (Array.isArray(d.despesas)) Viagens.despesas = d.despesas;
+      if (Array.isArray(d.manutencoes)) Viagens.manutencoes = d.manutencoes;
+      Viagens._garantirContainersTopo();
+      Viagens.renderFiltroPeriodo();
+      Viagens.renderChipsStatus();
+      Viagens.renderKpis();
+      Viagens.renderTudo();
+      Viagens._organizarTopoViagens();
     }
-    if (!navigator.onLine) {
-      var cache = await Offline.obterColecao('viagens-pagina', null);
-      if (!cache) cache = {
+
+    async function obterCacheLeve() {
+      var cache = await Offline.obterColecao('viagens-pagina-resumo', null);
+      if (cache) return cache;
+      cache = await Offline.obterColecao('viagens-pagina', null);
+      if (cache) return cache;
+      return {
         viagens: await Offline.obterColecao('viagens', []),
         veiculos: await Offline.obterColecao('veiculos', []),
-        abastecimentos: [], despesas: await Offline.obterColecao('despesas', []), manutencoes: []
+        abastecimentos: [],
+        despesas: await Offline.obterColecao('despesas', []),
+        manutencoes: []
       };
-      aplicar(cache); return;
     }
+
     try {
-      var r = await Promise.all([
-        sb.from('viagens').select('*').eq('organizacaoId', orgAtual.id).order('dataInicio', { ascending: false }),
-        sb.from('veiculos').select('id, nome, placa, tanque, combustivel, tipo, cor, energeticos, plugIn, capacidadeGnv, capacidadeBateria').eq('organizacaoId', orgAtual.id),
-        sb.from('abastecimentos').select('viagemId, veiculoId, valorTotal, litros, precoLitro, data, combustivel, unidade').eq('organizacaoId', orgAtual.id),
-        sb.from('despesas').select('viagemId, valor').eq('organizacaoId', orgAtual.id),
-        sb.from('manutencoes').select('viagemId, custo').eq('organizacaoId', orgAtual.id)
+      /* Primeira pintura: usa o cache sem esperar a rede. */
+      var cacheInicial = await obterCacheLeve();
+      var temCache = cacheInicial && Array.isArray(cacheInicial.viagens) && cacheInicial.viagens.length;
+      if (temCache) {
+        aplicar(cacheInicial);
+      } else if (el) {
+        el.innerHTML = '<div class="bloco-vazio">Carregando viagens...</div>';
+      }
+
+      if (!navigator.onLine) return;
+
+      /* Fase 1: somente os campos necessários para cards e KPIs.
+         A rota completa é carregada apenas no detalhe ou na edição. */
+      var camposViagens = [
+        'id','veiculoId','titulo','dataInicio','dataFim','origem','destino',
+        'distancia','kmInicial','kmFinal','combustivelPrev','pedagioPrev',
+        'alimentacaoPrev','hospedagemPrev','outrosPrev','totalPrev','status',
+        'idaVolta','organizacaoId','usuarioCriadorId','criadoEm','atualizadoEm'
+      ].join(',');
+
+      var basicos = await Promise.all([
+        sb.from('viagens').select(camposViagens)
+          .eq('organizacaoId', orgAtual.id)
+          .order('dataInicio', { ascending: false }),
+        sb.from('veiculos')
+          .select('id,nome,placa,tanque,combustivel,tipo,cor,energeticos,plugIn,capacidadeGnv,capacidadeBateria')
+          .eq('organizacaoId', orgAtual.id)
       ]);
-      var dados={viagens:r[0].data||[],veiculos:r[1].data||[],abastecimentos:r[2].data||[],despesas:r[3].data||[],manutencoes:r[4].data||[]};
+
+      if (basicos[0].error) throw basicos[0].error;
+      if (basicos[1].error) throw basicos[1].error;
+
+      var dados = {
+        viagens: basicos[0].data || [],
+        veiculos: basicos[1].data || [],
+        abastecimentos: temCache && Array.isArray(cacheInicial.abastecimentos) ? cacheInicial.abastecimentos : [],
+        despesas: temCache && Array.isArray(cacheInicial.despesas) ? cacheInicial.despesas : [],
+        manutencoes: temCache && Array.isArray(cacheInicial.manutencoes) ? cacheInicial.manutencoes : []
+      };
+
+      /* A lista aparece assim que viagens e veículos chegam. */
       aplicar(dados);
-      await Promise.all([Offline.salvarColecao('viagens',dados.viagens),Offline.salvarColecao('veiculos',dados.veiculos),Offline.salvarColecao('viagens-pagina',dados)]);
+
+      /* Fase 2: totais financeiros chegam depois, sem segurar os cards. */
+      var financeiros = await Promise.all([
+        sb.from('abastecimentos')
+          .select('viagemId,veiculoId,valorTotal,litros,precoLitro,data,combustivel,unidade')
+          .eq('organizacaoId', orgAtual.id),
+        sb.from('despesas').select('viagemId,valor').eq('organizacaoId', orgAtual.id),
+        sb.from('manutencoes').select('viagemId,custo').eq('organizacaoId', orgAtual.id)
+      ]);
+
+      if (!financeiros[0].error) dados.abastecimentos = financeiros[0].data || [];
+      if (!financeiros[1].error) dados.despesas = financeiros[1].data || [];
+      if (!financeiros[2].error) dados.manutencoes = financeiros[2].data || [];
+      aplicar(dados);
+
+      /* Uma única cópia leve. A gravação fica fora do caminho crítico. */
+      if (Offline.salvarColecaoEmSegundoPlano) {
+        Offline.salvarColecaoEmSegundoPlano('viagens-pagina-resumo', dados);
+      } else {
+        setTimeout(function () {
+          Offline.salvarColecao('viagens-pagina-resumo', dados).catch(function () {});
+        }, 0);
+      }
     } catch (erro) {
-      console.warn('CarWay viagens - rede falhou, usando cache:', erro);
-      aplicar(await Offline.obterColecao('viagens-pagina',{viagens:Viagens.lista||[],veiculos:Viagens.veiculos||[]}));
+      console.warn('CarWay viagens - rede falhou, mantendo cache:', erro);
+      if (!Viagens.lista.length) {
+        try { aplicar(await obterCacheLeve()); }
+        catch (e) { if (el) el.innerHTML = '<div class="bloco-vazio">Não foi possível carregar as viagens.</div>'; }
+      }
+    } finally {
+      Viagens._carregandoLista = false;
     }
   },
-
 
   _garantirContainersTopo: function () {
     if (document.getElementById('chipsStatusViagens')) return;
@@ -589,15 +665,8 @@ chamarRoutes: function (origem, destino, idaVolta, emissionType) {
   },
   navAno: function (d) { Viagens.periodo.ano += d; Viagens.renderFiltroPeriodo(); Viagens.renderChipsStatus(); Viagens.renderKpis(); Viagens.renderTudo(); },
   _noPeriodo: function (v) {
-    /*
-     * Viagens em andamento representam uma operacao atual e precisam
-     * continuar visiveis mesmo quando a data de inicio pertence a um
-     * mes ou ano anterior. Isso tambem cobre viagens antigas importadas
-     * que permaneceram abertas, como a viagem Nordeste do Pablo.
-     */
     var status = String((v && v.status) || '').trim().toLowerCase();
     if (status === 'andamento' || status === 'em_andamento') return true;
-
     var modo = Viagens.periodo.modo;
     if (modo === 'tudo') return true;
     var ref = v.dataInicio || v.dataFim;
@@ -881,8 +950,9 @@ abrirPlanejador: async function (idExistente) {
     }
     if (idExistente) {
       var existente = Viagens.lista.filter(function(v){return v.id===idExistente;})[0];
-      if (!existente && navigator.onLine) {
-        var rr=await sb.from('viagens').select('*').eq('id',idExistente).single(); existente=rr.data;
+      if (navigator.onLine) {
+        var rr=await sb.from('viagens').select('*').eq('id',idExistente).single();
+        if (!rr.error && rr.data) existente=rr.data;
       }
       if (!existente) { App.toast('Viagem não encontrada neste aparelho','erro'); return; }
       Viagens.editando=existente; Viagens._modoEdicao=true;
