@@ -1,4 +1,4 @@
-/* APP_VERSION: v19.3 - recuperacao de senha completa + sessao offline */
+/* APP_VERSION: v25.1 - MAPS.ME nas preferencias de navegacao */
 var sb = null;
 var usuarioAtual = null;
 var orgAtual = null;
@@ -1707,7 +1707,7 @@ _registrarOuvintesSessao: function () {
     /* Tela IDÊNTICA para todo mundo, inclusive o master — a única
        diferença é o card extra "Painel Administrativo", que só
        aparece se App.souMaster() for verdadeiro. */
-    var navAtual = ({ google_maps: 'Google Maps', waze: 'Waze', uber: 'Uber' })[usuarioAtual.appNavegacaoPreferido] || 'Perguntar sempre';
+    var navAtual = ({ google_maps: 'Google Maps', waze: 'Waze', mapsme: 'MAPS.ME', uber: 'Uber' })[usuarioAtual.appNavegacaoPreferido] || 'Perguntar sempre';
     var cardMaster = App.souMaster()
       ? '<div class="config-secao">Administração</div>' +
         '<button class="config-item" onclick="App.irPara(\'painel-admin\')">' +
@@ -1743,6 +1743,7 @@ abrirEscolhaNavegacao: function () {
     { id: 'perguntar', nome: 'Perguntar sempre', ico: 'help', cor: '#f59e0b', sub: 'Mostra as opções a cada viagem' },
     { id: 'google_maps', nome: 'Google Maps', ico: 'map', cor: '#4285F4', sub: 'Abre direto, sem perguntar' },
     { id: 'waze', nome: 'Waze', ico: 'assistant_navigation', cor: '#33CCFF', sub: 'Abre direto, sem perguntar' },
+    { id: 'mapsme', nome: 'MAPS.ME', ico: 'travel_explore', cor: '#ef4444', sub: 'Mapas offline e escolha da próxima parada' },
     { id: 'uber', nome: 'Uber', ico: 'local_taxi', cor: '#22c55e', sub: 'Abre direto, sem perguntar' }
   ];
 
@@ -2357,6 +2358,3 @@ _renderConteudoBarraVeiculoGlobal: function () {
   }
 };
 document.addEventListener('DOMContentLoaded', App.init);
-
-
-
