@@ -1,4 +1,4 @@
-/* APP_VERSION: v10.15 - preservacao do formulario e valores previstos da viagem */
+/* APP_VERSION: v10.16 - selecao de endereco estavel em toque e mouse */
 /* =====================================================================
    CARWAY v16 - VIAGENS
    Planejador completo com Google Routes + Geocoding + Places
@@ -1109,7 +1109,7 @@ abrirPlanejador: async function (idExistente) {
     setTimeout(function () {
       var el = document.getElementById(qual === 'origem' ? 'plSugOrigem' : 'plSugDestino');
       if (el) el.classList.remove('aberto');
-    }, 200);
+    }, 600);
   },
   buscarSugestoes: function (qual, texto) {
     var elId = qual === 'origem' ? 'plSugOrigem' : 'plSugDestino';
@@ -1124,7 +1124,7 @@ abrirPlanejador: async function (idExistente) {
     });
     if (historico.length) {
       el.innerHTML = historico.map(function (h, idx) {
-        return '<div class="sugestao-item" onmousedown="Viagens.escolherHistorico(\'' + qual + '\',' + idx + ')">' +
+        return '<div class="sugestao-item" onpointerdown="event.preventDefault();Viagens.escolherHistorico(\'' + qual + '\',' + idx + ')">' +
           '<span class="ms" style="font-size:18px;color:var(--azul2);vertical-align:middle;margin-right:6px">history</span>' +
           '<b>' + App.esc(h.endereco) + '</b></div>';
       }).join('') +
@@ -1147,7 +1147,7 @@ abrirPlanejador: async function (idExistente) {
           var partes = r.endereco.split(',');
           var nome = partes[0] ? partes[0].trim() : r.endereco;
           var resto = partes.slice(1).join(',').trim();
-          return '<div class="sugestao-item" onmousedown="Viagens.escolherSugestao(\'' + qual + '\',' + idx + ')">' +
+          return '<div class="sugestao-item" onpointerdown="event.preventDefault();Viagens.escolherSugestao(\'' + qual + '\',' + idx + ')">' +
             '<span class="ms" style="font-size:18px;color:var(--verde);vertical-align:middle;margin-right:6px">place</span>' +
             '<b>' + App.esc(nome) + '</b>' +
             (resto ? '<small>' + App.esc(resto) + '</small>' : '') +
@@ -1176,13 +1176,27 @@ abrirPlanejador: async function (idExistente) {
     });
     var h = lista[idx];
     if (!h) return;
-    document.getElementById(qual === 'origem' ? 'plOrigem' : 'plDestino').value = h.endereco;
+    var inputId = qual === 'origem' ? 'plOrigem' : 'plDestino';
+    var campo = document.getElementById(inputId);
+    if (campo) campo.value = h.endereco;
+    Viagens.plano[qual] = null;
+    Viagens.esconderSugestoes(qual);
     Viagens.chamarGeocode({ endereco: h.endereco })
       .then(function (rs) {
-        if (rs.length) Viagens.plano[qual] = { lat: rs[0].lat, lon: rs[0].lon, endereco: rs[0].endereco };
+        if (!rs.length) {
+          App.toast('Não foi possível localizar o endereço selecionado', 'erro');
+          return;
+        }
+        var atual = document.getElementById(inputId);
+        if (!atual || atual.value.trim() !== h.endereco) return;
+        Viagens.plano[qual] = { lat: rs[0].lat, lon: rs[0].lon, endereco: rs[0].endereco };
+        atual.value = rs[0].endereco;
+        Viagens.gravarHistorico(rs[0].endereco);
       })
-      .catch(function () {});
-    Viagens.esconderSugestoes(qual);
+      .catch(function (e) {
+        console.warn('CarWay - endereço recente não localizado:', e);
+        App.toast((e && e.message) || 'Erro ao localizar o endereço selecionado', 'erro');
+      });
   },
   esconderSugestoes: function (qual) {
     var el = document.getElementById(qual === 'origem' ? 'plSugOrigem' : 'plSugDestino');
