@@ -1,4 +1,4 @@
-/* APP_VERSION: v10.19 - lista progressiva e leve para iPhone */
+/* APP_VERSION: v10.20 - integracao MAPS.ME offline */
 /* =====================================================================
    CARWAY v16 - VIAGENS
    Planejador completo com Google Routes + Geocoding + Places
@@ -1373,11 +1373,12 @@ abrirPlanejador: async function (idExistente) {
   var apps = [
     { id: 'google', nome: 'Google Maps', ico: 'map', cor: '#4285F4', sub: 'Rota completa com origem e destino' },
     { id: 'waze', nome: 'Waze', ico: 'assistant_navigation', cor: '#33CCFF', sub: 'Navegação a partir de onde você está' },
+    { id: 'mapsme', nome: 'MAPS.ME', ico: 'travel_explore', cor: '#7CB342', sub: 'Abre o destino no mapa offline baixado' },
     { id: 'uber', nome: 'Uber', ico: 'local_taxi', cor: '#22c55e', sub: 'Pedir corrida até o destino' }
   ];
 
   if (isIOS) {
-    apps.splice(2, 0, { id: 'apple', nome: 'Apple Maps', ico: 'map', cor: '#007AFF', sub: 'Integrado ao iPhone' });
+    apps.splice(3, 0, { id: 'apple', nome: 'Apple Maps', ico: 'map', cor: '#007AFF', sub: 'Integrado ao iPhone' });
   }
 
   var html =
@@ -1435,6 +1436,18 @@ escolherAppNavegacao: function (app) {
     return;
   }
 
+  if (app === 'mapsme') {
+    Viagens._paradasParaNavegacao = null;
+    var nomeDestino = String(destino.curto || destino.endereco || 'Destino CarWay').trim();
+    var mapsMeUrl = 'mapswithme://map?v=1&ll=' +
+      encodeURIComponent(lat + ',' + lon) +
+      '&n=' + encodeURIComponent(nomeDestino) +
+      '&id=' + encodeURIComponent('carway-destino') +
+      '&appname=' + encodeURIComponent('CarWay');
+    window.location.href = mapsMeUrl;
+    return;
+  }
+
   if (app === 'uber') {
     Viagens._paradasParaNavegacao = null;
     window.location.href = 'https://m.uber.com/ul/?action=setPickup&pickup=my_location&dropoff[latitude]=' + lat + '&dropoff[longitude]=' + lon;
@@ -1453,7 +1466,7 @@ escolherAppNavegacao: function (app) {
   window.open(url, '_blank', 'noopener');
 },
 nomeApp: function (app) {
-  return ({ google: 'Google Maps', google_maps: 'Google Maps', waze: 'Waze', apple: 'Apple Maps', uber: 'Uber' })[app] || 'app';
+  return ({ google: 'Google Maps', google_maps: 'Google Maps', waze: 'Waze', apple: 'Apple Maps', mapsme: 'MAPS.ME', uber: 'Uber' })[app] || 'app';
 },
 
    voltarParaFormularioMantendoRotas: function () {
@@ -4426,3 +4439,4 @@ _urlMapsComParadas: function (origem, destino) {
     return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : s;
   }
 };
+
