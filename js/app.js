@@ -79,46 +79,227 @@ var App = {
     }
     return false;
   },
-  salvarNovaSenha: function (event) {
-    event.preventDefault();
-    var s1 = document.getElementById('nsSenha').value;
-    var s2 = document.getElementById('nsSenha2').value;
-    var btn = document.getElementById('btnNovaSenha');
-    var msg = document.getElementById('msgNovaSenha');
-    if (s1.length < 6) {
-      msg.textContent = 'Senha muito curta (mínimo 6 caracteres)';
-      msg.className = 'mensagem erro';
-      return;
+  /* =========================================================
+   SALVAR NOVA SENHA
+   ========================================================= */
+salvarNovaSenha: async functi*n (event) {
+  if (
+    event &&
+  * typeof event.preventDefault === '*unction'
+  ) {
+    event.preventDe*ault();
+  }
+
+  var campoSenha =
+  * document.getElementById('nsSenha'*;
+
+  var campoConfirmacao =
+    do*ument.getElementById('nsSenha2');
+*  var btn =
+    document.getElemen*ById('btnNovaSenha');
+
+  var msg =*    document.getElementById('msgNo*aSenha');
+
+  var s1 =
+    campoSen*a
+      ? String(campoSenha.value *| '')
+      : '';
+
+  var s2 =
+    *ampoConfirmacao
+      ? String(campoConfirmacao.value || '')
+      : '';
+
+  function definirMensagem(texto, tipo) {
+    if (!msg) return;
+
+    msg.textContent = texto;
+    msg.className =
+      'mensagem' +
+      (tipo ? ' ' + tipo : '');
+  }
+
+  function definirBotao(
+    desabilitado,
+    texto
+  ) {
+    if (!btn) return;
+
+    btn.disabled = !!desabilitado;
+
+    var span =
+      btn.querySelector('span');
+
+    if (span) {
+      span.textContent = texto;
+    } else {
+      btn.textContent = texto;
     }
-    if (s1 !== s2) {
-      msg.textContent = 'As duas senhas não conferem';
-      msg.className = 'mensagem erro';
-      return;
+  }
+
+  /* =====================================================
+     VALIDAÇÕES
+     ===================================================== */
+
+  if (s1.length < 8) {
+    definirMensagem(
+      'Senha muito curta. Use pelo menos 8 caracteres.',
+      'erro'
+    );
+
+    if (campoSenha) {
+      campoSenha.focus();
     }
-    btn.disabled = true;
-    btn.querySelector('span').textContent = 'Salvando...';
-    msg.textContent = '';
-    msg.className = 'mensagem';
-    sb.auth.updateUser({ password: s1 }).then(function (r) {
-      btn.disabled = false;
-      btn.querySelector('span').textContent = 'Salvar nova senha';
-      if (r.error) {
-        msg.textContent = 'Erro: ' + r.error.message;
-        msg.className = 'mensagem erro';
-        return;
+
+    return;
+  }
+
+  if (s1 !== s2) {
+    definirMensagem(
+      'As duas senhas não conferem.',
+      'erro'
+    );
+
+    if (campoConfirmacao) {
+      campoConfirmacao.focus();
+    }
+
+    return;
+  }
+
+  definirBotao(
+    true,
+    'Atualizando...'
+  );
+
+  definirMensagem(
+    '',
+    ''
+  );
+
+  try {
+    /*
+     * O link de recuperação precisa ter criado uma sessão
+     * temporária válida antes de updateUser().
+     */
+    var sessaoAtual =
+     *await sb.auth.getSession();
+
+    i* (
+      sessaoAtual.error ||
+      !sessaoAtual.data ||
+      !sessaoAtual.data.session
+    ) {
+      throw new Error(
+        'O link de redefinição expirou ou é inválido. Solicite um novo link.'
+      );
+    }
+
+    var resposta =
+      await sb.auth.updateUser({
+        password: s1
+      });
+
+    if (resposta.error) {
+      throw resposta.error;
+    }
+
+    definirMensagem(
+      'Senha alterada com sucesso. Redirecionando para o login...',
+      'ok'
+    );
+
+    App._recuperandoSenha = false;
+    App._saindo = true;
+
+    /*
+     * Aguarda brevemente para o usuário visualizar a
+     * confirmação e depois encerra a sessão temporária.
+     */
+    setTimeout(async function () {
+      try {
+        await sb.auth.signOut();
+
+        if (
+          typeof App._encerrarSessaoLocal ===
+          'function'
+        ) {
+          await App._encerrarSessaoLocal();
+        }
+
+        /*
+         * Limpa os campos depois da alteração.
+         */
+        if (campoSenha) {
+          campoSenha.value = '';
+          campoSenha.type = 'password';
+        }
+
+        if (campoConfirmacao) {
+          campoConfirmacao.value = '';
+          campoConfirmacao.type = 'password';
+        }
+
+        App.mostrarTela('login');
+
+        /*
+         * Preenche o e-mail do login quando estiver
+         * disponível na resposta do Supabase.
+         */
+        var campoEmail =
+   *      document.getElementById('log*nEmail');
+
+        if (
+          *ampoEmail &&
+          resposta.da*a &&
+          resposta.data.user *&
+          resposta.data.user.ema*l
+        ) {
+          campoEmail*value =
+            resposta.data.*ser.email;
+        }
+
+        if (*          typeof App.toast === 'fu*ction'
+        ) {
+          App.t*ast(
+            'Senha atualizada* Entre com a nova senha.',
+       *    'ok'
+          );
+        }
+  *   } catch (erroSaida) {
+        c*nsole.error(
+          'CarWay: er*o ao finalizar recuperação:',
+    *     erroSaida
+        );
+
+       *App.mostrarTela('login');
+      } *inally {
+        App._saindo = fal*e;
       }
-      msg.textContent = 'Senha alterada! Redirecionando...';
-      msg.className = 'mensagem ok';
-      setTimeout(function () {
-        App.verificarSessao();
-      }, 1500);
-    }).catch(function (e) {
-      btn.disabled = false;
-      btn.querySelector('span').textContent = 'Salvar nova senha';
-      msg.textContent = 'Erro: ' + (e.message || '');
-      msg.className = 'mensagem erro';
-    });
-  },
+    }, 1200);
+
+  } catc* (e) {
+    console.error(
+      'C*rWay: erro ao alterar senha:',
+   *  e
+    );
+
+    definirMensagem(
+ *    'Erro: ' +
+        (
+         *e && e.message
+            ? e.mes*age
+            : 'não foi possíve* alterar a senha'
+        ),
+     *'erro'
+    );
+
+    definirBotao(
+ *    false,
+      'Salvar nova senh*'
+    );
+  }
+},
   iniciarCampoTelefone: function () {
     var input = document.getElementById('cadTelefone');
     if (!input || !window.intlTelInput) return;
@@ -154,31 +335,178 @@ var App = {
       else App.mostrarTela('login');
     });
   },
-  /* Registra uma unica vez os ouvintes de autenticacao e de retorno
-     da conexao (evita ouvintes duplicados ao chamar verificarSessao
-     novamente, por exemplo apos trocar a senha). */
-  _registrarOuvintesSessao: function () {
-    if (App._ouvintesSessaoRegistrados) return;
-    App._ouvintesSessaoRegistrados = true;
-    sb.auth.onAuthStateChange(function (evento, sessao) {
-      if (evento === 'SIGNED_IN' && sessao) {
-        /* Mesmo usuario ja dentro do app: nao recarrega a tela inteira. */
-        if (usuarioAtual && usuarioAtual.auth_id === sessao.user.id) {
-          if (App._modoOffline && navigator.onLine) App.revalidarSessao();
+/* =========================================================
+   OUVINTES DE AUTENTICAÇÃO E RECUPERAÇÃO DE SENHA
+   ========================================================= */
+_registrarOuvintesSessao: function () {
+  if (App._ouvintesSessaoRegistrados) return;
+
+  App._ouvintesSessaoRegistrados = true;
+
+  sb.auth.onAuthStateChange(function (evento, sessao) {
+    console.log(
+      'CarWay Auth:',
+      evento,
+      sessao && sessao.user
+        ? sessao.user.email
+        : 'sem usuário'
+    );
+
+    /* =====================================================
+       RETORNO DO LINK DE REDEFINIÇÃO DE SENHA
+       ===================================================== */
+    if (evento === 'PASSWORD_RECOVERY') {
+      App._recuperandoSenha = true;
+
+      setTimeout(function () {
+        var campoSenha =
+          document.getElementById('nsSenha');
+
+        var campoConfirmacao =
+          document.getElementById('nsSenha2');
+
+        var mensagem =
+          document.getElementById('msgNovaSenha');
+
+        var botao =
+          document.getElementById('btnNovaSenha');
+
+        if (campoSenha) {
+          campoSenha.value = '';
+          campoSenha.type = 'password';
+        }
+
+        if (campoConfirmacao) {
+          campoConfirmacao.value = '';
+          campoConfirmacao.type = 'password';
+        }
+
+        if (mensagem) {
+          mensagem.textContent =
+            'Digite e confirme sua nova senha.';
+
+          mensagem.className = 'mensagem';
+        }
+
+        if (botao) {
+          botao.disabled = false;
+
+          var textoBotao =
+            botao.querySelector('span');
+
+          if (textoBotao) {
+            textoBotao.textContent =
+              'Salvar nova senha';
+          }
+        }
+
+        /*
+         * O HTML atual do CarWay usa a tela "novaSenha".
+         */
+        if (
+          typeof App.mostrarTela === 'function'
+        ) {
+          App.mostrarTela('novaSenha');
+        } else {
+          console.error(
+            'CarWay: função para abrir a tela de nova senha não encontrada.'
+          );
+
           return;
         }
-        App.carregarPerfil(sessao.user);
-      } else if (evento === 'SIGNED_OUT') {
-        if (App._saindo) return;
-        App._encerrarSessaoLocal().then(function () {
+
+        setTimeout(function () {
+          if (campoSenha) {
+            campoSenha.focus();
+          }
+        }, 100);
+      }, 0);
+
+      /*
+       * Não carrega o perfil nem entra no painel enquanto
+       * a nova senha não tiver sido gravada.
+       */
+      return;
+    }
+
+    /* =====================================================
+       LOGIN NORMAL
+       ===================================================== */
+    if (evento === 'SIGNED_IN' && sessao) {
+      /*
+       * O Supabase pode emitir SIGNED_IN logo após montar
+       * a sessão temporária do link de recuperação.
+       */
+      if (App._recuperandoSenha) {
+        return;
+      }
+
+      /*
+       * Mesmo usuário já dentro do aplicativo:
+       * não recarrega toda a interface.
+       */
+      if (
+        usuarioAtual &&
+        usuarioAtual.auth_id === sessao.user.id
+      ) {
+        if (
+          App._modoOffline &&
+          navigator.onLine
+        ) {
+          App.revalidarSessao();
+        }
+
+        return;
+      }
+
+      App.carregarPerfil(sessao.user);
+      return;
+    }
+
+    /* =====================================================
+       USUÁRIO ATUALIZADO
+       ===================================================== */
+    if (evento === 'USER_UPDATED') {
+      console.log(
+        'CarWay: usuário atualizado no Supabase.'
+      );
+
+      return;
+    }
+
+    /* =====================================================
+       LOGOUT
+       ===================================================== */
+    if (evento === 'SIGNED_OUT') {
+      /*
+       * Quando salvarNovaSenha executa o logout, a própria
+       * função controla a limpeza e a ida para o login.
+       */
+      if (App._saindo) return;
+
+      App._recuperandoSenha = false;
+
+      App._encerrarSessaoLocal()
+        .then(function () {
           App.mostrarTela('login');
         });
+
+      return;
+    }
+  });
+
+  /* =====================================================
+     CONEXÃO RESTABELECIDA
+     ===================================================== */
+  window.addEventListener(
+    'carway:online-revalidar',
+    function () {
+      if (App._modoOffline) {
+        App.revalidarSessao();
       }
-    });
-    window.addEventListener('carway:online-revalidar', function () {
-      if (App._modoOffline) App.revalidarSessao();
-    });
-  },
+    }
+  );
+},
   _ehErroRede: function (e) {
     if (!navigator.onLine) return true;
     if (typeof Offline !== 'undefined' && Offline._ehErroDeRede) return Offline._ehErroDeRede(e);
