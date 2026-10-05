@@ -4,7 +4,7 @@
    Release 18.2.2 - Lote 03 (abastecimentos, manutenções e documentos offline)
    ===================================================================== */
 'use strict';
-const CACHE_VERSION = 'carway-shell-18.2.2';
+const CACHE_VERSION = 'carway-shell-18.2.5';
 const OFFLINE_PAGE = './index.html';
 /*
  * Recursos locais essenciais.
@@ -24,7 +24,7 @@ const APP_SHELL = [
   './icones/carway-512.png',
   './js/carway-startup.js?v=1.0',
   './js/config.js?v=2',
-  './js/app.js?v=24.9',
+  './js/app.js?v=25.0',
   './js/offline.js?v=1.2',
   './js/veiculos.js?v=2.8',
   './js/abastecimentos.js?v=3.9',
