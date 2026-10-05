@@ -1,4 +1,4 @@
-/* APP_VERSION: v10.14 - limite mensal de solicitacoes de rota por plano */
+/* APP_VERSION: v10.15 - preservacao do formulario e valores previstos da viagem */
 /* =====================================================================
    CARWAY v16 - VIAGENS
    Planejador completo com Google Routes + Geocoding + Places
@@ -79,7 +79,8 @@ var Viagens = {
     paradasPorRota: {},
     veiculoSelecionado: null,
     parametrosAutonomia: null,
-    energeticoSelecionado: null
+    energeticoSelecionado: null,
+    tituloDigitado: ''
   },
   _sug: {
     origem: { timer: null, ultimoTexto: '', resultados: [] },
@@ -739,8 +740,36 @@ chamarRoutes: function (origem, destino, idaVolta, emissionType) {
     });
     Viagens.despesas.forEach(function (d) { if (d.viagemId === viagemId) { desp += Number(d.valor) || 0; qtdDesp++; } });
     Viagens.manutencoes.forEach(function (m) { if (m.viagemId === viagemId) { manut += Number(m.custo) || 0; qtdManut++; } });
-    var resumo = Object.keys(quantidades).map(function (u) { return App.fmtNum(quantidades[u], 1) + ' ' + u; }).join(' · ') || '—';
-    return { combustivel: Math.round(combustivel * 100) / 100, quantidades: quantidades, unidadeResumo: resumo, litros: 0, despesas: Math.round(desp * 100) / 100, qtdDespesas: qtdDesp, manutencoes: Math.round(manut * 100) / 100, qtdManutencoes: qtdManut, total: Math.round((combustivel + desp + manut) * 100) / 100 };
+    var viagem = Viagens.lista.filter(function (v) { return v.id === viagemId; })[0] || {};
+    var totalReal = Math.round((combustivel + desp + manut) * 100) / 100;
+    var totalPrevisto = Number(viagem.totalPrev) || 0;
+    var usarPrevisto = totalReal <= 0 && totalPrevisto > 0;
+    var resumo = Object.keys(quantidades).map(function (u) { return App.fmtNum(quantidades[u], 1) + ' ' + u; }).join(' · ');
+    if (!resumo && viagem.rota) {
+      try {
+        var rotaResumo = JSON.parse(viagem.rota);
+        var qtdPrevista = Number(rotaResumo.quantidadeEnergiaPrevista) || 0;
+        if (!qtdPrevista && Number(rotaResumo.consumo) > 0) {
+          qtdPrevista = (Number(viagem.distancia) || Number(rotaResumo.km) || 0) / Number(rotaResumo.consumo);
+        }
+        if (qtdPrevista > 0) resumo = App.fmtNum(qtdPrevista, 1) + ' ' + (rotaResumo.unidadeQuantidade || 'L');
+      } catch (e) {}
+    }
+    if (!resumo) resumo = '—';
+    return {
+      combustivel: Math.round(combustivel * 100) / 100,
+      quantidades: quantidades,
+      unidadeResumo: resumo,
+      litros: 0,
+      despesas: Math.round(desp * 100) / 100,
+      qtdDespesas: qtdDesp,
+      manutencoes: Math.round(manut * 100) / 100,
+      qtdManutencoes: qtdManut,
+      total: totalReal,
+      totalPrevisto: totalPrevisto,
+      totalExibicao: usarPrevisto ? totalPrevisto : totalReal,
+      totalEhPrevisto: usarPrevisto
+    };
   },
 
   precoMedioCombustivel: function (veiculoId, energetico) {
@@ -802,7 +831,7 @@ chamarRoutes: function (origem, destino, idaVolta, emissionType) {
             '<span class="ms" style="font-size:14px">' + icoVeic + '</span>' + App.esc(veicNome + veicPlaca) +
           '</small>' +
         '</div>' +
-        '<div class="cv2-valor">' + App.moeda(totais.total) + '<small>Total</small></div>' +
+        '<div class="cv2-valor">' + App.moeda(totais.totalExibicao) + '<small>' + (totais.totalEhPrevisto ? 'Previsto' : 'Total') + '</small></div>' +
       '</div>' +
       '<div class="cv2-nums">' +
         '<div class="cv2-num"><b>' + App.fmtNum(km) + '</b><small>KM</small></div>' +
@@ -850,12 +879,12 @@ abrirPlanejador: async function (idExistente) {
       Viagens.editando=existente; Viagens._modoEdicao=true;
       Viagens._origemOriginalTxt=existente.origem||''; Viagens._destinoOriginalTxt=existente.destino||'';
       Viagens._idaVoltaOriginal=String(existente.idaVolta).toUpperCase()==='SIM';
-      Viagens.plano={origem:existente.origem?{lat:0,lon:0,endereco:existente.origem}:null,destino:existente.destino?{lat:0,lon:0,endereco:existente.destino}:null,idaVolta:Viagens._idaVoltaOriginal,rotas:null,rotaAtiva:0,paradasPorRota:{},veiculoSelecionado:null,parametrosAutonomia:null,energeticoSelecionado:null};
+      Viagens.plano={origem:existente.origem?{lat:0,lon:0,endereco:existente.origem}:null,destino:existente.destino?{lat:0,lon:0,endereco:existente.destino}:null,idaVolta:Viagens._idaVoltaOriginal,rotas:null,rotaAtiva:0,paradasPorRota:{},veiculoSelecionado:null,parametrosAutonomia:null,energeticoSelecionado:null,tituloDigitado:existente.titulo||''};
       if(existente.rota){try{var rotaSalva=JSON.parse(existente.rota);Viagens.plano.origem=rotaSalva.origem||Viagens.plano.origem;Viagens.plano.destino=rotaSalva.destino||Viagens.plano.destino;Viagens.plano.energeticoSelecionado=rotaSalva.energetico||null;}catch(e){}}
       Viagens.renderPlanejador(existente); return;
     }
     Viagens.editando=null; Viagens._modoEdicao=false;
-    Viagens.plano={origem:null,destino:null,idaVolta:false,rotas:null,rotaAtiva:0,paradasPorRota:{},veiculoSelecionado:null,parametrosAutonomia:null,energeticoSelecionado:null};
+    Viagens.plano={origem:null,destino:null,idaVolta:false,rotas:null,rotaAtiva:0,paradasPorRota:{},veiculoSelecionado:null,parametrosAutonomia:null,energeticoSelecionado:null,tituloDigitado:''};
     Viagens.renderPlanejador(null);
   },
 
@@ -891,7 +920,7 @@ abrirPlanejador: async function (idExistente) {
         '<small>Somente energéticos aceitos pelo veículo.</small></div>' +
       '<div class="campo-form">' +
         '<label>Nome da viagem  <small style="text-transform:none;color:var(--txt2);font-weight:400">(opcional)</small></label>' +
-        '<input type="text" id="plNomeViagem" placeholder="' + App.esc((v.origem || '').split(',')[0] + (v.destino ? ' → ' + v.destino.split(',')[0] : '')) + '" value="' + App.esc(v.titulo || '') + '" maxlength="100">' +
+        '<input type="text" id="plNomeViagem" placeholder="' + App.esc((v.origem || '').split(',')[0] + (v.destino ? ' → ' + v.destino.split(',')[0] : '')) + '" value="' + App.esc(v.titulo || Viagens.plano.tituloDigitado || '') + '" maxlength="100" oninput="Viagens.plano.tituloDigitado=this.value">' +
       '</div>' +
       '<div class="campo-form">' +
         '<label>Saindo de</label>' +
@@ -1346,6 +1375,8 @@ nomeApp: function (app) {
 
   var inpOrigem = document.getElementById('plOrigem');
   var inpDestino = document.getElementById('plDestino');
+  var inpTitulo = document.getElementById('plNomeViagem');
+  if (inpTitulo) inpTitulo.value = Viagens.plano.tituloDigitado || '';
 
   if (inpOrigem && Viagens.plano.origem) inpOrigem.value = Viagens.plano.origem.endereco || '';
   if (inpDestino && Viagens.plano.destino) inpDestino.value = Viagens.plano.destino.endereco || '';
@@ -1694,6 +1725,8 @@ nomeApp: function (app) {
       categoria: infoEnergia.categoria
     };
 
+    var campoTituloRota = document.getElementById('plNomeViagem');
+    if (campoTituloRota) Viagens.plano.tituloDigitado = campoTituloRota.value.trim();
     var emissionType = infoEnergia.emissionType;
     var btn = document.getElementById('btnBuscarRotas') || document.getElementById('btnSalvarEdicao');
     var reservaId = null;
@@ -2489,7 +2522,9 @@ html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="b
     var destinoTxt = Viagens.plano.destino.endereco.split(',')[0];
     var hoje = App.hojeISO();
     var tituloPadrao = origemTxt + ' → ' + destinoTxt;
-    var tituloInicial = document.getElementById('plNomeViagem') ? document.getElementById('plNomeViagem').value.trim() : '';
+    var campoTituloAnterior = document.getElementById('plNomeViagem');
+    var tituloInicial = campoTituloAnterior ? campoTituloAnterior.value.trim() : (Viagens.plano.tituloDigitado || '');
+    Viagens.plano.tituloDigitado = tituloInicial;
 
     var html =
       '<h2 class="form-titulo">Criar viagem</h2>' +
@@ -2503,7 +2538,7 @@ html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="b
         '</div>' +
       '</div>' +
       '<div class="campo-form"><label>Nome da viagem <small style="text-transform:none;color:var(--txt2);font-weight:400">(opcional)</small></label>' +
-        '<input type="text" id="crTitulo" value="' + App.esc(tituloInicial) + '" placeholder="' + App.esc(tituloPadrao) + '" maxlength="100">' +
+        '<input type="text" id="crTitulo" value="' + App.esc(tituloInicial) + '" placeholder="' + App.esc(tituloPadrao) + '" maxlength="100" oninput="Viagens.plano.tituloDigitado=this.value">' +
       '</div>' +
       '<div class="linha-2">' +
         '<div class="campo-form"><label>Saída</label><input type="date" id="crDataInicio" value="' + hoje + '"></div>' +
@@ -2541,6 +2576,7 @@ html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="b
     var origemCurta = Viagens.plano.origem.endereco.split(',')[0];
     var destinoCurto = Viagens.plano.destino.endereco.split(',')[0];
     var tituloDigitado = document.getElementById('crTitulo').value.trim();
+    Viagens.plano.tituloDigitado = tituloDigitado;
     var tituloFinal = tituloDigitado || (origemCurta + ' → ' + destinoCurto);
     var dataInicio = document.getElementById('crDataInicio').value;
     var dataFim = document.getElementById('crDataFim').value || null;
@@ -2580,6 +2616,8 @@ html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="b
         polyline: r.polyline,
         idaVolta: idaVolta,
         custoCombustivel: r.custoCombustivel,
+        quantidadeEnergiaPrevista: r.litros || 0,
+        custoTotalPrevisto: r.custoTotal || totalPrev,
         custoPedagio: r.custoPedagio,
         temPedagio: r.temPedagio,
         energetico: Viagens.plano.energeticoSelecionado || 'Gasolina',
@@ -2640,6 +2678,7 @@ html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="b
       if (App._painelRaw) App._painelRaw = null;
       App.toast(paradasReg.length ? 'Viagem criada com ' + paradasReg.length + ' parada(s)!' : 'Viagem criada!', 'ok');
       App.irPara('viagens');
+      setTimeout(function () { Viagens.carregarLista(); }, 50);
     }).catch(function (e) {
       Viagens._salvando = false;
       console.error('CarWay - falha na RPC de criação:', e);
@@ -2660,6 +2699,7 @@ html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="b
         if (App._painelRaw) App._painelRaw = null;
         App.toast('Viagem criada!', 'ok');
         App.irPara('viagens');
+        setTimeout(function () { Viagens.carregarLista(); }, 50);
         return;
       }
       return sb.from('paradas_viagem').insert(paradasReg).then(function (rp) {
@@ -2683,6 +2723,7 @@ html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="b
         if (App._painelRaw) App._painelRaw = null;
         App.toast('Viagem criada com ' + paradasReg.length + ' parada(s)!', 'ok');
         App.irPara('viagens');
+        setTimeout(function () { Viagens.carregarLista(); }, 50);
       });
     }).catch(function (e) {
       Viagens._salvando = false;
@@ -2911,8 +2952,11 @@ html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="b
     var totDesp = 0; desp.forEach(function (x) { totDesp += Number(x.valor) || 0; });
     var totManut = 0; manut.forEach(function (x) { totManut += Number(x.custo) || 0; });
     var total = totComb + totDesp + totManut;
+    var totalPrevistoCab = Number(v.totalPrev) || 0;
+    var totalCabecalho = total > 0 ? total : totalPrevistoCab;
+    var rotuloTotalCabecalho = total > 0 ? 'Gasto total' : 'Previsto';
     var kmReal = v.kmFinal > 0 ? (Number(v.kmFinal) - Number(v.kmInicial)) : Number(v.distancia);
-    var custoKm = kmReal > 0 ? total / kmReal : 0;
+    var custoKm = kmReal > 0 ? totalCabecalho / kmReal : 0;
 
     /* CORRIGIDO (6.3): separa o valor REAL gasto por categoria de
        despesa (Alimentação/Hospedagem/Pedágio/Outros), em vez de
@@ -2941,7 +2985,7 @@ html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="b
         (veiculo ? '<div class="rota" style="margin-top:6px;color:' + corVeic + '"><span class="ms" style="color:' + corVeic + '">' + icoVeic + '</span>' + App.esc(veiculo.nome) + ' · ' + App.esc(veiculo.placa || 'sem placa') + '</div>' : '') +
         '<div class="detalhe-nums">' +
           '<div class="detalhe-num"><b>' + App.fmtNum(kmReal) + '</b><small>KM</small></div>' +
-          '<div class="detalhe-num"><b>' + App.moeda(total) + '</b><small>Gasto total</small></div>' +
+          '<div class="detalhe-num"><b>' + App.moeda(totalCabecalho) + '</b><small>' + rotuloTotalCabecalho + '</small></div>' +
           '<div class="detalhe-num"><b>' + App.moeda(custoKm) + '</b><small>Custo/km</small></div>' +
         '</div>' +
         /* CORRIGIDO (6.1): botões no padrão visual do app (btn-novo-sec
@@ -4262,4 +4306,3 @@ _urlMapsComParadas: function (origem, destino) {
     return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : s;
   }
 };
-
