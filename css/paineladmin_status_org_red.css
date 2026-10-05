@@ -1,0 +1,22 @@
+/* CARWAY - Botao critico de inativacao da organizacao */
+button.btn-admin-share[onclick^="PainelAdmin.abrirAlterarStatusOrganizacao"] {
+  background: #dc2626 !important;
+  border: 1px solid #ef4444 !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.28) !important;
+}
+
+button.btn-admin-share[onclick^="PainelAdmin.abrirAlterarStatusOrganizacao"] .ms {
+  color: #ffffff !important;
+}
+
+button.btn-admin-share[onclick^="PainelAdmin.abrirAlterarStatusOrganizacao"]:hover {
+  background: #b91c1c !important;
+  border-color: #f87171 !important;
+}
+
+button.btn-admin-share[onclick^="PainelAdmin.abrirAlterarStatusOrganizacao"]:active {
+  background: #991b1b !important;
+  transform: translateY(1px);
+}
