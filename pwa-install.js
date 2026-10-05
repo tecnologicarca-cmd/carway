@@ -212,8 +212,8 @@
           navigator.serviceWorker.ready.then(function (registro) {
             registro.showNotification('CarWay', {
               body: 'Notificações ativadas. Você receberá os alertas do CarWay.',
-              icon: 'carway-192.png',
-              badge: 'carway-192.png',
+              icon: '/icones/carway-192.png',
+              badge: '/icones/carway-192.png',
               tag: 'carway-permissao-ok'
             });
           }).catch(function () {
@@ -341,3 +341,4 @@
     CarWayPWA.iniciar();
   }
 })();
+
