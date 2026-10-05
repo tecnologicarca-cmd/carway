@@ -41,7 +41,7 @@ const APP_SHELL = [
   './js/equipe.js?v=1.1',
   './js/conta.js?v=1.1',
   './js/paineladmin.js?v=3.1',
-  './js/viagens.js?v=10.13',
+  './js/viagens.js?v=10.14',
   './pwa-install.js?v=1.1'
 ];
 
