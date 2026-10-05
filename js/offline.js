@@ -1,4 +1,4 @@
-/* APP_VERSION: v1.3 - cache leve e gravacao ociosa para iPhone */
+/* APP_VERSION: v1.4 - cache leve e gravacao ociosa para iPhone */
 'use strict';
 var Offline = {
   DB_NOME: 'carway_offline_v1',
