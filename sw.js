@@ -45,6 +45,7 @@ const APP_SHELL = [
   './js/conta.js?v=1.1',
   './js/paineladmin.js?v=3.2',
   './js/viagens.js?v=10.20',
+  './js/viagens_mapsme_paradas.js?v=1.0',
   './pwa-install.js?v=1.1'
 ];
 
