@@ -34,7 +34,7 @@ const APP_SHELL = [
   './icones/carway-512.png',
   './js/carway-startup.js?v=1.0',
   './js/config.js?v=2',
-  './js/app.js?v=25.0',
+  './js/app.js?v=25.1',
   './js/offline.js?v=1.4',
   './js/veiculos.js?v=2.8',
   './js/abastecimentos.js?v=3.9',
