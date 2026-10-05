@@ -1,12 +1,12 @@
 /* =====================================================================
    CARWAY - SERVICE WORKER
    Shell offline da versão Supabase / Play Store
-   Release 18.2.7 - carregamento otimizado para iPhone
+   Release 18.2.8 - iPhone otimizado e integracao MAPS.ME
    ===================================================================== */
 
 'use strict';
 
-const CACHE_VERSION = 'carway-shell-18.2.7';
+const CACHE_VERSION = 'carway-shell-18.2.8';
 const OFFLINE_PAGE = './index.html';
 
 /*
@@ -41,7 +41,7 @@ const APP_SHELL = [
   './js/equipe.js?v=1.1',
   './js/conta.js?v=1.1',
   './js/paineladmin.js?v=3.1',
-  './js/viagens.js?v=10.19',
+  './js/viagens.js?v=10.20',
   './pwa-install.js?v=1.1'
 ];
 
