@@ -1,4 +1,4 @@
-/* APP_VERSION: v19.2 - sessao offline + isolamento por usuario */
+/* APP_VERSION: v19.3 - recuperacao de senha completa + sessao offline */
 var sb = null;
 var usuarioAtual = null;
 var orgAtual = null;
@@ -16,23 +16,71 @@ var App = {
       alert('Nao consegui carregar o Supabase.');
       return;
     }
-    if (!CARWAY_CONFIG.SUPABASE_URL || CARWAY_CONFIG.SUPABASE_URL.indexOf('COLE_AQUI') > -1) {
+
+    if (
+      !CARWAY_CONFIG.SUPABASE_URL ||
+      CARWAY_CONFIG.SUPABASE_URL.indexOf('COLE_AQUI') > -1
+    ) {
       alert('Configure o Supabase em js/config.js');
       return;
     }
-    sb = window.supabase.createClient(CARWAY_CONFIG.SUPABASE_URL, CARWAY_CONFIG.SUPABASE_ANON_KEY);
+
+    sb = window.supabase.createClient(
+      CARWAY_CONFIG.SUPABASE_URL,
+      CARWAY_CONFIG.SUPABASE_ANON_KEY,
+      {
+        auth: {
+          persistSession: true,
+          autoRefreshToken: true,
+          detectSessionInUrl: true
+        }
+      }
+    );
+
     console.log('CarWay: Supabase inicializado');
+
     App.iniciarCampoTelefone();
     App.aplicarTemaSalvo();
-    if (App.detectouLinkResetSenha()) {
-      console.log('CarWay: link de reset de senha detectado');
-      return;
-    }
-    if (App.detectouLinkConviteMaster()) {
-      console.log('CarWay: link de convite do master detectado');
-      return;
-    }
-    App.verificarSessao();
+
+    /*
+     * O ouvinte precisa existir antes de processar o retorno do e-mail.
+     * Assim o evento PASSWORD_RECOVERY não é perdido.
+     */
+    App._registrarOuvintesSessao();
+
+    App.detectouLinkResetSenha()
+      .then(function (recuperacao) {
+        if (recuperacao) {
+          console.log(
+            'CarWay: link de recuperação de senha processado'
+          );
+          return;
+        }
+
+        if (App.detectouLinkConviteMaster()) {
+          console.log(
+            'CarWay: link de convite do master detectado'
+          );
+          return;
+        }
+
+        App.verificarSessao();
+      })
+      .catch(function (erro) {
+        console.error(
+          'CarWay: erro ao iniciar recuperação:',
+          erro
+        );
+
+        App._limparUrlAutenticacao();
+        App.mostrarTela('login');
+        App.mostrarErroLogin(
+          'Não foi possível validar o link de redefinição. ' +
+          (erro && erro.message
+            ? erro.message
+            : 'Solicite um novo link.')
+        );
+      });
   },
 
   /**
@@ -54,252 +102,318 @@ var App = {
     setTimeout(function () { App.irParaCadastro(); }, 50);
     return true;
   },
-  detectouLinkResetSenha: function () {
-    var hash = window.location.hash || '';
-    if (!hash) return false;
-    if (hash.indexOf('type=recovery') > -1 ||
-        hash.indexOf('type%3Drecovery') > -1) {
-      try {
-        if (window.history && window.history.replaceState) {
-          window.history.replaceState({}, document.title, window.location.pathname);
-        }
-      } catch (e) {}
-      setTimeout(function () {
-        App.mostrarTela('novaSenha');
-        var msg = document.getElementById('msgNovaSenha');
-        if (msg) {
-          msg.textContent = 'Voce veio do link de recuperacao. Escolha sua nova senha.';
-          msg.className = 'mensagem ok';
-        }
-        setTimeout(function () {
-          document.getElementById('nsSenha').focus();
-        }, 100);
-      }, 300);
-      return true;
-    }
-    return false;
-  },
   /* =========================================================
-   SALVAR NOVA SENHA
-   ========================================================= */
-salvarNovaSenha: async functi*n (event) {
-  if (
-    event &&
-  * typeof event.preventDefault === '*unction'
-  ) {
-    event.preventDe*ault();
-  }
+     RECUPERAÇÃO DE SENHA
+     ========================================================= */
+  _limparUrlAutenticacao: function () {
+    try {
+      if (window.history && window.history.replaceState) {
+        window.history.replaceState(
+          {},
+          document.title,
+          window.location.pathname
+        );
+      }
+    } catch (e) {}
+  },
 
-  var campoSenha =
-  * document.getElementById('nsSenha'*;
-
-  var campoConfirmacao =
-    do*ument.getElementById('nsSenha2');
-*  var btn =
-    document.getElemen*ById('btnNovaSenha');
-
-  var msg =*    document.getElementById('msgNo*aSenha');
-
-  var s1 =
-    campoSen*a
-      ? String(campoSenha.value *| '')
-      : '';
-
-  var s2 =
-    *ampoConfirmacao
-      ? String(campoConfirmacao.value || '')
-      : '';
-
-  function definirMensagem(texto, tipo) {
-    if (!msg) return;
-
-    msg.textContent = texto;
-    msg.className =
-      'mensagem' +
-      (tipo ? ' ' + tipo : '');
-  }
-
-  function definirBotao(
-    desabilitado,
-    texto
-  ) {
-    if (!btn) return;
-
-    btn.disabled = !!desabilitado;
-
-    var span =
-      btn.querySelector('span');
-
-    if (span) {
-      span.textContent = texto;
-    } else {
-      btn.textContent = texto;
-    }
-  }
-
-  /* =====================================================
-     VALIDAÇÕES
-     ===================================================== */
-
-  if (s1.length < 8) {
-    definirMensagem(
-      'Senha muito curta. Use pelo menos 8 caracteres.',
-      'erro'
+  _urlTemRetornoSenha: function () {
+    var url = new URL(window.location.href);
+    var hash = new URLSearchParams(
+      String(window.location.hash || '').replace(/^#/, '')
     );
 
-    if (campoSenha) {
-      campoSenha.focus();
-    }
-
-    return;
-  }
-
-  if (s1 !== s2) {
-    definirMensagem(
-      'As duas senhas não conferem.',
-      'erro'
+    return !!(
+      url.searchParams.get('code') ||
+      hash.get('type') === 'recovery' ||
+      hash.get('access_token')
     );
+  },
 
-    if (campoConfirmacao) {
-      campoConfirmacao.focus();
-    }
-
-    return;
-  }
-
-  definirBotao(
-    true,
-    'Atualizando...'
-  );
-
-  definirMensagem(
-    '',
-    ''
-  );
-
-  try {
-    /*
-     * O link de recuperação precisa ter criado uma sessão
-     * temporária válida antes de updateUser().
-     */
-    var sessaoAtual =
-     *await sb.auth.getSession();
-
-    i* (
-      sessaoAtual.error ||
-      !sessaoAtual.data ||
-      !sessaoAtual.data.session
-    ) {
+  _abrirTelaNovaSenha: function (sessao) {
+    if (!sessao || !sessao.user || !sessao.access_token) {
       throw new Error(
-        'O link de redefinição expirou ou é inválido. Solicite um novo link.'
+        'O link não criou uma sessão válida de recuperação.'
       );
     }
 
-    var resposta =
-      await sb.auth.updateUser({
+    App._recuperandoSenha = true;
+    App._sessaoRecuperacao = sessao;
+
+    var campoSenha = document.getElementById('nsSenha');
+    var campoConfirmacao = document.getElementById('nsSenha2');
+    var msg = document.getElementById('msgNovaSenha');
+    var btn = document.getElementById('btnNovaSenha');
+
+    if (campoSenha) {
+      campoSenha.value = '';
+      campoSenha.type = 'password';
+    }
+
+    if (campoConfirmacao) {
+      campoConfirmacao.value = '';
+      campoConfirmacao.type = 'password';
+    }
+
+    if (msg) {
+      msg.textContent =
+        'Digite e confirme sua nova senha.';
+      msg.className = 'mensagem ok';
+    }
+
+    if (btn) {
+      btn.disabled = false;
+      var span = btn.querySelector('span');
+      if (span) span.textContent = 'Salvar nova senha';
+    }
+
+    App.mostrarTela('novaSenha');
+
+    setTimeout(function () {
+      if (campoSenha) campoSenha.focus();
+    }, 100);
+  },
+
+  detectouLinkResetSenha: async function () {
+    if (!App._urlTemRetornoSenha()) return false;
+    if (App._processandoRecuperacao) return true;
+
+    App._processandoRecuperacao = true;
+    App._recuperandoSenha = true;
+
+    try {
+      var url = new URL(window.location.href);
+      var codigo = url.searchParams.get('code');
+      var hash = new URLSearchParams(
+        String(window.location.hash || '').replace(/^#/, '')
+      );
+      var accessToken = hash.get('access_token');
+      var refreshToken = hash.get('refresh_token');
+      var sessao = null;
+
+      /*
+       * Primeiro verifica se detectSessionInUrl já criou a sessão.
+       */
+      var existente = await sb.auth.getSession();
+      if (
+        !existente.error &&
+        existente.data &&
+        existente.data.session
+      ) {
+        sessao = existente.data.session;
+      }
+
+      /* Fluxo PKCE: troca ?code=... por uma sessão. */
+      if (!sessao && codigo) {
+        var troca =
+          await sb.auth.exchangeCodeForSession(codigo);
+
+        if (troca.error) throw troca.error;
+
+        sessao =
+          troca.data && troca.data.session
+            ? troca.data.session
+            : null;
+      }
+
+      /* Fluxo implícito: tokens vêm no hash da URL. */
+      if (!sessao && accessToken && refreshToken) {
+        var definicao = await sb.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken
+        });
+
+        if (definicao.error) throw definicao.error;
+
+        sessao =
+          definicao.data && definicao.data.session
+            ? definicao.data.session
+            : null;
+      }
+
+      if (!sessao) {
+        throw new Error(
+          'O link expirou, já foi utilizado ou foi aberto em outro navegador.'
+        );
+      }
+
+      App._limparUrlAutenticacao();
+      App._abrirTelaNovaSenha(sessao);
+      return true;
+
+    } catch (erro) {
+      App._recuperandoSenha = false;
+      App._sessaoRecuperacao = null;
+      App._limparUrlAutenticacao();
+
+      try {
+        localStorage.removeItem(
+          'carway_recuperacao_pendente'
+        );
+      } catch (e) {}
+
+      throw erro;
+
+    } finally {
+      App._processandoRecuperacao = false;
+    }
+  },
+
+  salvarNovaSenha: async function (event) {
+    if (
+      event &&
+      typeof event.preventDefault === 'function'
+    ) {
+      event.preventDefault();
+    }
+
+    var campoSenha = document.getElementById('nsSenha');
+    var campoConfirmacao = document.getElementById('nsSenha2');
+    var btn = document.getElementById('btnNovaSenha');
+    var msg = document.getElementById('msgNovaSenha');
+
+    var s1 = campoSenha
+      ? String(campoSenha.value || '')
+      : '';
+
+    var s2 = campoConfirmacao
+      ? String(campoConfirmacao.value || '')
+      : '';
+
+    function definirMensagem(texto, tipo) {
+      if (!msg) return;
+      msg.textContent = texto;
+      msg.className =
+        'mensagem' + (tipo ? ' ' + tipo : '');
+    }
+
+    function definirBotao(desabilitado, texto) {
+      if (!btn) return;
+      btn.disabled = !!desabilitado;
+      var span = btn.querySelector('span');
+      if (span) span.textContent = texto;
+      else btn.textContent = texto;
+    }
+
+    if (s1.length < 8) {
+      definirMensagem(
+        'Senha muito curta. Use pelo menos 8 caracteres.',
+        'erro'
+      );
+      if (campoSenha) campoSenha.focus();
+      return;
+    }
+
+    if (s1 !== s2) {
+      definirMensagem(
+        'As duas senhas não conferem.',
+        'erro'
+      );
+      if (campoConfirmacao) campoConfirmacao.focus();
+      return;
+    }
+
+    definirBotao(true, 'Atualizando...');
+    definirMensagem('', '');
+
+    try {
+      var consulta = await sb.auth.getSession();
+      var sessao =
+        !consulta.error &&
+        consulta.data &&
+        consulta.data.session
+          ? consulta.data.session
+          : null;
+
+      if (!sessao) {
+        throw new Error(
+          'O link expirou ou não criou uma sessão válida. Solicite um novo link.'
+        );
+      }
+
+      var resposta = await sb.auth.updateUser({
         password: s1
       });
 
-    if (resposta.error) {
-      throw resposta.error;
-    }
+      if (resposta.error) throw resposta.error;
 
-    definirMensagem(
-      'Senha alterada com sucesso. Redirecionando para o login...',
-      'ok'
-    );
+      var emailAtual =
+        resposta.data && resposta.data.user
+          ? resposta.data.user.email
+          : '';
 
-    App._recuperandoSenha = false;
-    App._saindo = true;
+      definirMensagem(
+        'Senha alterada com sucesso. Redirecionando para o login...',
+        'ok'
+      );
 
-    /*
-     * Aguarda brevemente para o usuário visualizar a
-     * confirmação e depois encerra a sessão temporária.
-     */
-    setTimeout(async function () {
+      App._recuperandoSenha = false;
+      App._sessaoRecuperacao = null;
+      App._saindo = true;
+
       try {
-        await sb.auth.signOut();
-
-        if (
-          typeof App._encerrarSessaoLocal ===
-          'function'
-        ) {
-          await App._encerrarSessaoLocal();
-        }
-
-        /*
-         * Limpa os campos depois da alteração.
-         */
-        if (campoSenha) {
-          campoSenha.value = '';
-          campoSenha.type = 'password';
-        }
-
-        if (campoConfirmacao) {
-          campoConfirmacao.value = '';
-          campoConfirmacao.type = 'password';
-        }
-
-        App.mostrarTela('login');
-
-        /*
-         * Preenche o e-mail do login quando estiver
-         * disponível na resposta do Supabase.
-         */
-        var campoEmail =
-   *      document.getElementById('log*nEmail');
-
-        if (
-          *ampoEmail &&
-          resposta.da*a &&
-          resposta.data.user *&
-          resposta.data.user.ema*l
-        ) {
-          campoEmail*value =
-            resposta.data.*ser.email;
-        }
-
-        if (*          typeof App.toast === 'fu*ction'
-        ) {
-          App.t*ast(
-            'Senha atualizada* Entre com a nova senha.',
-       *    'ok'
-          );
-        }
-  *   } catch (erroSaida) {
-        c*nsole.error(
-          'CarWay: er*o ao finalizar recuperação:',
-    *     erroSaida
+        localStorage.removeItem(
+          'carway_recuperacao_pendente'
         );
+      } catch (e) {}
 
-       *App.mostrarTela('login');
-      } *inally {
-        App._saindo = fal*e;
-      }
-    }, 1200);
+      setTimeout(async function () {
+        try {
+          await sb.auth.signOut();
 
-  } catc* (e) {
-    console.error(
-      'C*rWay: erro ao alterar senha:',
-   *  e
-    );
+          if (
+            typeof App._encerrarSessaoLocal === 'function'
+          ) {
+            await App._encerrarSessaoLocal();
+          }
 
-    definirMensagem(
- *    'Erro: ' +
-        (
-         *e && e.message
-            ? e.mes*age
-            : 'não foi possíve* alterar a senha'
-        ),
-     *'erro'
-    );
+          if (campoSenha) campoSenha.value = '';
+          if (campoConfirmacao) {
+            campoConfirmacao.value = '';
+          }
 
-    definirBotao(
- *    false,
-      'Salvar nova senh*'
-    );
-  }
-},
+          App.mostrarTela('login');
+
+          var campoEmail =
+            document.getElementById('email');
+
+          if (campoEmail && emailAtual) {
+            campoEmail.value = emailAtual;
+          }
+
+          App.toast(
+            'Senha atualizada. Entre com a nova senha.',
+            'ok'
+          );
+        } catch (erroFinalizacao) {
+          console.error(
+            'CarWay: erro ao finalizar recuperação:',
+            erroFinalizacao
+          );
+          App.mostrarTela('login');
+        } finally {
+          App._saindo = false;
+        }
+      }, 1200);
+
+    } catch (erro) {
+      console.error(
+        'CarWay: erro ao alterar senha:',
+        erro
+      );
+
+      definirMensagem(
+        'Erro: ' +
+          (erro && erro.message
+            ? erro.message
+            : 'não foi possível alterar a senha'),
+        'erro'
+      );
+
+      definirBotao(false, 'Salvar nova senha');
+    }
+  },
+
   iniciarCampoTelefone: function () {
     var input = document.getElementById('cadTelefone');
     if (!input || !window.intlTelInput) return;
@@ -339,174 +453,80 @@ salvarNovaSenha: async functi*n (event) {
    OUVINTES DE AUTENTICAÇÃO E RECUPERAÇÃO DE SENHA
    ========================================================= */
 _registrarOuvintesSessao: function () {
-  if (App._ouvintesSessaoRegistrados) return;
+    if (App._ouvintesSessaoRegistrados) return;
 
-  App._ouvintesSessaoRegistrados = true;
+    App._ouvintesSessaoRegistrados = true;
 
-  sb.auth.onAuthStateChange(function (evento, sessao) {
-    console.log(
-      'CarWay Auth:',
-      evento,
-      sessao && sessao.user
-        ? sessao.user.email
-        : 'sem usuário'
-    );
+    sb.auth.onAuthStateChange(function (evento, sessao) {
+      console.log(
+        'CarWay Auth:',
+        evento,
+        sessao && sessao.user
+          ? sessao.user.email
+          : 'sem usuário'
+      );
 
-    /* =====================================================
-       RETORNO DO LINK DE REDEFINIÇÃO DE SENHA
-       ===================================================== */
-    if (evento === 'PASSWORD_RECOVERY') {
-      App._recuperandoSenha = true;
-
-      setTimeout(function () {
-        var campoSenha =
-          document.getElementById('nsSenha');
-
-        var campoConfirmacao =
-          document.getElementById('nsSenha2');
-
-        var mensagem =
-          document.getElementById('msgNovaSenha');
-
-        var botao =
-          document.getElementById('btnNovaSenha');
-
-        if (campoSenha) {
-          campoSenha.value = '';
-          campoSenha.type = 'password';
-        }
-
-        if (campoConfirmacao) {
-          campoConfirmacao.value = '';
-          campoConfirmacao.type = 'password';
-        }
-
-        if (mensagem) {
-          mensagem.textContent =
-            'Digite e confirme sua nova senha.';
-
-          mensagem.className = 'mensagem';
-        }
-
-        if (botao) {
-          botao.disabled = false;
-
-          var textoBotao =
-            botao.querySelector('span');
-
-          if (textoBotao) {
-            textoBotao.textContent =
-              'Salvar nova senha';
+      if (evento === 'PASSWORD_RECOVERY') {
+        setTimeout(function () {
+          try {
+            App._abrirTelaNovaSenha(sessao);
+          } catch (erro) {
+            console.error(
+              'CarWay: recuperação sem sessão:',
+              erro
+            );
+            App.mostrarTela('login');
+            App.mostrarErroLogin(
+              'O link de redefinição é inválido ou expirou. Solicite um novo link.'
+            );
           }
-        }
+        }, 0);
+        return;
+      }
 
-        /*
-         * O HTML atual do CarWay usa a tela "novaSenha".
-         */
+      if (evento === 'SIGNED_IN' && sessao) {
+        if (App._recuperandoSenha) return;
+
         if (
-          typeof App.mostrarTela === 'function'
+          usuarioAtual &&
+          usuarioAtual.auth_id === sessao.user.id
         ) {
-          App.mostrarTela('novaSenha');
-        } else {
-          console.error(
-            'CarWay: função para abrir a tela de nova senha não encontrada.'
-          );
-
+          if (App._modoOffline && navigator.onLine) {
+            App.revalidarSessao();
+          }
           return;
         }
 
-        setTimeout(function () {
-          if (campoSenha) {
-            campoSenha.focus();
-          }
-        }, 100);
-      }, 0);
-
-      /*
-       * Não carrega o perfil nem entra no painel enquanto
-       * a nova senha não tiver sido gravada.
-       */
-      return;
-    }
-
-    /* =====================================================
-       LOGIN NORMAL
-       ===================================================== */
-    if (evento === 'SIGNED_IN' && sessao) {
-      /*
-       * O Supabase pode emitir SIGNED_IN logo após montar
-       * a sessão temporária do link de recuperação.
-       */
-      if (App._recuperandoSenha) {
+        App.carregarPerfil(sessao.user);
         return;
       }
 
-      /*
-       * Mesmo usuário já dentro do aplicativo:
-       * não recarrega toda a interface.
-       */
-      if (
-        usuarioAtual &&
-        usuarioAtual.auth_id === sessao.user.id
-      ) {
-        if (
-          App._modoOffline &&
-          navigator.onLine
-        ) {
-          App.revalidarSessao();
-        }
-
+      if (evento === 'USER_UPDATED') {
+        console.log(
+          'CarWay: usuário atualizado no Supabase.'
+        );
         return;
       }
 
-      App.carregarPerfil(sessao.user);
-      return;
-    }
+      if (evento === 'SIGNED_OUT') {
+        if (App._saindo) return;
 
-    /* =====================================================
-       USUÁRIO ATUALIZADO
-       ===================================================== */
-    if (evento === 'USER_UPDATED') {
-      console.log(
-        'CarWay: usuário atualizado no Supabase.'
-      );
+        App._recuperandoSenha = false;
+        App._sessaoRecuperacao = null;
 
-      return;
-    }
-
-    /* =====================================================
-       LOGOUT
-       ===================================================== */
-    if (evento === 'SIGNED_OUT') {
-      /*
-       * Quando salvarNovaSenha executa o logout, a própria
-       * função controla a limpeza e a ida para o login.
-       */
-      if (App._saindo) return;
-
-      App._recuperandoSenha = false;
-
-      App._encerrarSessaoLocal()
-        .then(function () {
+        App._encerrarSessaoLocal().then(function () {
           App.mostrarTela('login');
         });
-
-      return;
-    }
-  });
-
-  /* =====================================================
-     CONEXÃO RESTABELECIDA
-     ===================================================== */
-  window.addEventListener(
-    'carway:online-revalidar',
-    function () {
-      if (App._modoOffline) {
-        App.revalidarSessao();
       }
-    }
-  );
-},
+    });
+
+    window.addEventListener(
+      'carway:online-revalidar',
+      function () {
+        if (App._modoOffline) App.revalidarSessao();
+      }
+    );
+  },
   _ehErroRede: function (e) {
     if (!navigator.onLine) return true;
     if (typeof Offline !== 'undefined' && Offline._ehErroDeRede) return Offline._ehErroDeRede(e);
@@ -1791,34 +1811,85 @@ salvarNavegacaoPreferida: function (valor) {
     App.mostrarTela('login');
   },
     esqueciSenha: function () {
-    var emailAtual = document.getElementById('email').value.trim();
+    var emailAtual =
+      document.getElementById('email').value.trim();
+
     var html =
       '<div class="campo-form">' +
         '<label>E-mail da conta</label>' +
-        '<input type="email" id="recoverEmail" placeholder="seu@email.com" value="' + App.esc(emailAtual) + '">' +
-        '<small style="display:block;margin-top:8px;font-size:12px;color:var(--txt2);line-height:1.5">' +
+        '<input type="email" id="recoverEmail" ' +
+          'placeholder="seu@email.com" value="' +
+          App.esc(emailAtual) + '">' +
+        '<small style="display:block;margin-top:8px;' +
+          'font-size:12px;color:var(--txt2);line-height:1.5">' +
           'Enviaremos um link para você criar uma senha nova. ' +
           'Confira também a caixa de spam.' +
         '</small>' +
       '</div>';
-    App.abrirModal('Recuperar senha', html, function () {
-      var email = document.getElementById('recoverEmail').value.trim().toLowerCase();
-      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
-        App.toast('E-mail inválido', 'erro');
-        return;
-      }
-      App.fecharModal();
-      App.toast('Enviando...', 'ok');
-      sb.auth.resetPasswordForEmail(email).then(function (r) {
-        if (r.error) {
-          App.toast('Erro: ' + r.error.message, 'erro');
+
+    App.abrirModal(
+      'Recuperar senha',
+      html,
+      function () {
+        var email =
+          document.getElementById('recoverEmail')
+            .value.trim().toLowerCase();
+
+        if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+          App.toast('E-mail inválido', 'erro');
           return;
         }
-        App.toast('Link enviado! Confira seu e-mail.', 'ok');
-      }).catch(function (e) {
-        App.toast('Erro: ' + (e.message || ''), 'erro');
-      });
-    }, 'Enviar link');
+
+        App.fecharModal();
+        App.toast('Enviando...', 'ok');
+
+        try {
+          localStorage.setItem(
+            'carway_recuperacao_pendente',
+            '1'
+          );
+        } catch (e) {}
+
+        sb.auth.resetPasswordForEmail(
+          email,
+          {
+            redirectTo:
+              'https://carway.sistemalan.online/'
+          }
+        ).then(function (r) {
+          if (r.error) {
+            try {
+              localStorage.removeItem(
+                'carway_recuperacao_pendente'
+              );
+            } catch (e) {}
+
+            App.toast(
+              'Erro: ' + r.error.message,
+              'erro'
+            );
+            return;
+          }
+
+          App.toast(
+            'Link enviado! Confira seu e-mail.',
+            'ok'
+          );
+        }).catch(function (e) {
+          try {
+            localStorage.removeItem(
+              'carway_recuperacao_pendente'
+            );
+          } catch (erroLocal) {}
+
+          App.toast(
+            'Erro: ' + (e.message || ''),
+            'erro'
+          );
+        });
+      },
+      'Enviar link'
+    );
   },
   fazerLogin: function (event) {
     event.preventDefault();
@@ -2286,4 +2357,6 @@ _renderConteudoBarraVeiculoGlobal: function () {
   }
 };
 document.addEventListener('DOMContentLoaded', App.init);
+
+
 
