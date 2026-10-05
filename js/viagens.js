@@ -1,4 +1,4 @@
-/* APP_VERSION: v10.16 - selecao de endereco estavel em toque e mouse */
+/* APP_VERSION: v10.17 - edicao compativel com colunas reais da tabela viagens */
 /* =====================================================================
    CARWAY v16 - VIAGENS
    Planejador completo com Google Routes + Geocoding + Places
@@ -1507,19 +1507,37 @@ nomeApp: function (app) {
     var outros = document.getElementById('plOutros') ? Number(document.getElementById('plOutros').value) || 0 : (v.outrosPrev || 0);
     var pedagio = Number(v.pedagioPrev) || 0;
 
+    var tituloCampo = document.getElementById('plNomeViagem');
+    var tituloAtualizado = tituloCampo ? tituloCampo.value.trim() : '';
+    var energeticoAtual = Viagens.plano.energeticoSelecionado || 'Gasolina';
+    var infoEnergeticoAtual = Viagens._infoEnergetico(energeticoAtual);
+    var rotaAtualizada = v.rota || '';
+    if (rotaAtualizada) {
+      try {
+        var rotaObj = JSON.parse(rotaAtualizada);
+        rotaObj.energetico = energeticoAtual;
+        rotaObj.unidadeQuantidade = infoEnergeticoAtual.unidade;
+        rotaObj.consumo = kmL;
+        rotaObj.capacidade = Number(document.getElementById('plTanque').value) || rotaObj.capacidade || 0;
+        rotaObj.quantidadeEnergiaPrevista = kmL > 0 && distancia > 0 ? Math.round((distancia / kmL) * 100) / 100 : (rotaObj.quantidadeEnergiaPrevista || 0);
+        rotaObj.custoCombustivel = novoCombPrev;
+        rotaObj.custoPedagio = pedagio;
+        rotaObj.custoTotalPrevisto = Math.round((novoCombPrev + pedagio + alim + hosp + outros) * 100) / 100;
+        rotaAtualizada = JSON.stringify(rotaObj);
+      } catch (e) {
+        console.warn('CarWay - não foi possível atualizar os parâmetros internos da rota:', e);
+      }
+    }
     var reg = {
       veiculoId: document.getElementById('plVeiculo').value,
-      titulo: document.getElementById('plNomeViagem').value.trim() || v.titulo,
-      kmL: kmL,
-      precoLitro: preco,
-      energetico: Viagens.plano.energeticoSelecionado || 'Gasolina',
-      unidadeQuantidade: Viagens._infoEnergetico(Viagens.plano.energeticoSelecionado).unidade,
+      titulo: tituloAtualizado || v.titulo,
       combustivelPrev: novoCombPrev,
       alimentacaoPrev: alim,
       hospedagemPrev: hosp,
       outrosPrev: outros,
       totalPrev: Math.round((novoCombPrev + pedagio + alim + hosp + outros) * 100) / 100
     };
+    if (rotaAtualizada) reg.rota = rotaAtualizada;
     var dataInicioEl = document.getElementById('plDataInicio');
     var dataFimEl = document.getElementById('plDataFim');
     var kmInicialEl = document.getElementById('plKmInicialEdicao');
@@ -1529,14 +1547,23 @@ nomeApp: function (app) {
 
     var btn = document.getElementById('btnSalvarEdicao');
     if (btn) { btn.disabled = true; btn.textContent = 'Salvando...'; }
-    sb.from('viagens').update(reg).eq('id', viagemId).then(function (r) {
+    sb.from('viagens').update(reg).eq('id', viagemId).select('*').single().then(function (r) {
       if (r.error) {
+        console.error('CarWay - erro ao editar viagem:', r.error, reg);
         if (btn) { btn.disabled = false; btn.innerHTML = '<span class="ms">check</span> Salvar alterações'; }
-        App.toast('Erro: ' + r.error.message, 'erro');
+        App.toast('Erro ao salvar viagem: ' + r.error.message, 'erro');
         return;
       }
+      Viagens.editando = r.data || Object.assign({}, v, reg);
+      var pos = Viagens.lista.findIndex(function (item) { return item.id === viagemId; });
+      if (pos >= 0) Viagens.lista[pos] = Viagens.editando;
+      if (App._painelRaw) App._painelRaw = null;
       App.toast('Alterações salvas! (sem custo de nova busca)', 'ok');
       App.irParaDetalheViagem(viagemId);
+    }).catch(function (e) {
+      console.error('CarWay - falha ao editar viagem:', e, reg);
+      if (btn) { btn.disabled = false; btn.innerHTML = '<span class="ms">check</span> Salvar alterações'; }
+      App.toast('Não foi possível salvar a viagem', 'erro');
     });
   },
 
@@ -4320,3 +4347,5 @@ _urlMapsComParadas: function (origem, destino) {
     return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : s;
   }
 };
+
+
