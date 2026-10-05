@@ -171,18 +171,14 @@ var Offline = {
     );
   },
 
-  /* Agenda caches de leitura fora da primeira pintura da tela. */
   salvarColecaoEmSegundoPlano: function (nome, valor) {
     var executar = function () {
       Offline.salvarColecao(nome, valor).catch(function (erro) {
         console.warn('CarWay Offline - cache não gravado:', nome, erro);
       });
     };
-    if (typeof requestIdleCallback === 'function') {
-      requestIdleCallback(executar, { timeout: 1500 });
-    } else {
-      setTimeout(executar, 50);
-    }
+    if (typeof requestIdleCallback === 'function') requestIdleCallback(executar, { timeout: 1500 });
+    else setTimeout(executar, 50);
   },
   obterColecao: function (nome, padrao) {
     var chaveNova = Offline.chaveContexto(nome);
@@ -912,9 +908,6 @@ var Offline = {
 
   _clonar: function (valor) {
     if (valor === undefined) return undefined;
-    if (typeof structuredClone === 'function') {
-      try { return structuredClone(valor); } catch (e) {}
-    }
     return JSON.parse(JSON.stringify(valor));
   },
 
