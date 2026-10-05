@@ -34,7 +34,8 @@ const APP_SHELL = [
   './js/equipe.js?v=1.1',
   './js/conta.js?v=1.1',
   './js/paineladmin.js?v=3.0',
-  './js/viagens.js?v=10.13'
+  './js/viagens.js?v=10.13',
+   '/pwa-install.js?v=1.1'
 ];
 /* Arquivos que podem ser acrescentados nas próximas etapas. */
 const OPTIONAL_SHELL = [];
