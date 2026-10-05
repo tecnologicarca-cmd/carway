@@ -1,16 +1,23 @@
 /* =====================================================================
    CARWAY - SERVICE WORKER
    Shell offline da versão Supabase / Play Store
-   Release 18.2.2 - Lote 03 (abastecimentos, manutenções e documentos offline)
+   Release 18.2.6 - PWA, abastecimentos, manutenções e documentos offline
    ===================================================================== */
+
 'use strict';
-const CACHE_VERSION = 'carway-shell-18.2.5';
+
+const CACHE_VERSION = 'carway-shell-18.2.6';
 const OFFLINE_PAGE = './index.html';
+
 /*
  * Recursos locais essenciais.
+ *
  * O carregamento é tolerante: se um arquivo ainda não existir,
- * a instalação do Service Worker não é cancelada.
- * As URLs precisam ser IDÊNTICAS às do index.html (incluindo ?v=).
+ * a instalação do Service Worker não será cancelada.
+ *
+ * IMPORTANTE:
+ * As URLs abaixo precisam ser idênticas às carregadas pelo index.html,
+ * inclusive os parâmetros de versão "?v=".
  */
 const APP_SHELL = [
   './',
@@ -35,15 +42,31 @@ const APP_SHELL = [
   './js/conta.js?v=1.1',
   './js/paineladmin.js?v=3.0',
   './js/viagens.js?v=10.13',
-   '/pwa-install.js?v=1.1'
+  './pwa-install.js?v=1.1'
 ];
-/* Arquivos que podem ser acrescentados nas próximas etapas. */
+
+/*
+ * Arquivos opcionais podem ser acrescentados aqui em etapas futuras.
+ * Uma falha nesses arquivos não impedirá a instalação do Service Worker.
+ */
 const OPTIONAL_SHELL = [];
+
+/**
+ * Verifica se a URL pertence ao mesmo domínio do CarWay.
+ */
 function isSameOrigin(url) {
   return url.origin === self.location.origin;
 }
+
+/**
+ * Identifica recursos estáticos locais que podem ser armazenados
+ * com segurança no Cache Storage.
+ */
 function isStaticAsset(request, url) {
-  if (!isSameOrigin(url)) return false;
+  if (!isSameOrigin(url)) {
+    return false;
+  }
+
   return (
     request.destination === 'style' ||
     request.destination === 'script' ||
@@ -52,33 +75,70 @@ function isStaticAsset(request, url) {
     /\.(?:css|js|woff2?|ttf|png|jpg|jpeg|webp|svg|ico)$/i.test(url.pathname)
   );
 }
+
+/**
+ * Armazena uma resposta válida no cache.
+ */
 async function putIfValid(cache, request, response) {
-  if (!response || !response.ok) return response;
+  if (!response || !response.ok) {
+    return response;
+  }
+
   try {
     await cache.put(request, response.clone());
   } catch (error) {
-    console.warn('CarWay SW: não foi possível atualizar o cache:', error);
+    console.warn(
+      'CarWay SW: não foi possível atualizar o cache:',
+      request,
+      error
+    );
   }
+
   return response;
 }
+
+/**
+ * Carrega o shell do aplicativo de forma tolerante.
+ *
+ * Se um recurso estiver temporariamente indisponível, os demais
+ * continuarão sendo armazenados normalmente.
+ */
 async function cacheShellTolerante() {
   const cache = await caches.open(CACHE_VERSION);
   const recursos = APP_SHELL.concat(OPTIONAL_SHELL);
+
   await Promise.allSettled(
     recursos.map(async function (recurso) {
       try {
-        const request = new Request(recurso, { cache: 'reload' });
+        const request = new Request(recurso, {
+          cache: 'reload'
+        });
+
         const response = await fetch(request);
+
         if (!response.ok) {
-          throw new Error('HTTP ' + response.status + ' em ' + recurso);
+          throw new Error(
+            'HTTP ' + response.status + ' ao carregar ' + recurso
+          );
         }
+
         await cache.put(request, response);
       } catch (error) {
-        console.warn('CarWay SW: recurso não armazenado:', recurso, error.message);
+        console.warn(
+          'CarWay SW: recurso não armazenado:',
+          recurso,
+          error.message
+        );
       }
     })
   );
 }
+
+/**
+ * Instalação do Service Worker.
+ *
+ * Armazena os recursos locais e ativa imediatamente a nova versão.
+ */
 self.addEventListener('install', function (event) {
   event.waitUntil(
     cacheShellTolerante().then(function () {
@@ -86,15 +146,27 @@ self.addEventListener('install', function (event) {
     })
   );
 });
+
+/**
+ * Ativação do Service Worker.
+ *
+ * Remove versões antigas do shell e assume imediatamente
+ * o controle das páginas abertas.
+ */
 self.addEventListener('activate', function (event) {
   event.waitUntil(
-    caches.keys()
+    caches
+      .keys()
       .then(function (nomes) {
         return Promise.all(
           nomes.map(function (nome) {
-            if (nome.startsWith('carway-shell-') && nome !== CACHE_VERSION) {
+            if (
+              nome.startsWith('carway-shell-') &&
+              nome !== CACHE_VERSION
+            ) {
               return caches.delete(nome);
             }
+
             return Promise.resolve(false);
           })
         );
@@ -104,21 +176,43 @@ self.addEventListener('activate', function (event) {
       })
   );
 });
+
+/**
+ * Estratégias de carregamento.
+ */
 self.addEventListener('fetch', function (event) {
   const request = event.request;
-  /* Nunca interceptar gravações, autenticação ou chamadas de API. */
-  if (request.method !== 'GET') return;
-  const url = new URL(request.url);
+
   /*
-   * Navegação: tenta a rede primeiro para receber a versão mais nova.
-   * Sem conexão: abre o index.html armazenado.
+   * Nunca intercepta gravações, autenticação ou chamadas que não sejam GET.
+   */
+  if (request.method !== 'GET') {
+    return;
+  }
+
+  const url = new URL(request.url);
+
+  /*
+   * NAVEGAÇÃO
+   *
+   * Estratégia: Network First.
+   *
+   * 1. Tenta carregar a versão mais recente pela rede.
+   * 2. Atualiza o index.html armazenado.
+   * 3. Sem conexão, abre a versão offline.
    */
   if (request.mode === 'navigate') {
     event.respondWith(
       fetch(request)
         .then(async function (response) {
           const cache = await caches.open(CACHE_VERSION);
-          await putIfValid(cache, OFFLINE_PAGE, response);
+
+          await putIfValid(
+            cache,
+            OFFLINE_PAGE,
+            response
+          );
+
           return response;
         })
         .catch(async function () {
@@ -129,11 +223,18 @@ self.addEventListener('fetch', function (event) {
           );
         })
     );
+
     return;
   }
+
   /*
-   * Recursos estáticos locais: usa cache imediatamente e atualiza ao fundo.
-   * Se ainda não estiver no cache, busca na rede e armazena.
+   * RECURSOS ESTÁTICOS LOCAIS
+   *
+   * Estratégia: Stale While Revalidate.
+   *
+   * 1. Entrega imediatamente o arquivo armazenado.
+   * 2. Consulta a rede em segundo plano.
+   * 3. Atualiza o cache para o próximo carregamento.
    */
   if (isStaticAsset(request, url)) {
     event.respondWith(
@@ -141,42 +242,76 @@ self.addEventListener('fetch', function (event) {
         const networkResponse = fetch(request)
           .then(async function (response) {
             const cache = await caches.open(CACHE_VERSION);
-            return putIfValid(cache, request, response);
+
+            return putIfValid(
+              cache,
+              request,
+              response
+            );
           })
           .catch(function () {
             return cachedResponse;
           });
+
         return cachedResponse || networkResponse;
       })
     );
+
     return;
   }
+
   /*
-   * Supabase, mapas, FIPE e demais serviços externos continuam na rede.
-   * Dados privados não são armazenados indiscriminadamente no Cache Storage.
+   * Supabase, mapas, FIPE e demais serviços externos permanecem na rede.
+   *
+   * Dados privados não são armazenados indiscriminadamente no
+   * Cache Storage.
    */
 });
-/*
- * Background Sync é complemento, não dependência.
- * O processamento real da fila fica no js/offline.js, com a sessão Supabase.
+
+/**
+ * Background Sync.
+ *
+ * É apenas um complemento. O processamento da fila permanece no
+ * js/offline.js, porque ele possui acesso à sessão autenticada do Supabase.
  */
 self.addEventListener('sync', function (event) {
-  if (event.tag !== 'carway-sync-pendentes') return;
+  if (event.tag !== 'carway-sync-pendentes') {
+    return;
+  }
+
   event.waitUntil(
-    self.clients.matchAll({ type: 'window', includeUncontrolled: true })
+    self.clients
+      .matchAll({
+        type: 'window',
+        includeUncontrolled: true
+      })
       .then(function (clientes) {
         clientes.forEach(function (cliente) {
-          cliente.postMessage({ tipo: 'CARWAY_SINCRONIZAR_PENDENTES' });
+          cliente.postMessage({
+            tipo: 'CARWAY_SINCRONIZAR_PENDENTES'
+          });
         });
       })
   );
 });
+
+/**
+ * Mensagens enviadas pelas páginas do CarWay ao Service Worker.
+ */
 self.addEventListener('message', function (event) {
   const mensagem = event.data || {};
+
+  /*
+   * Solicita ativação imediata de uma versão nova.
+   */
   if (mensagem.tipo === 'CARWAY_SKIP_WAITING') {
     self.skipWaiting();
     return;
   }
+
+  /*
+   * Limpa todos os caches do shell do CarWay.
+   */
   if (mensagem.tipo === 'CARWAY_LIMPAR_CACHE') {
     event.waitUntil(
       caches.keys().then(function (nomes) {
