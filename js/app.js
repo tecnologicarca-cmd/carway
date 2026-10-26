@@ -2152,6 +2152,8 @@ salvarNavegacaoPreferida: function (valor) {
     if (onConfirmar) {
       rodape.style.display = 'flex';
       var btn = document.getElementById('btnModalSalvar');
+      btn.disabled = false;
+      btn.removeAttribute('aria-busy');
       btn.textContent = textoBotao || 'Confirmar';
       btn.onclick = onConfirmar;
     } else rodape.style.display = 'none';
