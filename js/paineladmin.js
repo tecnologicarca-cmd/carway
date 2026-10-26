@@ -444,7 +444,7 @@ var PainelAdmin = {
       var precoAtualizado = { id: planoId, nome: nomePlano, precoMensal: mensal, precoAnual: anual, limiteVeiculos: limiteVeiculos, limiteRotasMes: limiteRotas };
       if (indicePreco >= 0) { PainelAdmin.precos[indicePreco] = precoAtualizado; } else { PainelAdmin.precos.push(precoAtualizado); }
       PainelAdmin._render();
-      setTimeout(function () { window.location.reload(); }, 300);
+      PainelAdmin.carregarDados();
     }).catch(function (erro) {
       PainelAdmin._liberarSalvamentoPreco(btnSalvar, textoBotao);
       App.toast('Erro: ' + ((erro && erro.message) || 'Não foi possível salvar as alterações'), 'erro');
@@ -530,7 +530,7 @@ var PainelAdmin = {
         return;
       }
       App.toast(novoStatus === 'APROVADA' ? 'Plano aprovado!' : 'Solicitação recusada', 'ok');
-      setTimeout(function () { window.location.reload(); }, 300);
+      PainelAdmin.carregarDados();
     });
   },
 
@@ -717,7 +717,7 @@ var PainelAdmin = {
       }
       App.fecharModal();
       App.toast('Plano alterado com sucesso!', 'ok');
-      setTimeout(function () { window.location.reload(); }, 300);
+      PainelAdmin.carregarDados();
     });
   },
 
@@ -781,7 +781,7 @@ var PainelAdmin = {
       }
       App.fecharModal();
       App.toast(conceder ? 'Cortesia concedida!' : 'Cortesia removida', 'ok');
-      setTimeout(function () { window.location.reload(); }, 300);
+      PainelAdmin.carregarDados();
     });
   },
 
