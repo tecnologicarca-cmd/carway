@@ -34,7 +34,7 @@ const APP_SHELL = [
   './icones/carway-512.png',
   './js/carway-startup.js?v=1.0',
   './js/config.js?v=2',
-  './js/app.js?v=25.2',
+  './js/app.js?v=25.3',
   './js/offline.js?v=1.4',
   './js/veiculos.js?v=2.9',
   './js/abastecimentos.js?v=3.9',
@@ -43,7 +43,7 @@ const APP_SHELL = [
   './js/documentos.js?v=1.1',
   './js/equipe.js?v=1.1',
   './js/conta.js?v=1.1',
-  './js/paineladmin.js?v=3.2',
+  './js/paineladmin.js?v=3.3',
   './js/viagens.js?v=10.22',
   './js/viagens_mapsme_paradas.js?v=1.0',
   './pwa-install.js?v=1.1'
