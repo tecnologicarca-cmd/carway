@@ -440,6 +440,10 @@ var PainelAdmin = {
       PainelAdmin._salvandoPreco = false;
       App.fecharModal();
       App.toast('Preço e limites atualizados!', 'ok');
+      var indicePreco = PainelAdmin.precos.findIndex(function (p) { return String(p.id) === String(planoId); });
+      var precoAtualizado = { id: planoId, nome: nomePlano, precoMensal: mensal, precoAnual: anual, limiteVeiculos: limiteVeiculos, limiteRotasMes: limiteRotas };
+      if (indicePreco >= 0) { PainelAdmin.precos[indicePreco] = precoAtualizado; } else { PainelAdmin.precos.push(precoAtualizado); }
+      PainelAdmin._render();
       PainelAdmin.carregarDados();
     }).catch(function (erro) {
       PainelAdmin._liberarSalvamentoPreco(btnSalvar, textoBotao);
@@ -979,3 +983,4 @@ var PainelAdmin = {
     PainelAdmin.copiarLinkConvite();
   }
 };
+
