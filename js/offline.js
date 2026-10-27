@@ -1,4 +1,4 @@
-/* APP_VERSION: v1.4 - cache leve e gravacao ociosa para iPhone */
+/* APP_VERSION: v1.5 - cache leve e gravacao ociosa para iPhone */
 'use strict';
 var Offline = {
   DB_NOME: 'carway_offline_v1',
@@ -677,7 +677,7 @@ var Offline = {
   registrarServiceWorker: function () {
     if (!('serviceWorker' in navigator)) return Promise.resolve(null);
 
-    return navigator.serviceWorker.register('./sw.js', { scope: './' })
+    return navigator.serviceWorker.register('./sw.js?v=18.2.10', { scope: './', updateViaCache: 'none' })
       .then(function (registro) {
         console.log('CarWay Offline: Service Worker registrado.');
 
