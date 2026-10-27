@@ -628,6 +628,14 @@ _registrarOuvintesSessao: function () {
     tentativa = tentativa || 1;
     opcoes = opcoes || {};
     var revalidacao = !!opcoes.revalidacao;
+
+    /* Se o navegador ja esta offline, nao tenta reabrir o perfil pelo
+       Supabase. Restaura diretamente o ultimo contexto validado. */
+    if (!navigator.onLine && !revalidacao) {
+      App.entrarOffline(user);
+      return Promise.resolve();
+    }
+
     var MAX = 5;
     var usuarioAnteriorId = usuarioAtual ? usuarioAtual.id : null;
     var usuarioLido = null;
