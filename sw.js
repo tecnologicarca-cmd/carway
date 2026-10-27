@@ -6,7 +6,7 @@
 
 'use strict';
 
-const CACHE_VERSION = 'carway-shell-18.3.1';
+const CACHE_VERSION = 'carway-shell-18.3.2';
 const OFFLINE_PAGE = './index.html';
 
 /*
@@ -23,32 +23,32 @@ const APP_SHELL = [
   './',
   './index.html',
   './manifest.json?v=18.2.0',
-  './css/estilo.css?v=18.3.1',
-  './js/paineladmin_status_org.js?v=18.3.1',
-  './js/paineladmin_status_org_cores.js?v=18.3.1',
-  './css/paineladmin_status_org_red.css?v=18.3.1',
+  './css/estilo.css?v=18.3.2',
+  './js/paineladmin_status_org.js?v=18.3.2',
+  './js/paineladmin_status_org_cores.js?v=18.3.2',
+  './css/paineladmin_status_org_red.css?v=18.3.2',
   './fonts/material-symbols-rounded.woff2',
   './icones/carway-32.png',
   './icones/carway-180.png',
   './icones/carway-192.png',
   './icones/carway-512.png',
-  './js/carway-startup.js?v=18.3.1',
-  './js/config.js?v=18.3.1',
-  './js/vendor/supabase-2.45.0.min.js?v=18.3.1',
-  './js/app.js?v=18.3.1',
-  './js/offline.js?v=18.3.1',
-  './js/veiculos.js?v=18.3.1',
-  './js/abastecimentos.js?v=18.3.1',
-  './js/manutencoes.js?v=18.3.1',
-  './js/despesas.js?v=18.3.1',
-  './js/documentos.js?v=18.3.1',
-  './js/equipe.js?v=18.3.1',
-  './js/conta.js?v=18.3.1',
-  './js/paineladmin.js?v=18.3.1',
-  './js/viagens.js?v=18.3.1',
-  './js/viagens_mapsme_paradas.js?v=18.3.1',
-  './js/carway-correcao-abastecimento-senha-18.2.4.js?v=18.3.1',
-  './pwa-install.js?v=18.3.1'
+  './js/carway-startup.js?v=18.3.2',
+  './js/config.js?v=18.3.2',
+  './js/vendor/supabase-2.45.0.min.js?v=18.3.2',
+  './js/app.js?v=18.3.2',
+  './js/offline.js?v=18.3.2',
+  './js/veiculos.js?v=18.3.2',
+  './js/abastecimentos.js?v=18.3.2',
+  './js/manutencoes.js?v=18.3.2',
+  './js/despesas.js?v=18.3.2',
+  './js/documentos.js?v=18.3.2',
+  './js/equipe.js?v=18.3.2',
+  './js/conta.js?v=18.3.2',
+  './js/paineladmin.js?v=18.3.2',
+  './js/viagens.js?v=18.3.2',
+  './js/viagens_mapsme_paradas.js?v=18.3.2',
+  './js/carway-correcao-abastecimento-senha-18.2.4.js?v=18.3.2',
+  './pwa-install.js?v=18.3.2'
 ];
 
 /*
