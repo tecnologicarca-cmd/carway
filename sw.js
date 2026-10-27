@@ -6,7 +6,7 @@
 
 'use strict';
 
-const CACHE_VERSION = 'carway-shell-18.3.7';
+const CACHE_VERSION = 'carway-shell-18.3.8';
 const OFFLINE_PAGE = './index.html';
 
 /*
@@ -23,45 +23,45 @@ const APP_SHELL = [
   './',
   './index.html',
   './manifest.json?v=18.2.0',
-  './css/estilo.css?v=18.3.7',
-  './js/paineladmin_status_org.js?v=18.3.7',
-  './js/paineladmin_status_org_cores.js?v=18.3.7',
-  './css/paineladmin_status_org_red.css?v=18.3.7',
+  './css/estilo.css?v=18.3.8',
+  './js/paineladmin_status_org.js?v=18.3.8',
+  './js/paineladmin_status_org_cores.js?v=18.3.8',
+  './css/paineladmin_status_org_red.css?v=18.3.8',
   './fonts/material-symbols-rounded.woff2',
   './icones/carway-32.png',
   './icones/carway-180.png',
   './icones/carway-192.png',
   './icones/carway-512.png',
-  './js/carway-startup.js?v=18.3.7',
-  './js/config.js?v=18.3.7',
-  './js/vendor/supabase-2.45.0.min.js?v=18.3.7',
-  './js/vendor/intl-tel-input/intlTelInputWithUtils-23.0.4.min.js?v=18.3.7',
-  './js/vendor/leaflet/leaflet-1.9.4.js?v=18.3.7',
-  './css/vendor/leaflet/leaflet-1.9.4.css?v=18.3.7',
+  './js/carway-startup.js?v=18.3.8',
+  './js/config.js?v=18.3.8',
+  './js/vendor/supabase-2.45.0.min.js?v=18.3.8',
+  './js/vendor/intl-tel-input/intlTelInputWithUtils-23.0.4.min.js?v=18.3.8',
+  './js/vendor/leaflet/leaflet-1.9.4.js?v=18.3.8',
+  './css/vendor/leaflet/leaflet-1.9.4.css?v=18.3.8',
   './css/vendor/leaflet/images/layers.png',
   './css/vendor/leaflet/images/layers-2x.png',
   './css/vendor/leaflet/images/marker-icon.png',
   './css/vendor/leaflet/images/marker-icon-2x.png',
   './css/vendor/leaflet/images/marker-shadow.png',
-'./css/vendor/intlTelInput-23.0.4.css?v=18.3.7',
+'./css/vendor/intlTelInput-23.0.4.css?v=18.3.8',
   './css/img/flags.png',
   './css/img/flags@2x.png',
   './css/img/globe.png',
   './css/img/globe@2x.png',
-  './js/app.js?v=18.3.7',
-  './js/offline.js?v=18.3.7',
-  './js/veiculos.js?v=18.3.7',
-  './js/abastecimentos.js?v=18.3.7',
-  './js/manutencoes.js?v=18.3.7',
-  './js/despesas.js?v=18.3.7',
-  './js/documentos.js?v=18.3.7',
-  './js/equipe.js?v=18.3.7',
-  './js/conta.js?v=18.3.7',
-  './js/paineladmin.js?v=18.3.7',
-  './js/viagens.js?v=18.3.7',
-  './js/viagens_mapsme_paradas.js?v=18.3.7',
-  './js/carway-correcao-abastecimento-senha-18.2.4.js?v=18.3.7',
-  './pwa-install.js?v=18.3.7'
+  './js/app.js?v=18.3.8',
+  './js/offline.js?v=18.3.8',
+  './js/veiculos.js?v=18.3.8',
+  './js/abastecimentos.js?v=18.3.8',
+  './js/manutencoes.js?v=18.3.8',
+  './js/despesas.js?v=18.3.8',
+  './js/documentos.js?v=18.3.8',
+  './js/equipe.js?v=18.3.8',
+  './js/conta.js?v=18.3.8',
+  './js/paineladmin.js?v=18.3.8',
+  './js/viagens.js?v=18.3.8',
+  './js/viagens_mapsme_paradas.js?v=18.3.8',
+  './js/carway-correcao-abastecimento-senha-18.2.4.js?v=18.3.8',
+  './pwa-install.js?v=18.3.8'
 ];
 
 /*
@@ -274,6 +274,70 @@ self.addEventListener('fetch', function (event) {
 
         return cachedResponse || networkResponse;
       })
+    );
+
+    return;
+  }
+
+
+  /*
+   * TILES OPENSTREETMAP
+   *
+   * Cache passivo: armazena apenas tiles solicitados durante
+   * a navegação normal do usuario. Nao faz prefetch nem download
+   * de regioes.
+   *
+   * Online: rede primeiro e atualiza cache.
+   * Offline: usa somente tile anteriormente visualizado.
+   */
+  if (
+    request.method === 'GET' &&
+    url.hostname === 'tile.openstreetmap.org' &&
+    /\/\d+\/\d+\/\d+\.png$/.test(url.pathname)
+  ) {
+    event.respondWith(
+      (async function () {
+        const TILE_CACHE = 'carway-map-tiles-v1';
+        const cache = await caches.open(TILE_CACHE);
+
+        try {
+          const response = await fetch(request);
+
+          if (response && response.ok) {
+            try {
+              await cache.put(request, response.clone());
+
+              /* Limite local de seguranca: somente tiles efetivamente vistos. */
+              const chaves = await cache.keys();
+              const LIMITE_TILES = 500;
+
+              if (chaves.length > LIMITE_TILES) {
+                const excesso = chaves.length - LIMITE_TILES;
+
+                for (let i = 0; i < excesso; i++) {
+                  await cache.delete(chaves[i]);
+                }
+              }
+            } catch (erroCache) {
+              console.warn(
+                'CarWay SW: tile nao armazenado:',
+                erroCache
+              );
+            }
+          }
+
+          return response;
+
+        } catch (erroRede) {
+          const salvo = await cache.match(request);
+
+          if (salvo) {
+            return salvo;
+          }
+
+          throw erroRede;
+        }
+      })()
     );
 
     return;
