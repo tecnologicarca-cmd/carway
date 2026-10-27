@@ -421,8 +421,7 @@ var App = {
       initialCountry: 'br',
       preferredCountries: ['br', 'pt', 'us', 'ao', 'mz'],
       separateDialCode: true,
-      utilsScript: 'js/vendor/intl-tel-input/intlTelInput-utils-23.0.4.js?v=18.3.3',
-      autoPlaceholder: 'aggressive',
+autoPlaceholder: 'aggressive',
       formatOnDisplay: true,
       nationalMode: false
     });
