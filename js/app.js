@@ -918,20 +918,90 @@ _registrarOuvintesSessao: function () {
    * cada clique.
    */
   carregarDadosPainel: function () {
-    if (App._painelRaw) return Promise.resolve(App._painelRaw);
+    if (App._painelRaw) {
+      return Promise.resolve(App._painelRaw);
+    }
+
+    var vazio = {
+      abastecimentos: [],
+      despesas: [],
+      manutencoes: [],
+      viagens: []
+    };
+
+    function usarCachePainel() {
+      if (
+        typeof Offline === 'undefined' ||
+        typeof Offline.obterColecao !== 'function'
+      ) {
+        App._painelRaw = vazio;
+        return Promise.resolve(App._painelRaw);
+      }
+
+      return Offline.obterColecao('painel_raw', null)
+        .then(function (cache) {
+          App._painelRaw = cache || vazio;
+          return App._painelRaw;
+        });
+    }
+
+    if (!navigator.onLine) {
+      return usarCachePainel();
+    }
+
     return Promise.all([
-      sb.from('abastecimentos').select('valorTotal, data').eq('organizacaoId', orgAtual.id),
-      sb.from('despesas').select('valor, data').eq('organizacaoId', orgAtual.id),
-      sb.from('manutencoes').select('custo, data').eq('organizacaoId', orgAtual.id),
-      sb.from('viagens').select('id, dataInicio').eq('organizacaoId', orgAtual.id)
+      sb.from('abastecimentos')
+        .select('valorTotal, data')
+        .eq('organizacaoId', orgAtual.id),
+
+      sb.from('despesas')
+        .select('valor, data')
+        .eq('organizacaoId', orgAtual.id),
+
+      sb.from('manutencoes')
+        .select('custo, data')
+        .eq('organizacaoId', orgAtual.id),
+
+      sb.from('viagens')
+        .select('id, dataInicio')
+        .eq('organizacaoId', orgAtual.id)
     ]).then(function (r) {
+      var erro = r.find(function (item) {
+        return item && item.error;
+      });
+
+      if (erro) {
+        if (App._ehErroRede(erro.error)) {
+          return usarCachePainel();
+        }
+
+        throw erro.error;
+      }
+
       App._painelRaw = {
         abastecimentos: r[0].data || [],
         despesas: r[1].data || [],
         manutencoes: r[2].data || [],
         viagens: r[3].data || []
       };
+
+      if (
+        typeof Offline !== 'undefined' &&
+        typeof Offline.salvarColecaoEmSegundoPlano === 'function'
+      ) {
+        Offline.salvarColecaoEmSegundoPlano(
+          'painel_raw',
+          App._painelRaw
+        );
+      }
+
       return App._painelRaw;
+    }).catch(function (erro) {
+      if (App._ehErroRede(erro)) {
+        return usarCachePainel();
+      }
+
+      throw erro;
     });
   },
 
