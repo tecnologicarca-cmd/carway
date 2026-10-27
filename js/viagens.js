@@ -2559,7 +2559,7 @@ html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="b
     if (!el || typeof L === 'undefined') return;
     if (Viagens._mapaFull) { try { Viagens._mapaFull.remove(); } catch (e) {} }
     Viagens._mapaFull = L.map('mapaFullscreenLeaflet', { zoomControl: true }).setView([-15.78, -47.92], 5);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(Viagens._mapaFull);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(Viagens._mapaFull);
     var coords = Viagens._decodificarPolyline(rota.polyline || '');
     if (!coords.length) return;
     var linha = L.polyline(coords, { color: '#3b82f6', weight: 5, opacity: 0.9 }).addTo(Viagens._mapaFull);
@@ -4185,7 +4185,7 @@ if (concluida) {
       if (!el || typeof L === 'undefined') return;
       if (Viagens._mapaDetalhe) { try { Viagens._mapaDetalhe.remove(); } catch (e) {} Viagens._mapaDetalhe = null; }
       Viagens._mapaDetalhe = L.map('mapaDetalheViagem', { zoomControl: true, attributionControl: false }).setView([-15.7939, -47.8828], 6);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(Viagens._mapaDetalhe);
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(Viagens._mapaDetalhe);
       var coords = Viagens._decodificarPolyline(r.polyline || '');
       if (!coords.length) return;
       var linha = L.polyline(coords, { color: '#3b82f6', weight: 5, opacity: 0.9 }).addTo(Viagens._mapaDetalhe);
