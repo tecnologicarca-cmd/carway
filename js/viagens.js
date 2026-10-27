@@ -3189,30 +3189,246 @@ html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="b
      ========================================================= */
   abrirDetalhe: function (id) {
     var el = document.getElementById('detalheViagemContainer');
-    el.innerHTML = '<div class="vazio-veiculo"><span class="ms">hourglass_top</span><p>Carregando...</p></div>';
-    Viagens._paradasGrupoAberto = { IDA: false, VOLTA: false };
-    Promise.all([
-      sb.from('viagens').select('*').eq('id', id).single(),
-      sb.from('abastecimentos').select('*').eq('viagemId', id).order('data'),
-      sb.from('despesas').select('*').eq('viagemId', id).order('data'),
-      sb.from('manutencoes').select('*').eq('viagemId', id).order('data'),
-      sb.from('paradas_viagem').select('*').eq('viagemId', id).order('ordem'),
-      sb.from('veiculos').select('id, nome, placa, tipo, cor, combustivel, energeticos, plugIn, tanque, capacidadeGnv, capacidadeBateria').eq('organizacaoId', orgAtual.id)
-    ]).then(function (r) {
-      if (r[0].error || !r[0].data) { el.innerHTML = '<div class="vazio-veiculo"><p>Viagem não encontrada.</p></div>'; return; }
+
+    el.innerHTML =
+      '<div class="vazio-veiculo">' +
+        '<span class="ms">hourglass_top</span>' +
+        '<p>Carregando...</p>' +
+      '</div>';
+
+    Viagens._paradasGrupoAberto = {
+      IDA: false,
+      VOLTA: false
+    };
+
+    function aplicarDetalhe(dados) {
+      if (!dados || !dados.viagem) {
+        el.innerHTML =
+          '<div class="vazio-veiculo">' +
+            '<p>Viagem não encontrada neste aparelho.</p>' +
+          '</div>';
+        return false;
+      }
+
       Viagens._detalheAtual = {
-        viagem: r[0].data,
-        abastecimentos: r[1].data || [],
-        despesas: r[2].data || [],
-        manutencoes: r[3].data || [],
-        paradas: r[4].data || [],
-        veiculos: r[5].data || []
+        viagem: dados.viagem,
+        abastecimentos: dados.abastecimentos || [],
+        despesas: dados.despesas || [],
+        manutencoes: dados.manutencoes || [],
+        paradas: dados.paradas || [],
+        veiculos: dados.veiculos || []
       };
+
       Viagens._detalheAtual.paradas.forEach(function (p) {
-        p.abastecimentoVinculado = String(p.origemConclusao || '').toUpperCase() === 'VINCULADO';
+        p.abastecimentoVinculado =
+          String(p.origemConclusao || '').toUpperCase() ===
+          'VINCULADO';
       });
+
       Viagens.renderDetalhe();
-    });
+      return true;
+    }
+
+    async function obterDetalheOffline() {
+      var cacheCompleto = await Offline.obterColecao(
+        'viagem-detalhe:' + id,
+        null
+      );
+
+      if (cacheCompleto && cacheCompleto.viagem) {
+        return cacheCompleto;
+      }
+
+      var pagina = await Offline.obterColecao(
+        'viagens-pagina-resumo',
+        null
+      );
+
+      var viagens = await Offline.obterColecao(
+        'viagens',
+        []
+      );
+
+      var veiculos = await Offline.obterColecao(
+        'veiculos',
+        []
+      );
+
+      var abastecimentos = await Offline.obterColecao(
+        'abastecimentos',
+        []
+      );
+
+      var despesas = await Offline.obterColecao(
+        'despesas',
+        []
+      );
+
+      var manutencoes = await Offline.obterColecao(
+        'manutencoes',
+        []
+      );
+
+      var paradas = await Offline.obterColecao(
+        'paradas_viagem',
+        []
+      );
+
+      var candidatas = [];
+
+      if (pagina && Array.isArray(pagina.viagens)) {
+        candidatas = candidatas.concat(pagina.viagens);
+      }
+
+      if (Array.isArray(viagens)) {
+        candidatas = candidatas.concat(viagens);
+      }
+
+      var viagem = candidatas.filter(function (v) {
+        return v && v.id === id;
+      })[0];
+
+      if (!viagem) {
+        return null;
+      }
+
+      return {
+        viagem: viagem,
+
+        abastecimentos: (abastecimentos || []).filter(function (x) {
+          return x.viagemId === id;
+        }),
+
+        despesas: (despesas || []).filter(function (x) {
+          return x.viagemId === id;
+        }),
+
+        manutencoes: (manutencoes || []).filter(function (x) {
+          return x.viagemId === id;
+        }),
+
+        paradas: (paradas || [])
+          .filter(function (x) {
+            return x.viagemId === id;
+          })
+          .sort(function (a, b) {
+            return (Number(a.ordem) || 0) -
+              (Number(b.ordem) || 0);
+          }),
+
+        veiculos: veiculos || []
+      };
+    }
+
+    if (!navigator.onLine) {
+      obterDetalheOffline()
+        .then(function (dados) {
+          aplicarDetalhe(dados);
+        })
+        .catch(function (erro) {
+          console.error(
+            'CarWay detalhe offline:',
+            erro
+          );
+
+          el.innerHTML =
+            '<div class="vazio-veiculo">' +
+              '<p>Não foi possível abrir a viagem offline.</p>' +
+            '</div>';
+        });
+
+      return;
+    }
+
+    Promise.all([
+      sb.from('viagens')
+        .select('*')
+        .eq('id', id)
+        .single(),
+
+      sb.from('abastecimentos')
+        .select('*')
+        .eq('viagemId', id)
+        .order('data'),
+
+      sb.from('despesas')
+        .select('*')
+        .eq('viagemId', id)
+        .order('data'),
+
+      sb.from('manutencoes')
+        .select('*')
+        .eq('viagemId', id)
+        .order('data'),
+
+      sb.from('paradas_viagem')
+        .select('*')
+        .eq('viagemId', id)
+        .order('ordem'),
+
+      sb.from('veiculos')
+        .select(
+          'id, nome, placa, tipo, cor, combustivel, energeticos, ' +
+          'plugIn, tanque, capacidadeGnv, capacidadeBateria'
+        )
+        .eq('organizacaoId', orgAtual.id)
+    ])
+      .then(function (r) {
+        if (r[0].error || !r[0].data) {
+          throw r[0].error ||
+            new Error('Viagem não encontrada.');
+        }
+
+        var dados = {
+          viagem: r[0].data,
+          abastecimentos: r[1].data || [],
+          despesas: r[2].data || [],
+          manutencoes: r[3].data || [],
+          paradas: r[4].data || [],
+          veiculos: r[5].data || []
+        };
+
+        aplicarDetalhe(dados);
+
+        if (
+          typeof Offline !== 'undefined' &&
+          typeof Offline.salvarColecaoEmSegundoPlano ===
+            'function'
+        ) {
+          Offline.salvarColecaoEmSegundoPlano(
+            'viagem-detalhe:' + id,
+            dados
+          );
+        }
+
+        return dados;
+      })
+      .catch(function (erro) {
+        if (!App._ehErroRede(erro)) {
+          console.error(
+            'CarWay detalhe:',
+            erro
+          );
+        }
+
+        return obterDetalheOffline()
+          .then(function (dados) {
+            if (!aplicarDetalhe(dados)) {
+              throw erro;
+            }
+          });
+      })
+      .catch(function (erroFinal) {
+        console.error(
+          'CarWay detalhe indisponível:',
+          erroFinal
+        );
+
+        el.innerHTML =
+          '<div class="vazio-veiculo">' +
+            '<p>Viagem não encontrada.</p>' +
+          '</div>';
+      });
   },
 
   renderDetalhe: function () {
