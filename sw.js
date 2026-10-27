@@ -6,7 +6,7 @@
 
 'use strict';
 
-const CACHE_VERSION = 'carway-shell-18.3.9';
+const CACHE_VERSION = 'carway-shell-18.3.10';
 const OFFLINE_PAGE = './index.html';
 
 /*
@@ -23,45 +23,45 @@ const APP_SHELL = [
   './',
   './index.html',
   './manifest.json?v=18.2.0',
-  './css/estilo.css?v=18.3.9',
-  './js/paineladmin_status_org.js?v=18.3.9',
-  './js/paineladmin_status_org_cores.js?v=18.3.9',
-  './css/paineladmin_status_org_red.css?v=18.3.9',
+  './css/estilo.css?v=18.3.10',
+  './js/paineladmin_status_org.js?v=18.3.10',
+  './js/paineladmin_status_org_cores.js?v=18.3.10',
+  './css/paineladmin_status_org_red.css?v=18.3.10',
   './fonts/material-symbols-rounded.woff2',
   './icones/carway-32.png',
   './icones/carway-180.png',
   './icones/carway-192.png',
   './icones/carway-512.png',
-  './js/carway-startup.js?v=18.3.9',
-  './js/config.js?v=18.3.9',
-  './js/vendor/supabase-2.45.0.min.js?v=18.3.9',
-  './js/vendor/intl-tel-input/intlTelInputWithUtils-23.0.4.min.js?v=18.3.9',
-  './js/vendor/leaflet/leaflet-1.9.4.js?v=18.3.9',
-  './css/vendor/leaflet/leaflet-1.9.4.css?v=18.3.9',
+  './js/carway-startup.js?v=18.3.10',
+  './js/config.js?v=18.3.10',
+  './js/vendor/supabase-2.45.0.min.js?v=18.3.10',
+  './js/vendor/intl-tel-input/intlTelInputWithUtils-23.0.4.min.js?v=18.3.10',
+  './js/vendor/leaflet/leaflet-1.9.4.js?v=18.3.10',
+  './css/vendor/leaflet/leaflet-1.9.4.css?v=18.3.10',
   './css/vendor/leaflet/images/layers.png',
   './css/vendor/leaflet/images/layers-2x.png',
   './css/vendor/leaflet/images/marker-icon.png',
   './css/vendor/leaflet/images/marker-icon-2x.png',
   './css/vendor/leaflet/images/marker-shadow.png',
-'./css/vendor/intlTelInput-23.0.4.css?v=18.3.9',
+'./css/vendor/intlTelInput-23.0.4.css?v=18.3.10',
   './css/img/flags.png',
   './css/img/flags@2x.png',
   './css/img/globe.png',
   './css/img/globe@2x.png',
-  './js/app.js?v=18.3.9',
-  './js/offline.js?v=18.3.9',
-  './js/veiculos.js?v=18.3.9',
-  './js/abastecimentos.js?v=18.3.9',
-  './js/manutencoes.js?v=18.3.9',
-  './js/despesas.js?v=18.3.9',
-  './js/documentos.js?v=18.3.9',
-  './js/equipe.js?v=18.3.9',
-  './js/conta.js?v=18.3.9',
-  './js/paineladmin.js?v=18.3.9',
-  './js/viagens.js?v=18.3.9',
-  './js/viagens_mapsme_paradas.js?v=18.3.9',
-  './js/carway-correcao-abastecimento-senha-18.2.4.js?v=18.3.9',
-  './pwa-install.js?v=18.3.9'
+  './js/app.js?v=18.3.10',
+  './js/offline.js?v=18.3.10',
+  './js/veiculos.js?v=18.3.10',
+  './js/abastecimentos.js?v=18.3.10',
+  './js/manutencoes.js?v=18.3.10',
+  './js/despesas.js?v=18.3.10',
+  './js/documentos.js?v=18.3.10',
+  './js/equipe.js?v=18.3.10',
+  './js/conta.js?v=18.3.10',
+  './js/paineladmin.js?v=18.3.10',
+  './js/viagens.js?v=18.3.10',
+  './js/viagens_mapsme_paradas.js?v=18.3.10',
+  './js/carway-correcao-abastecimento-senha-18.2.4.js?v=18.3.10',
+  './pwa-install.js?v=18.3.10'
 ];
 
 /*
@@ -303,7 +303,10 @@ self.addEventListener('fetch', function (event) {
         try {
           const response = await fetch(request);
 
-          if (response && response.ok) {
+          if (
+            response &&
+            (response.ok || response.type === 'opaque')
+          ) {
             try {
               await cache.put(request, response.clone());
 
