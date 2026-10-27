@@ -2819,7 +2819,132 @@ html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="b
     });
     var btn = document.getElementById('btnCriarViagem');
     btn.disabled = true;
-    btn.textContent = 'Criando...';
+    btn.textContent = navigator.onLine
+      ? 'Criando...'
+      : 'Salvando no aparelho...';
+
+    /* Sem internet, preserva a viagem calculada e suas paradas na fila.
+       O cálculo de uma rota nova continua dependendo de conexão. */
+    if (!navigator.onLine) {
+      (async function () {
+        try {
+          var resultadoViagem = await Offline.salvar({
+            tabela: 'viagens',
+            operacao: 'insert',
+            registro: reg,
+            registroId: reg.id,
+            metadados: {
+              modulo: 'viagens',
+              acao: 'criar_viagem',
+              viagemId: reg.id,
+              paradas: paradasReg.length
+            }
+          });
+
+          if (resultadoViagem.error) {
+            throw resultadoViagem.error;
+          }
+
+          for (var pi = 0; pi < paradasReg.length; pi++) {
+            var resultadoParada = await Offline.salvar({
+              tabela: 'paradas_viagem',
+              operacao: 'insert',
+              registro: paradasReg[pi],
+              registroId: paradasReg[pi].id,
+              dependencias: resultadoViagem.filaId
+                ? [resultadoViagem.filaId]
+                : [],
+              metadados: {
+                modulo: 'viagens',
+                acao: 'criar_parada_viagem',
+                viagemId: reg.id,
+                paradaId: paradasReg[pi].id
+              }
+            });
+
+            if (resultadoParada.error) {
+              throw resultadoParada.error;
+            }
+          }
+
+          var cache = await Offline.obterColecao(
+            'viagens-pagina-resumo',
+            null
+          );
+
+          cache = cache || {
+            viagens: [],
+            veiculos: Viagens.veiculos || [],
+            abastecimentos: [],
+            despesas: [],
+            manutencoes: []
+          };
+
+          cache.viagens = [
+            Object.assign({}, reg, {
+              _offlinePendente: true,
+              _offlineFilaId: resultadoViagem.filaId
+            })
+          ].concat(
+            (cache.viagens || []).filter(function (v) {
+              return v.id !== reg.id;
+            })
+          );
+
+          if (!Array.isArray(cache.veiculos) || !cache.veiculos.length) {
+            cache.veiculos = Viagens.veiculos || [];
+          }
+
+          await Offline.salvarColecao(
+            'viagens-pagina-resumo',
+            cache
+          );
+
+          await Offline.salvarColecao(
+            'viagens',
+            cache.viagens
+          );
+
+          Viagens.lista = cache.viagens;
+          Viagens._salvando = false;
+
+          if (App._painelRaw) {
+            App._painelRaw = null;
+          }
+
+          App.toast(
+            'Viagem salva no aparelho e aguardando sincronização.',
+            'ok'
+          );
+
+          App.irPara('viagens');
+
+          setTimeout(function () {
+            Viagens.carregarLista();
+          }, 50);
+
+        } catch (erroOffline) {
+          Viagens._salvando = false;
+
+          console.error(
+            'CarWay - falha ao salvar viagem offline:',
+            erroOffline
+          );
+
+          App.toast(
+            'Erro ao salvar viagem no aparelho: ' +
+              (erroOffline.message || 'desconhecido'),
+            'erro'
+          );
+
+          btn.disabled = false;
+          btn.textContent = 'Criar viagem';
+        }
+      })();
+
+      return;
+    }
+
     sb.rpc('criar_viagem_com_paradas', {
       p_viagem: reg,
       p_paradas: paradasReg
@@ -4460,4 +4585,3 @@ _urlMapsComParadas: function (origem, destino) {
     return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : s;
   }
 };
-
