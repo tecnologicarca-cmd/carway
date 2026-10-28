@@ -1,4 +1,46 @@
 /* APP_VERSION: v25.2 - limites de carros e rotas por plano */
+/* =========================================================
+   MARCO 5 - INSTALACAO DO PWA
+   ========================================================= */
+
+window.__carwayInstallPrompt = null;
+window.__carwayPWAInstalado = false;
+
+window.addEventListener('beforeinstallprompt', function (evento) {
+  evento.preventDefault();
+
+  window.__carwayInstallPrompt = evento;
+
+  if (
+    typeof App !== 'undefined' &&
+    typeof App.renderMenu === 'function'
+  ) {
+    App.renderMenu();
+  }
+});
+
+window.addEventListener('appinstalled', function () {
+  window.__carwayInstallPrompt = null;
+  window.__carwayPWAInstalado = true;
+
+  if (
+    typeof App !== 'undefined' &&
+    typeof App.renderMenu === 'function'
+  ) {
+    App.renderMenu();
+  }
+
+  if (
+    typeof App !== 'undefined' &&
+    typeof App.toast === 'function'
+  ) {
+    App.toast(
+      'CarWay instalado com sucesso!',
+      'ok'
+    );
+  }
+});
+
 var sb = null;
 var usuarioAtual = null;
 var orgAtual = null;
@@ -1817,6 +1859,27 @@ _registrarOuvintesSessao: function () {
       { acao: 'despesas', icone: 'receipt_long', titulo: 'Despesas', sub: 'toque para lançar', cor: 'vermelho' },
       { acao: 'configuracoes', icone: 'admin_panel_settings', titulo: 'Configurações', sub: 'sua conta', cor: 'cinza', full: true }
     ];
+
+    var emStandalone =
+      window.matchMedia &&
+      window.matchMedia(
+        '(display-mode: standalone)'
+      ).matches;
+
+    if (
+      !emStandalone &&
+      !window.__carwayPWAInstalado &&
+      window.__carwayInstallPrompt
+    ) {
+      cards.push({
+        acao: 'instalar-carway',
+        icone: 'install_mobile',
+        titulo: 'Instalar CarWay',
+        sub: 'usar como aplicativo',
+        cor: 'azul',
+        full: true
+      });
+    }
     grid.innerHTML = cards.map(function (c) {
       return '<button class="menu-card ' + c.cor + (c.full ? ' menu-card-full' : '') + '" ' +
         'onclick="App.acionarMenu(\'' + c.acao + '\')">' +
@@ -1826,7 +1889,68 @@ _registrarOuvintesSessao: function () {
       '</button>';
     }).join('');
   },
+  instalarPWA: async function () {
+    var evento = window.__carwayInstallPrompt;
+
+    if (!evento) {
+      if (
+        window.matchMedia &&
+        window.matchMedia(
+          '(display-mode: standalone)'
+        ).matches
+      ) {
+        App.toast(
+          'O CarWay já está instalado.',
+          'ok'
+        );
+      } else {
+        App.toast(
+          'A instalação não está disponível neste momento.',
+          'ok'
+        );
+      }
+
+      return;
+    }
+
+    window.__carwayInstallPrompt = null;
+
+    try {
+      await evento.prompt();
+
+      var escolha = await evento.userChoice;
+
+      if (
+        escolha &&
+        escolha.outcome === 'accepted'
+      ) {
+        App.toast(
+          'Instalando CarWay...',
+          'ok'
+        );
+      }
+
+    } catch (erro) {
+      console.error(
+        'CarWay PWA - falha na instalação:',
+        erro
+      );
+
+      App.toast(
+        'Não foi possível iniciar a instalação.',
+        'erro'
+      );
+    }
+
+    App.renderMenu();
+  },
+
   acionarMenu: function (acao) {
+
+    if (acao === 'instalar-carway') {
+      App.instalarPWA();
+      return;
+    }
     if (acao === 'painel') { App.irPara('painel'); return; }
     if (acao === 'veiculos') { App.irParaFormVeiculo(); return; }
     if (acao === 'viagens') { App.irParaFormViagem(); return; }
