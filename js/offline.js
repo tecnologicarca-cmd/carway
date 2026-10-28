@@ -1,4 +1,4 @@
-/* APP_VERSION: v18.4.2 - cache leve e gravacao ociosa para iPhone */
+/* APP_VERSION: v18.4.3 - cache leve e gravacao ociosa para iPhone */
 'use strict';
 var Offline = {
   DB_NOME: 'carway_offline_v1',
@@ -677,9 +677,112 @@ var Offline = {
   registrarServiceWorker: function () {
     if (!('serviceWorker' in navigator)) return Promise.resolve(null);
 
-    return navigator.serviceWorker.register('./sw.js?v=18.4.2', { scope: './', updateViaCache: 'none' })
+    return navigator.serviceWorker.register('./sw.js?v=18.4.3', { scope: './', updateViaCache: 'none' })
       .then(function (registro) {
         console.log('CarWay Offline: Service Worker registrado.');
+
+        /* MARCO 5 - atualização controlada do PWA. */
+        Offline._registroSW = registro;
+        Offline._atualizacaoDisponivel = null;
+        Offline._recarregandoAtualizacao = false;
+
+        Offline._mostrarAtualizacaoPWA = function (worker) {
+          if (!worker) return;
+
+          Offline._atualizacaoDisponivel = worker;
+
+          var banner =
+            document.getElementById('carwayOfflineBanner');
+          var titulo =
+            document.getElementById('carwayOfflineTitulo');
+          var resumo =
+            document.getElementById('carwayOfflineResumo');
+          var botaoVer =
+            document.getElementById('carwayOfflineVer');
+          var botaoAcao =
+            document.getElementById('carwayOfflineSync');
+
+          if (!banner || !titulo || !resumo || !botaoAcao) {
+            Offline._mostrarAviso(
+              'Nova versão do CarWay disponível.',
+              'ok'
+            );
+            return;
+          }
+
+          banner.classList.remove('offline', 'falha');
+          banner.classList.add('on');
+
+          titulo.textContent = 'Nova versão disponível';
+          resumo.textContent =
+            'Atualize o CarWay para usar a versão mais recente.';
+
+          if (botaoVer) {
+            botaoVer.style.display = 'none';
+          }
+
+          botaoAcao.disabled = false;
+          botaoAcao.textContent = 'Atualizar agora';
+
+          botaoAcao.onclick = function () {
+            var novoWorker =
+              Offline._atualizacaoDisponivel ||
+              (Offline._registroSW &&
+               Offline._registroSW.waiting);
+
+            if (!novoWorker) {
+              Offline._mostrarAviso(
+                'A atualização ainda está sendo preparada.',
+                'ok'
+              );
+              return;
+            }
+
+            botaoAcao.disabled = true;
+            botaoAcao.textContent = 'Atualizando...';
+
+            novoWorker.postMessage({
+              tipo: 'CARWAY_SKIP_WAITING'
+            });
+          };
+        };
+
+        if (
+          registro.waiting &&
+          navigator.serviceWorker.controller
+        ) {
+          Offline._mostrarAtualizacaoPWA(registro.waiting);
+        }
+
+        registro.addEventListener('updatefound', function () {
+          var instalando = registro.installing;
+          if (!instalando) return;
+
+          instalando.addEventListener('statechange', function () {
+            if (
+              instalando.state === 'installed' &&
+              navigator.serviceWorker.controller
+            ) {
+              Offline._mostrarAtualizacaoPWA(
+                registro.waiting || instalando
+              );
+            }
+          });
+        });
+
+        navigator.serviceWorker.addEventListener(
+          'controllerchange',
+          function () {
+            if (Offline._recarregandoAtualizacao) return;
+            if (!Offline._atualizacaoDisponivel) return;
+
+            Offline._recarregandoAtualizacao = true;
+
+            setTimeout(function () {
+              window.location.reload();
+            }, 150);
+          }
+        );
 
         navigator.serviceWorker.addEventListener('message', function (evento) {
           var mensagem = evento.data || {};
@@ -787,6 +890,10 @@ var Offline = {
   atualizarBanner: async function () {
     var banner = document.getElementById('carwayOfflineBanner');
     if (!banner) return;
+
+    if (Offline._atualizacaoDisponivel) {
+      return;
+    }
 
     var itens = [];
     try {
