@@ -6,7 +6,7 @@
 
 'use strict';
 
-const CACHE_VERSION = 'carway-shell-18.4.3';
+const CACHE_VERSION = 'carway-shell-18.4.4';
 const OFFLINE_PAGE = './index.html';
 
 /*
@@ -20,50 +20,50 @@ const OFFLINE_PAGE = './index.html';
  * inclusive os parâmetros de versão "?v=".
  */
 const APP_SHELL = [
-  './manifest.json?v=18.4.3',
+  './manifest.json?v=18.4.4',
   './',
   './index.html',
-'./css/estilo.css?v=18.4.3',
-  './js/paineladmin_status_org.js?v=18.4.3',
-  './js/paineladmin_status_org_cores.js?v=18.4.3',
-  './css/paineladmin_status_org_red.css?v=18.4.3',
+'./css/estilo.css?v=18.4.4',
+  './js/paineladmin_status_org.js?v=18.4.4',
+  './js/paineladmin_status_org_cores.js?v=18.4.4',
+  './css/paineladmin_status_org_red.css?v=18.4.4',
   './fonts/material-symbols-rounded.woff2',
   './icones/carway-32.png',
   './icones/carway-180.png',
   './icones/carway-192.png',
   './icones/carway-512.png',
-  './js/carway-startup.js?v=18.4.3',
-  './js/config.js?v=18.4.3',
-  './js/vendor/supabase-2.45.0.min.js?v=18.4.3',
-  './js/vendor/jspdf-2.5.1.umd.min.js?v=18.4.3',
-  './js/vendor/jspdf-autotable-3.8.2.js?v=18.4.3',
-  './js/vendor/intl-tel-input/intlTelInputWithUtils-23.0.4.min.js?v=18.4.3',
-  './js/vendor/leaflet/leaflet-1.9.4.js?v=18.4.3',
-  './css/vendor/leaflet/leaflet-1.9.4.css?v=18.4.3',
+  './js/carway-startup.js?v=18.4.4',
+  './js/config.js?v=18.4.4',
+  './js/vendor/supabase-2.45.0.min.js?v=18.4.4',
+  './js/vendor/jspdf-2.5.1.umd.min.js?v=18.4.4',
+  './js/vendor/jspdf-autotable-3.8.2.js?v=18.4.4',
+  './js/vendor/intl-tel-input/intlTelInputWithUtils-23.0.4.min.js?v=18.4.4',
+  './js/vendor/leaflet/leaflet-1.9.4.js?v=18.4.4',
+  './css/vendor/leaflet/leaflet-1.9.4.css?v=18.4.4',
   './css/vendor/leaflet/images/layers.png',
   './css/vendor/leaflet/images/layers-2x.png',
   './css/vendor/leaflet/images/marker-icon.png',
   './css/vendor/leaflet/images/marker-icon-2x.png',
   './css/vendor/leaflet/images/marker-shadow.png',
-'./css/vendor/intlTelInput-23.0.4.css?v=18.4.3',
+'./css/vendor/intlTelInput-23.0.4.css?v=18.4.4',
   './css/img/flags.png',
   './css/img/flags@2x.png',
   './css/img/globe.png',
   './css/img/globe@2x.png',
-  './js/app.js?v=18.4.3',
-  './js/offline.js?v=18.4.3',
-  './js/veiculos.js?v=18.4.3',
-  './js/abastecimentos.js?v=18.4.3',
-  './js/manutencoes.js?v=18.4.3',
-  './js/despesas.js?v=18.4.3',
-  './js/documentos.js?v=18.4.3',
-  './js/equipe.js?v=18.4.3',
-  './js/conta.js?v=18.4.3',
-  './js/paineladmin.js?v=18.4.3',
-  './js/viagens.js?v=18.4.3',
-  './js/viagens_mapsme_paradas.js?v=18.4.3',
-  './js/carway-correcao-abastecimento-senha-18.2.4.js?v=18.4.3',
-  './pwa-install.js?v=18.4.3'
+  './js/app.js?v=18.4.4',
+  './js/offline.js?v=18.4.4',
+  './js/veiculos.js?v=18.4.4',
+  './js/abastecimentos.js?v=18.4.4',
+  './js/manutencoes.js?v=18.4.4',
+  './js/despesas.js?v=18.4.4',
+  './js/documentos.js?v=18.4.4',
+  './js/equipe.js?v=18.4.4',
+  './js/conta.js?v=18.4.4',
+  './js/paineladmin.js?v=18.4.4',
+  './js/viagens.js?v=18.4.4',
+  './js/viagens_mapsme_paradas.js?v=18.4.4',
+  './js/carway-correcao-abastecimento-senha-18.2.4.js?v=18.4.4',
+  './pwa-install.js?v=18.4.4'
 ];
 
 /*
@@ -162,9 +162,7 @@ async function cacheShellTolerante() {
  */
 self.addEventListener('install', function (event) {
   event.waitUntil(
-    cacheShellTolerante().then(function () {
-      return self.skipWaiting();
-    })
+    cacheShellTolerante()
   );
 });
 
