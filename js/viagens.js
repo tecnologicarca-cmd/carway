@@ -154,6 +154,14 @@ var Viagens = {
 },
    
 chamarRoutes: function (origem, destino, idaVolta, emissionType) {
+  if (!navigator.onLine) {
+    return Promise.reject(
+      new Error(
+        'Para calcular uma nova rota, conecte-se à internet e tente novamente.'
+      )
+    );
+  }
+
   var url = CARWAY_CONFIG.SUPABASE_URL + '/functions/v1/google-routes';
 
   return sb.auth.getSession().then(function (r) {
@@ -184,6 +192,14 @@ chamarRoutes: function (origem, destino, idaVolta, emissionType) {
   });
 },
   chamarGeocode: function (params) {
+  if (!navigator.onLine) {
+    return Promise.reject(
+      new Error(
+        'A busca de CEP ou endereço exige conexão com a internet.'
+      )
+    );
+  }
+
   var url = CARWAY_CONFIG.SUPABASE_URL + '/functions/v1/google-geocode';
 
   return sb.auth.getSession().then(function (r) {
@@ -210,6 +226,14 @@ chamarRoutes: function (origem, destino, idaVolta, emissionType) {
 },
 
    chamarPlaces: function (lat, lon, raio, limite, tipo) {
+  if (!navigator.onLine) {
+    return Promise.reject(
+      new Error(
+        'A busca de locais e estabelecimentos exige conexão com a internet.'
+      )
+    );
+  }
+
   var url = CARWAY_CONFIG.SUPABASE_URL + '/functions/v1/google-places';
 
   return sb.auth.getSession().then(function (r) {
@@ -3037,6 +3061,14 @@ html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="b
     });
   },
   _buscarPontosRecargaOCM: function (lat, lon) {
+    if (!navigator.onLine) {
+      return Promise.reject(
+        new Error(
+          'A busca de pontos de recarga exige conexão com a internet.'
+        )
+      );
+    }
+
     var key = (typeof CARWAY_CONFIG !== 'undefined' && CARWAY_CONFIG.OPEN_CHARGE_MAP_KEY) || '';
     var url = 'https://api.openchargemap.io/v3/poi/?output=json' +
       '&latitude=' + lat + '&longitude=' + lon +
@@ -3057,6 +3089,14 @@ html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="b
     });
   },
   _buscarPostosOverpass: function (lat, lon, raioMetros) {
+    if (!navigator.onLine) {
+      return Promise.reject(
+        new Error(
+          'A busca de postos próximos exige conexão com a internet.'
+        )
+      );
+    }
+
     var raio = raioMetros || 5000;
     var query = '[out:json][timeout:15];(node["amenity"="fuel"](around:' + raio + ',' + lat + ',' + lon + '););out center 15;';
     var tentar = function (idx) {
