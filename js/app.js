@@ -708,6 +708,79 @@ _registrarOuvintesSessao: function () {
     PAGINA_ANTERIOR = 'menu';
     App.irParaMenu();
     App.renderBarraVeiculoGlobal();
+
+    /* MARCO 5 - atalhos do PWA.
+       Executa somente depois que sessao, usuario e organizacao
+       ja foram restaurados. O parametro e removido para impedir
+       que um F5 execute o atalho novamente. */
+    (function () {
+      var params = new URLSearchParams(
+        window.location.search || ''
+      );
+
+      var atalho = String(
+        params.get('atalho') || ''
+      ).toLowerCase();
+
+      if (
+        atalho !== 'abastecimento' &&
+        atalho !== 'viagem' &&
+        atalho !== 'manutencao'
+      ) {
+        return;
+      }
+
+      try {
+        params.delete('atalho');
+
+        var query = params.toString();
+        var urlLimpa =
+          window.location.pathname +
+          (query ? '?' + query : '') +
+          window.location.hash;
+
+        if (
+          window.history &&
+          window.history.replaceState
+        ) {
+          window.history.replaceState(
+            {},
+            document.title,
+            urlLimpa
+          );
+        }
+      } catch (e) {}
+
+      setTimeout(function () {
+        try {
+          if (atalho === 'abastecimento') {
+            App.irParaFormAbastecimento();
+            return;
+          }
+
+          if (atalho === 'manutencao') {
+            App.irParaFormManutencao();
+            return;
+          }
+
+          if (
+            atalho === 'viagem' &&
+            typeof Viagens !== 'undefined' &&
+            typeof Viagens.abrirPlanejador === 'function'
+          ) {
+            Viagens.abrirPlanejador();
+          }
+        } catch (erroAtalho) {
+          console.error(
+            'CarWay PWA - falha ao abrir atalho:',
+            erroAtalho
+          );
+
+          App.irParaMenu();
+        }
+      }, 100);
+    })();
+
     /* Carrega os alertas de revisão em segundo plano, já no login,
        para o sininho do topo mostrar a badge sem precisar abrir o Painel. */
     App.carregarAlertas().then(function (itens) {
