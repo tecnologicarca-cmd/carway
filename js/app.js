@@ -765,10 +765,9 @@ _registrarOuvintesSessao: function () {
 
           if (
             atalho === 'viagem' &&
-            typeof Viagens !== 'undefined' &&
-            typeof Viagens.abrirPlanejador === 'function'
+            typeof App.irParaFormViagem === 'function'
           ) {
-            Viagens.abrirPlanejador();
+            App.irParaFormViagem();
           }
         } catch (erroAtalho) {
           console.error(
