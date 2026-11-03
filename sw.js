@@ -6,7 +6,7 @@
 
 'use strict';
 
-const CACHE_VERSION = 'carway-shell-18.5.5';
+const CACHE_VERSION = 'carway-shell-18.5.6';
 const OFFLINE_PAGE = './index.html';
 
 /*
@@ -51,7 +51,7 @@ const APP_SHELL = [
   './css/img/globe.png',
   './css/img/globe@2x.png',
   './js/app.js?v=18.5.3',
-  './js/offline.js?v=18.5.5',
+  './js/offline.js?v=18.5.6',
   './js/veiculos.js?v=18.5.0',
   './js/abastecimentos.js?v=18.5.0',
   './js/manutencoes.js?v=18.5.0',
@@ -60,8 +60,8 @@ const APP_SHELL = [
   './js/equipe.js?v=18.5.0',
   './js/conta.js?v=18.5.0',
   './js/paineladmin.js?v=18.5.0',
-  './js/viagens.js?v=18.5.4',
-  './js/viagens_mapsme_paradas.js?v=18.5.4',
+  './js/viagens.js?v=18.5.6',
+  './js/viagens_mapsme_paradas.js?v=18.5.6',
   './js/carway-correcao-abastecimento-senha-18.2.4.js?v=18.5.0',
   './pwa-install.js?v=18.5.0'
 ];
