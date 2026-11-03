@@ -1,4 +1,4 @@
-/* APP_VERSION: v10.22 - rotas imediatas, postos em paralelo e custo validado */
+/* APP_VERSION: v10.21 - rotas ilimitadas normalizadas */
 /* =====================================================================
    CARWAY v16 - VIAGENS
    Planejador completo com Google Routes + Geocoding + Places
@@ -69,10 +69,6 @@ var Viagens = {
   _carregandoLista: false,
   _mapaFull: null,
   _marcadoresExtras: [],
-  _cachePlaces: {},
-  _chamadasPlacesEmAndamento: {},
-  _geracaoPlanejamento: 0,
-  _telaResultadosRotas: false,
   periodo: { modo: 'mes', ano: 0, mes: 0 },
   filtroStatus: 'todos',
   plano: {
@@ -238,21 +234,9 @@ chamarRoutes: function (origem, destino, idaVolta, emissionType) {
     );
   }
 
-  raio = raio || 10000;
-  limite = limite || 8;
-  tipo = tipo || 'gas_station';
-
-  /* Pontos de duas rotas costumam cair na mesma regiÃ£o. Este cache curto
-     evita repetir a mesma consulta enquanto os dois cards sÃ£o preparados,
-     sem transformar um resultado antigo em fonte permanente. */
-  var chave = Number(lat).toFixed(3) + '|' + Number(lon).toFixed(3) + '|' + raio + '|' + limite + '|' + tipo;
-  var agora = Date.now();
-  var salvo = Viagens._cachePlaces[chave];
-  if (salvo && salvo.expiraEm > agora) return Promise.resolve(salvo.locais.slice());
-  if (Viagens._chamadasPlacesEmAndamento[chave]) return Viagens._chamadasPlacesEmAndamento[chave];
-
   var url = CARWAY_CONFIG.SUPABASE_URL + '/functions/v1/google-places';
-  var requisicao = sb.auth.getSession().then(function (r) {
+
+  return sb.auth.getSession().then(function (r) {
     var token = r.data && r.data.session ? r.data.session.access_token : '';
 
     if (!token) throw new Error('SessÃ£o expirada. FaÃ§a login novamente.');
@@ -267,9 +251,9 @@ chamarRoutes: function (origem, destino, idaVolta, emissionType) {
       body: JSON.stringify({
         lat: lat,
         lon: lon,
-        raio: raio,
-        limite: limite,
-        tipo: tipo
+        raio: raio || 10000,
+        limite: limite || 8,
+        tipo: tipo || 'gas_station'
       })
     }).catch(function () {
       throw new Error('Sem conexÃ£o com a internet. Verifique sua rede.');
@@ -277,17 +261,8 @@ chamarRoutes: function (origem, destino, idaVolta, emissionType) {
   }).then(function (resposta) {
     return Viagens._processarRespostaFuncao(resposta, 'google-places');
   }).then(function (dados) {
-    var locais = dados.locais || [];
-    Viagens._cachePlaces[chave] = { expiraEm: Date.now() + (15 * 60 * 1000), locais: locais.slice() };
-    delete Viagens._chamadasPlacesEmAndamento[chave];
-    return locais;
-  }).catch(function (e) {
-    delete Viagens._chamadasPlacesEmAndamento[chave];
-    throw e;
+    return dados.locais || [];
   });
-
-  Viagens._chamadasPlacesEmAndamento[chave] = requisicao;
-  return requisicao;
 },
   /* =========================================================
      DETECÃ‡ÃƒO DE DISPOSITIVO
@@ -399,10 +374,7 @@ chamarRoutes: function (origem, destino, idaVolta, emissionType) {
     if (atualizarPreco) {
       var preco = document.getElementById('plPreco');
       var medio = Viagens.precoMedioCombustivel(veic.id, energetico);
-      if (preco) {
-        preco.value = medio > 0 ? medio : '';
-        if (preco.dataset) preco.dataset.precoOrigem = medio > 0 ? 'media_real' : 'indisponivel';
-      }
+      if (preco) preco.value = medio > 0 ? medio : '';
     }
     Viagens.previewAutonomia();
   },
@@ -902,41 +874,16 @@ chamarRoutes: function (origem, destino, idaVolta, emissionType) {
     };
   },
 
-  _normalizarEnergeticoPreco: function (valor) {
-    var texto = String(valor || '');
-    if (texto.normalize) texto = texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-    return texto.trim().toUpperCase();
-  },
-
-  _precoUnitarioReal: function (abastecimento) {
-    var preco = Number(abastecimento && abastecimento.precoLitro) || 0;
-    if (preco > 0) return preco;
-    var quantidade = Number(abastecimento && abastecimento.litros) || 0;
-    var total = Number(abastecimento && abastecimento.valorTotal) || 0;
-    return quantidade > 0 && total > 0 ? total / quantidade : 0;
-  },
-
   precoMedioCombustivel: function (veiculoId, energetico) {
-    var alvo = Viagens._normalizarEnergeticoPreco(energetico);
     var lista = (Viagens.abastecimentos || []).filter(function (a) {
-      if (a.veiculoId !== veiculoId || Viagens._precoUnitarioReal(a) <= 0) return false;
-      if (!alvo) return true;
-      return Viagens._normalizarEnergeticoPreco(a.combustivel) === alvo;
+      return a.veiculoId === veiculoId && (!energetico || a.combustivel === energetico) && Number(a.precoLitro) > 0;
     });
     lista.sort(function (a, b) { return String(b.data || '').localeCompare(String(a.data || '')); });
     var ultimos5 = lista.slice(0, 5);
     if (!ultimos5.length) return 0;
     var soma = 0;
-    ultimos5.forEach(function (a) { soma += Viagens._precoUnitarioReal(a); });
+    ultimos5.forEach(function (a) { soma += Number(a.precoLitro) || 0; });
     return Math.round((soma / ultimos5.length) * 100) / 100;
-  },
-
-  _resolverPrecoPlanejamento: function (veiculoId, energetico, precoInformado) {
-    var informado = Number(precoInformado) || 0;
-    if (informado > 0) return { valor: informado, origem: 'informado' };
-    var medio = Viagens.precoMedioCombustivel(veiculoId, energetico);
-    if (medio > 0) return { valor: medio, origem: 'media_real' };
-    return { valor: 0, origem: 'indisponivel' };
   },
 
   /* Card da lista:  /* Card da lista: PLANEJADA agora tem Ver/Iniciar/Excluir sempre na
@@ -1011,23 +958,15 @@ abrirPlanejador: async function (idExistente) {
       var paginaCache = await Offline.obterColecao('viagens-pagina', null);
       if (paginaCache && paginaCache.abastecimentos) Viagens.abastecimentos = paginaCache.abastecimentos;
     }
-    if (navigator.onLine && (!Viagens.veiculos.length || !Viagens.abastecimentos.length)) {
+    if (!Viagens.veiculos.length && navigator.onLine) {
       try {
-        var consultas = [];
-        var buscarVeiculos = !Viagens.veiculos.length;
-        var buscarPrecos = !Viagens.abastecimentos.length;
-        if (buscarVeiculos) {
-          consultas.push(sb.from('veiculos').select('id,nome,placa,tanque,combustivel,tipo,cor,energeticos,plugIn,capacidadeGnv,capacidadeBateria').eq('organizacaoId', orgAtual.id).order('nome'));
-        }
-        if (buscarPrecos) {
-          consultas.push(sb.from('abastecimentos').select('veiculoId,precoLitro,valorTotal,litros,data,combustivel,unidade').eq('organizacaoId', orgAtual.id));
-        }
-        var rs = await Promise.all(consultas);
-        var posConsulta = 0;
-        if (buscarVeiculos) Viagens.veiculos = (rs[posConsulta++].data || []);
-        if (buscarPrecos) Viagens.abastecimentos = (rs[posConsulta++].data || []);
-        if (buscarVeiculos) await Offline.salvarColecao('veiculos', Viagens.veiculos);
-      } catch (e) { console.warn('CarWay viagens - usando dados locais:', e); }
+        var rs = await Promise.all([
+          sb.from('veiculos').select('id,nome,placa,tanque,combustivel,tipo,cor,energeticos,plugIn,capacidadeGnv,capacidadeBateria').eq('organizacaoId', orgAtual.id).order('nome'),
+          sb.from('abastecimentos').select('veiculoId,precoLitro,data,combustivel,unidade').eq('organizacaoId', orgAtual.id)
+        ]);
+        Viagens.veiculos = rs[0].data || []; Viagens.abastecimentos = rs[1].data || [];
+        await Offline.salvarColecao('veiculos', Viagens.veiculos);
+      } catch (e) { console.warn('CarWay viagens - usando veÃ­culos locais:', e); }
     }
     if (!Viagens.veiculos.length) {
       App.abrirModal('VeÃ­culo necessÃ¡rio','<div style="text-align:center;padding:10px 0"><span class="ms" style="font-size:56px;color:var(--txt2);opacity:.5">directions_car</span><h3>Cadastre um veÃ­culo primeiro</h3><p>Para planejar viagens, Ã© necessÃ¡rio ter pelo menos um veÃ­culo salvo neste aparelho.</p></div>',function(){App.fecharModal();App.irParaFormVeiculo();},'Cadastrar veÃ­culo');
@@ -1053,7 +992,6 @@ abrirPlanejador: async function (idExistente) {
   },
 
   renderPlanejador: function (viagemExistente) {
-    Viagens._telaResultadosRotas = false;
     var v = viagemExistente || {};
     var veiculos = Viagens.veiculos;
     var vSel = v.veiculoId || (App.veiculoAtivoId && veiculos.some(function(x){return x.id===App.veiculoAtivoId;}) ? App.veiculoAtivoId : veiculos[0].id);
@@ -1069,12 +1007,7 @@ abrirPlanejador: async function (idExistente) {
     Viagens.plano.energeticoSelecionado = energeticoSel;
     var infoEnergia = Viagens._infoEnergetico(energeticoSel);
     var precoMedio = Viagens.precoMedioCombustivel(vSel, energeticoSel);
-    var precoSalvo = Number(v.precoLitro) || 0;
-    if (!precoSalvo && v.rota) {
-      try { precoSalvo = Number(JSON.parse(v.rota).precoEnergia) || 0; } catch (e) {}
-    }
-    var precoInicial = precoSalvo > 0 ? precoSalvo : (precoMedio > 0 ? precoMedio : '');
-    var precoInicialOrigem = precoSalvo > 0 ? 'informado' : (precoMedio > 0 ? 'media_real' : 'indisponivel');
+    var precoInicial = v.precoLitro || precoMedio || 0;
     var nivelSel = v.nivelPct || 100;
     var reservaSel = v.reservaPct || 15;
     var ehEdicao = Viagens._modoEdicao;
@@ -1158,8 +1091,8 @@ abrirPlanejador: async function (idExistente) {
         '</div>' +
       '</div>' +
       '<div class="campo-form">' +
-        '<label id="plLabelPreco">PreÃ§o / ' + infoEnergia.unidade + (precoMedio > 0 ? ' <small style="text-transform:none;color:var(--txt2);font-weight:400">(mÃ©dia real dos Ãºltimos 5: ' + App.moeda(precoMedio) + ')</small>' : '') + '</label>' +
-        '<input type="number" id="plPreco" step="0.01" min="0.01" placeholder="Informe o preÃ§o" value="' + precoInicial + '" data-preco-origem="' + precoInicialOrigem + '" oninput="this.dataset.precoOrigem=\'informado\';this.style.borderColor=\'\'">' +
+        '<label id="plLabelPreco">PreÃ§o / ' + infoEnergia.unidade + (precoMedio > 0 ? ' <small style="text-transform:none;color:var(--txt2);font-weight:400">(mÃ©dia dos Ãºltimos 5: ' + App.moeda(precoMedio) + ')</small>' : '') + '</label>' +
+        '<input type="number" id="plPreco" step="0.01" placeholder="6,29" value="' + precoInicial + '">' +
       '</div>';
 
     if (ehEdicao) {
@@ -1562,7 +1495,6 @@ nomeApp: function (app) {
 
    voltarParaFormularioMantendoRotas: function () {
   var v = (Viagens._modoEdicao && Viagens.editando) ? Viagens.editando : {};
-  Viagens._telaResultadosRotas = false;
 
   if (!Viagens.veiculos.length) {
     Viagens.abrirPlanejador(v.id || null);
@@ -1682,20 +1614,8 @@ nomeApp: function (app) {
   _salvarEdicaoSemNovaRota: function (viagemId) {
     var v = Viagens.editando || {};
     var kmL = Number(document.getElementById('plKmL').value) || 0;
+    var preco = Number(document.getElementById('plPreco').value) || 0;
     var distancia = Number(v.distancia) || 0;
-    var veiculoIdAtual = document.getElementById('plVeiculo').value;
-    var energeticoAtual = Viagens.plano.energeticoSelecionado || 'Gasolina';
-    var campoPrecoAtual = document.getElementById('plPreco');
-    var precoResolvido = Viagens._resolverPrecoPlanejamento(veiculoIdAtual, energeticoAtual, campoPrecoAtual ? campoPrecoAtual.value : 0);
-    if (campoPrecoAtual && campoPrecoAtual.dataset && campoPrecoAtual.dataset.precoOrigem === 'media_real' && precoResolvido.valor > 0) {
-      precoResolvido.origem = 'media_real';
-    }
-    var preco = precoResolvido.valor;
-    if (kmL > 0 && distancia > 0 && preco <= 0) {
-      if (campoPrecoAtual) { campoPrecoAtual.style.borderColor = '#ef4444'; campoPrecoAtual.focus(); }
-      App.toast('Informe um preÃ§o vÃ¡lido. O custo previsto nÃ£o pÃ´de ser calculado.', 'erro');
-      return;
-    }
     var novoCombPrev = (kmL > 0 && distancia > 0) ? Math.round((distancia / kmL) * preco * 100) / 100 : (v.combustivelPrev || 0);
 
     var alim = document.getElementById('plAlim') ? Number(document.getElementById('plAlim').value) || 0 : (v.alimentacaoPrev || 0);
@@ -1705,6 +1625,7 @@ nomeApp: function (app) {
 
     var tituloCampo = document.getElementById('plNomeViagem');
     var tituloAtualizado = tituloCampo ? tituloCampo.value.trim() : '';
+    var energeticoAtual = Viagens.plano.energeticoSelecionado || 'Gasolina';
     var infoEnergeticoAtual = Viagens._infoEnergetico(energeticoAtual);
     var rotaAtualizada = v.rota || '';
     if (rotaAtualizada) {
@@ -1715,8 +1636,6 @@ nomeApp: function (app) {
         rotaObj.consumo = kmL;
         rotaObj.capacidade = Number(document.getElementById('plTanque').value) || rotaObj.capacidade || 0;
         rotaObj.quantidadeEnergiaPrevista = kmL > 0 && distancia > 0 ? Math.round((distancia / kmL) * 100) / 100 : (rotaObj.quantidadeEnergiaPrevista || 0);
-        rotaObj.precoEnergia = preco;
-        rotaObj.precoOrigem = precoResolvido.origem;
         rotaObj.custoCombustivel = novoCombPrev;
         rotaObj.custoPedagio = pedagio;
         rotaObj.custoTotalPrevisto = Math.round((novoCombPrev + pedagio + alim + hosp + outros) * 100) / 100;
@@ -1726,7 +1645,7 @@ nomeApp: function (app) {
       }
     }
     var reg = {
-      veiculoId: veiculoIdAtual,
+      veiculoId: document.getElementById('plVeiculo').value,
       titulo: tituloAtualizado || v.titulo,
       combustivelPrev: novoCombPrev,
       alimentacaoPrev: alim,
@@ -1957,7 +1876,6 @@ nomeApp: function (app) {
 
     var veicId = document.getElementById('plVeiculo').value;
     var veic = Viagens.veiculos.filter(function (x) { return x.id === veicId; })[0];
-    if (!veic) { App.toast('Selecione um veÃ­culo vÃ¡lido', 'erro'); return; }
     var kmL = Number(document.getElementById('plKmL').value) || 0;
     var tanque = Number(document.getElementById('plTanque').value) || 0;
     if (kmL <= 0) { App.toast('Informe o consumo do energÃ©tico selecionado', 'erro'); return; }
@@ -1966,23 +1884,9 @@ nomeApp: function (app) {
 
     var nivel = Number(document.getElementById('plNivel').value) || 100;
     var reserva = Number(document.getElementById('plReserva').value) || 15;
+    var preco = Number(document.getElementById('plPreco').value) || 0;
     var energetico = Viagens.plano.energeticoSelecionado || Viagens._energeticosDoVeiculo(veic)[0];
     var infoEnergia = Viagens._infoEnergetico(energetico);
-    var campoPreco = document.getElementById('plPreco');
-    var precoResolvido = Viagens._resolverPrecoPlanejamento(veicId, energetico, campoPreco ? campoPreco.value : 0);
-    if (campoPreco && campoPreco.dataset && campoPreco.dataset.precoOrigem === 'media_real' && precoResolvido.valor > 0) {
-      precoResolvido.origem = 'media_real';
-    }
-    var preco = precoResolvido.valor;
-    if (preco <= 0) {
-      if (campoPreco) {
-        campoPreco.style.borderColor = '#ef4444';
-        campoPreco.focus();
-      }
-      App.toast('Informe um preÃ§o vÃ¡lido por ' + infoEnergia.unidade + '. O custo previsto nÃ£o pÃ´de ser calculado.', 'erro');
-      return;
-    }
-    if (campoPreco && !(Number(campoPreco.value) > 0)) campoPreco.value = preco;
     Viagens.plano.veiculoSelecionado = veic;
     Viagens.plano.parametrosAutonomia = {
       kmL: kmL,
@@ -1990,7 +1894,6 @@ nomeApp: function (app) {
       nivel: nivel,
       reserva: reserva,
       preco: preco,
-      precoOrigem: precoResolvido.origem,
       energetico: energetico,
       unidade: infoEnergia.unidade,
       categoria: infoEnergia.categoria
@@ -2041,19 +1944,12 @@ nomeApp: function (app) {
       })
       .then(function (rotas) {
         var custoPorKm = 1 / kmL;
-        rotas.forEach(function (r, indiceRota) {
-          /* O Ã­ndice local Ã© a fonte de verdade para os cards. Assim as duas
-             opÃ§Ãµes recebidas permanecem selecionÃ¡veis mesmo que o provedor
-             use identificadores prÃ³prios ou repetidos. */
-          r.indice = indiceRota;
+        rotas.forEach(function (r) {
           var litros = r.km * custoPorKm;
           r.litros = Math.round(litros * 100) / 100;
           r.custoCombustivel = Math.round(litros * preco * 100) / 100;
           r.custoPedagio = r.custoPedagio || 0;
           r.custoTotal = Math.round((r.custoCombustivel + r.custoPedagio) * 100) / 100;
-          r.precoEnergia = preco;
-          r.precoOrigem = precoResolvido.origem;
-          r.custoCalculado = litros <= 0 || preco > 0;
         });
 
         var iMaisRapida = 0;
@@ -2066,7 +1962,7 @@ nomeApp: function (app) {
         rotas[iMaisEconomica].seloEconomica = true;
         Viagens.plano.rotas = rotas;
         Viagens.plano.paradasPorRota = {};
-        Viagens._prepararRotasParaExibicao(iMaisRapida);
+        Viagens.calcularEMostrarRota(iMaisRapida);
         Viagens.carregarLimiteRotas();
       })
       .catch(function (e) {
@@ -2085,119 +1981,33 @@ nomeApp: function (app) {
         Viagens._restaurarBotaoBuscarRotas(btn);
       });
   },
-   _inicializarParadasRota: function (idx) {
-    if (Viagens.plano.paradasPorRota[idx]) return Viagens.plano.paradasPorRota[idx];
-    var rota = Viagens.plano.rotas && Viagens.plano.rotas[idx];
-    var p = Viagens.plano.parametrosAutonomia;
-    if (!rota || !p) return null;
-
-    /* Esta etapa Ã© puramente local e imediata: os cards aparecem antes de
-       qualquer consulta de postos. A busca externa apenas enriquece as
-       paradas que jÃ¡ estÃ£o visÃ­veis. */
-    var paradas = Viagens.calcularParadas(
-      Number(rota.km) || 0,
-      Number(rota.kmIda) || Number(rota.km) || 0,
-      Viagens.plano.idaVolta,
-      p.kmL,
-      p.tanque,
-      p.nivel,
-      p.reserva
-    );
-    var coords = rota.polyline ? Viagens._decodificarPolyline(rota.polyline) : [];
-    paradas.forEach(function (parada) {
-      var pos = coords.length ? Viagens._posicaoNaLinha(coords, parada.kmAcum, rota.kmIda, Viagens.plano.idaVolta) : null;
-      if (pos) { parada.lat = pos[0]; parada.lon = pos[1]; }
-      parada.carregandoPosto = true;
-    });
-
-    var dados = {
-      paradas: paradas,
-      manutencao: null,
-      erroParcial: false,
-      erroPostos: false,
-      carregandoPostos: paradas.length > 0,
-      carregandoManutencao: true,
-      detalhesIniciados: false
-    };
-    Viagens.plano.paradasPorRota[idx] = dados;
-    return dados;
-  },
-
-  _carregarDetalhesRotaEmSegundoPlano: function (idx, geracao) {
-    var rota = Viagens.plano.rotas && Viagens.plano.rotas[idx];
-    var dados = Viagens._inicializarParadasRota(idx);
-    if (!rota || !dados || dados.detalhesIniciados) return;
-    dados.detalhesIniciados = true;
-
-    function aindaEhBuscaAtual() {
-      return geracao === Viagens._geracaoPlanejamento &&
-        Viagens.plano.rotas && Viagens.plano.rotas[idx] === rota &&
-        Viagens.plano.paradasPorRota[idx] === dados;
-    }
-    function atualizarSeVisivel() {
-      if (aindaEhBuscaAtual() && Viagens._telaResultadosRotas && Viagens.plano.rotaAtiva === idx) Viagens.mostrarRotas(false, true);
-    }
-
-    var postos = dados.paradas.length
-      ? Viagens.buscarPostosParaParadasDaRota(dados.paradas, rota, atualizarSeVisivel)
-      : Promise.resolve();
-
-    postos.then(function () {
-      if (!aindaEhBuscaAtual()) return;
-      dados.paradas.forEach(function (parada) { parada.carregandoPosto = false; });
-      dados.carregandoPostos = false;
-      atualizarSeVisivel();
-    }).catch(function (e) {
-      if (!aindaEhBuscaAtual()) return;
-      console.warn('CarWay - postos indisponÃ­veis; mantendo as paradas calculadas:', e);
-      dados.paradas.forEach(function (parada) { parada.carregandoPosto = false; });
-      dados.carregandoPostos = false;
-      dados.erroPostos = true;
-      atualizarSeVisivel();
-    });
-
-    /* ManutenÃ§Ã£o e postos sÃ£o independentes; nenhuma consulta segura a outra. */
-    Viagens.verificarManutencao(Viagens.plano.veiculoSelecionado.id, rota.km)
-      .then(function (manut) {
-        if (!aindaEhBuscaAtual()) return;
-        dados.manutencao = manut;
-        dados.carregandoManutencao = false;
-        atualizarSeVisivel();
-      })
-      .catch(function (e) {
-        if (!aindaEhBuscaAtual()) return;
-        console.warn('Erro em manutenÃ§Ã£o (rota e paradas preservadas):', e);
-        dados.carregandoManutencao = false;
-        dados.erroParcial = true;
-        atualizarSeVisivel();
-      });
-  },
-
-  _prepararRotasParaExibicao: function (idxInicial) {
-    Viagens._geracaoPlanejamento++;
-    var geracao = Viagens._geracaoPlanejamento;
-    var rotas = Viagens.plano.rotas || [];
-    Viagens.plano.rotaAtiva = idxInicial;
-
-    /* Inicializa TODAS as opÃ§Ãµes de forma sÃ­ncrona para preservar os dois
-       cards e permitir a troca instantÃ¢nea entre eles. */
-    rotas.forEach(function (rota, idx) { Viagens._inicializarParadasRota(idx); });
-    Viagens.mostrarRotas();
-
-    /* A rota ativa comeÃ§a primeiro; as demais entram no mesmo ciclo sem
-       bloquear a tela e tambÃ©m ficam prontas em segundo plano. */
-    Viagens._carregarDetalhesRotaEmSegundoPlano(idxInicial, geracao);
-    rotas.forEach(function (rota, idx) {
-      if (idx === idxInicial) return;
-      setTimeout(function () { Viagens._carregarDetalhesRotaEmSegundoPlano(idx, geracao); }, 0);
-    });
-  },
-
-  calcularEMostrarRota: function (idx) {
+   calcularEMostrarRota: function (idx) {
     Viagens.plano.rotaAtiva = idx;
-    Viagens._inicializarParadasRota(idx);
-    Viagens.mostrarRotas();
-    Viagens._carregarDetalhesRotaEmSegundoPlano(idx, Viagens._geracaoPlanejamento);
+    if (Viagens.plano.paradasPorRota[idx]) {
+      Viagens.mostrarRotas();
+      return;
+    }
+    Viagens.mostrarRotas(true);
+    var rota = Viagens.plano.rotas[idx];
+    if (!rota) { Viagens.mostrarRotas(); return; }
+    Viagens.planejarParadasSequencial(rota).then(function (paradas) {
+      return Viagens.verificarManutencao(Viagens.plano.veiculoSelecionado.id, rota.km)
+        .then(function (manut) {
+          Viagens.plano.paradasPorRota[idx] = { paradas: paradas, manutencao: manut };
+          Viagens.mostrarRotas();
+        })
+        .catch(function (e) {
+          console.warn('Erro em manutenÃ§Ã£o (rota e paradas preservadas):', e);
+          Viagens.plano.paradasPorRota[idx] = { paradas: paradas, manutencao: null, erroParcial: true };
+          Viagens.mostrarRotas();
+          App.toast('NÃ£o foi possÃ­vel verificar as revisÃµes. A rota foi mantida.', 'ok');
+        });
+    }).catch(function (e) {
+      console.error('CarWay - erro ao planejar paradas:', e);
+      Viagens.plano.paradasPorRota[idx] = { paradas: [], manutencao: null, erroParcial: true };
+      Viagens.mostrarRotas();
+      App.toast('Ocorreu um erro ao calcular as paradas. A rota foi mantida.', 'erro');
+    });
   },
 
   selecionarRotaPreview: function (idx) {
@@ -2345,7 +2155,7 @@ nomeApp: function (app) {
       });
     });
   },
-  buscarPostosParaParadasDaRota: function (paradas, rota, aoAtualizar) {
+  buscarPostosParaParadasDaRota: function (paradas, rota) {
     if (!paradas || !paradas.length) return Promise.resolve();
     var coords = rota.polyline ? Viagens._decodificarPolyline(rota.polyline) : [];
     if (!coords.length) return Promise.resolve();
@@ -2370,24 +2180,22 @@ nomeApp: function (app) {
 
     function tentarPontoIdeal(p) {
       return (Viagens.plano.parametrosAutonomia && Viagens.plano.parametrosAutonomia.categoria === 'eletrico' ? Viagens._buscarPontosRecargaOCM(p.lat, p.lon) : Viagens.chamarPlaces(p.lat, p.lon, 8000, 5, 'gas_station')).then(function (locais) {
-        if (locais.length) { Viagens._aplicarPostoEncontrado(p, locais); p.carregandoPosto = false; }
+        if (locais.length) { Viagens._aplicarPostoEncontrado(p, locais); }
         return null;
       }).catch(function () { return null; });
     }
 
     return processarEmLotes(paradas, 5, tentarPontoIdeal).then(function () {
-      if (typeof aoAtualizar === 'function') aoAtualizar();
       var falharam1 = paradas.filter(function (p) { return !p.postoNome; });
       if (!falharam1.length) return;
       function tentarRaioMaior(p) {
         return (Viagens.plano.parametrosAutonomia && Viagens.plano.parametrosAutonomia.categoria === 'eletrico' ? Viagens._buscarPontosRecargaOCM(p.lat, p.lon) : Viagens.chamarPlaces(p.lat, p.lon, 25000, 5, 'gas_station')).then(function (locais) {
-          if (locais.length) { Viagens._aplicarPostoEncontrado(p, locais); p.carregandoPosto = false; }
+          if (locais.length) { Viagens._aplicarPostoEncontrado(p, locais); }
           return null;
         }).catch(function () { return null; });
       }
       return processarEmLotes(falharam1, 5, tentarRaioMaior);
     }).then(function () {
-      if (typeof aoAtualizar === 'function') aoAtualizar();
       var falharam2 = paradas.filter(function (p) { return !p.postoNome; });
       if (!falharam2.length) return;
       return Promise.all(falharam2.map(function (p) {
@@ -2400,9 +2208,6 @@ nomeApp: function (app) {
         }
         return Viagens._buscarPostoRetroativo(p, coords, kmSo, idaVolta, limiteInferior);
       }));
-    }).then(function () {
-      paradas.forEach(function (p) { p.carregandoPosto = false; });
-      if (typeof aoAtualizar === 'function') aoAtualizar();
     });
   },
 
@@ -2509,13 +2314,9 @@ nomeApp: function (app) {
   /* =========================================================
      MOSTRAR ROTAS (resultados)
      ========================================================= */
-  mostrarRotas: function (carregando, preservarScroll) {
-    var scrollAnterior = window.pageYOffset || document.documentElement.scrollTop || 0;
+  mostrarRotas: function (carregando) {
     var rotas = Viagens.plano.rotas;
     if (!rotas || !rotas.length) return;
-    var containerResultados = document.getElementById('formPlanoViagemContainer');
-    if (!containerResultados) { Viagens._telaResultadosRotas = false; return; }
-    Viagens._telaResultadosRotas = true;
     var idaVolta = Viagens.plano.idaVolta;
     var origemTxt = Viagens.plano.origem.endereco;
     var destinoTxt = Viagens.plano.destino.endereco;
@@ -2551,13 +2352,6 @@ nomeApp: function (app) {
           '<div><b>' + autUtil + '</b><small>km entre paradas</small></div>' +
         '</div>' +
       '</div>';
-      if (p.preco > 0) {
-        html += '<div style="display:flex;align-items:center;gap:7px;margin:-7px 0 16px;padding:9px 11px;' +
-          'border-radius:10px;background:rgba(59,130,246,.08);color:var(--txt2);font-size:12px">' +
-          '<span class="ms" style="font-size:16px;color:#60a5fa">payments</span>' +
-          'Custo calculado com ' + (p.precoOrigem === 'media_real' ? 'a mÃ©dia real dos Ãºltimos abastecimentos' : 'o preÃ§o informado') +
-          ': <b style="color:var(--txt)">' + App.moeda(p.preco) + ' / ' + App.esc(p.unidade) + '</b></div>';
-      }
     }
 
     if (dadosAtiva && dadosAtiva.manutencao && dadosAtiva.manutencao.alertas && dadosAtiva.manutencao.alertas.length) {
@@ -2567,12 +2361,6 @@ nomeApp: function (app) {
       html += '<div style="background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.4);border-radius:12px;padding:10px 12px;margin-bottom:14px;font-size:12.5px;color:#fcd34d">' +
         '<span class="ms" style="vertical-align:middle;margin-right:4px">warning</span>' +
         'NÃ£o conseguimos verificar as revisÃµes agora. A rota foi mantida â€” vocÃª pode tentar de novo depois, sem custo extra de busca de rota.' +
-      '</div>';
-    }
-    if (dadosAtiva && dadosAtiva.erroPostos) {
-      html += '<div style="background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.4);border-radius:12px;padding:10px 12px;margin-bottom:14px;font-size:12.5px;color:#fcd34d">' +
-        '<span class="ms" style="vertical-align:middle;margin-right:4px">wifi_off</span>' +
-        'Os pontos de parada foram calculados, mas os postos nÃ£o puderam ser atualizados agora. Tente novamente antes de criar a viagem.' +
       '</div>';
     }
 
@@ -2598,9 +2386,6 @@ nomeApp: function (app) {
     rotas.forEach(function (r) {
       var ativa = r.indice === idxAtiva;
       var dadosRota = Viagens.plano.paradasPorRota[r.indice];
-      var custoCalculado = r.custoCalculado !== false && (Number(r.litros) <= 0 || Number(r.precoEnergia) > 0);
-      var custoTotalTxt = custoCalculado ? App.moeda(r.custoTotal) : 'â€”';
-      var custoCombustivelTxt = custoCalculado ? App.moeda(r.custoCombustivel) : 'NÃ£o calculado';
       var pedagioTxt = '';
       if (r.temPedagio && r.pedagioDisponivel) pedagioTxt = '<b>' + App.moeda(r.custoPedagio) + '</b><small>pedÃ¡gio</small>';
       else if (r.temPedagio) pedagioTxt = '<b>â€”</b><small>pedÃ¡gio indisponÃ­vel</small>';
@@ -2631,12 +2416,6 @@ nomeApp: function (app) {
           if (idaP.length || voltaP.length) {
             paradasBlocoHtml = '<div class="paradas-viagem" style="margin-top:' + (r.seloRapida && r.seloEconomica ? '34px' : '14px') + '">' +
               '<h4><span class="ms" style="color:#a78bfa">pin_drop</span> Paradas sugeridas</h4>';
-            if (dadosRota.carregandoPostos) {
-              paradasBlocoHtml += '<div style="display:flex;align-items:center;gap:7px;margin:8px 0 10px;padding:9px 10px;' +
-                'border-radius:10px;background:rgba(59,130,246,.08);color:#bfdbfe;font-size:12px">' +
-                '<span class="ms" style="font-size:16px">progress_activity</span>' +
-                'Rotas disponÃ­veis. Localizando os melhores postos em paralelo...</div>';
-            }
             if (idaP.length) {
               paradasBlocoHtml += '<div class="parada-grupo-titulo" style="color:#3b82f6">' +
                 '<span class="ms" style="font-size:14px;vertical-align:middle">east</span> IDA</div>' +
@@ -2659,31 +2438,27 @@ nomeApp: function (app) {
           '<div class="rota-card-topo" style="' + (r.seloRapida && r.seloEconomica ? 'margin-top:20px' : '') + '">' +
             '<div><b style="display:block;font-size:16px">' + App.esc(r.nome) + '</b>' +
               '<small style="color:var(--txt2);font-size:12px">' + (idaVolta ? 'Ida e volta' : 'SÃ³ ida') + '</small></div>' +
-            '<div style="text-align:right"><b style="display:block;font-size:22px;color:#fff">' + custoTotalTxt + '</b>' +
-              '<small style="color:var(--txt2);font-size:10px;text-transform:uppercase">' + (custoCalculado ? 'Custo previsto' : 'Custo nÃ£o calculado') + '</small></div>' +
+            '<div style="text-align:right"><b style="display:block;font-size:22px;color:#fff">' + App.moeda(r.custoTotal) + '</b>' +
+              '<small style="color:var(--txt2);font-size:10px;text-transform:uppercase">Custo previsto</small></div>' +
           '</div>' +
           '<div class="rota-card-grid">' +
             '<div><b>' + r.km + '</b><small>km</small></div>' +
             '<div><b>' + Viagens.fmtMinutos(r.minutos) + '</b><small>duraÃ§Ã£o</small></div>' +
-            '<div><b>' + custoCombustivelTxt + '</b><small>' + r.litros + ' ' + (p ? p.unidade : 'L') + '</small></div>' +
+            '<div><b>' + App.moeda(r.custoCombustivel) + '</b><small>' + r.litros + ' ' + (p ? p.unidade : 'L') + '</small></div>' +
             '<div>' + pedagioTxt + '</div>' +
           '</div>' +
           paradasBlocoHtml +
           '<div class="rota-card-acoes">' +
             '<button class="btn-novo-sec" onclick="event.stopPropagation();Viagens.abrirMapaFullscreen(' + r.indice + ')"><span class="ms">map</span> Ver no mapa</button>' +
-            '<button class="btn-novo" ' + (dadosRota && dadosRota.carregandoPostos ? 'disabled title="Aguarde a localizaÃ§Ã£o dos postos"' : '') +
-              ' onclick="event.stopPropagation();Viagens.criarViagemDaRota(' + r.indice + ')"><span class="ms">' +
-              (dadosRota && dadosRota.carregandoPostos ? 'progress_activity' : 'check') + '</span> ' +
-              (dadosRota && dadosRota.carregandoPostos ? 'Localizando postos' : 'Escolher') + '</button>' +
+            '<button class="btn-novo" onclick="event.stopPropagation();Viagens.criarViagemDaRota(' + r.indice + ')"><span class="ms">check</span> Escolher</button>' +
           '</div>' +
         '</div>';
     });
 
 html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="btn-cancelar-form" onclick="Viagens.voltarParaFormularioMantendoRotas()"><span class="ms">arrow_back</span> Voltar</button></div>';
 
-    containerResultados.innerHTML = html;
-    if (preservarScroll) window.scrollTo(0, scrollAnterior);
-    else window.scrollTo({ top: 0, behavior: 'smooth' });
+    document.getElementById('formPlanoViagemContainer').innerHTML = html;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   },
 
   _htmlAlertasManutencao: function (alertas) {
@@ -2721,12 +2496,7 @@ html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="b
     var linhaEndereco = '';
     var corNum = '#3b82f6';
 
-    if (p.carregandoPosto) {
-      corNum = '#3b82f6';
-      linhaEndereco = '<small style="color:#bfdbfe">' +
-        '<span class="ms" style="font-size:13px;vertical-align:middle">progress_activity</span> ' +
-        'Localizando posto prÃ³ximo deste ponto de autonomia...</small>';
-    } else if (p.semPosto) {
+    if (p.semPosto) {
       corNum = '#ef4444';
       linhaEndereco = '<small style="color:#fca5a5">' +
         '<span class="ms" style="font-size:13px;vertical-align:middle">report</span> ' +
@@ -2924,15 +2694,6 @@ html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="b
     var r = Viagens.plano.rotas[idx];
     if (!r) return;
     var dados = Viagens.plano.paradasPorRota[idx];
-    if (dados && dados.carregandoPostos) {
-      App.toast('A rota jÃ¡ estÃ¡ disponÃ­vel. Aguarde apenas a localizaÃ§Ã£o dos postos antes de escolher.', 'ok');
-      return;
-    }
-    if (Number(r.litros) > 0 && !(Number(r.precoEnergia) > 0)) {
-      App.toast('O custo nÃ£o pÃ´de ser calculado. Volte e informe um preÃ§o vÃ¡lido.', 'erro');
-      return;
-    }
-    Viagens._telaResultadosRotas = false;
     var idaVolta = Viagens.plano.idaVolta;
     var veic = Viagens.plano.veiculoSelecionado || Viagens.veiculos[0];
     var origemTxt = Viagens.plano.origem.endereco.split(',')[0];
@@ -2984,10 +2745,6 @@ html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="b
     confirmarCriarViagem: function (idx) {
     var r = Viagens.plano.rotas[idx];
     if (!r) return;
-    if (Number(r.litros) > 0 && !(Number(r.precoEnergia) > 0)) {
-      App.toast('O custo nÃ£o pÃ´de ser calculado. Informe um preÃ§o vÃ¡lido antes de criar a viagem.', 'erro');
-      return;
-    }
     if (Viagens._salvando) return;
     Viagens._salvando = true;
     var dados = Viagens.plano.paradasPorRota[idx];
@@ -3038,8 +2795,6 @@ html += '<div class="form-acoes-viagem" style="margin-top:20px"><button class="b
         idaVolta: idaVolta,
         custoCombustivel: r.custoCombustivel,
         quantidadeEnergiaPrevista: r.litros || 0,
-        precoEnergia: r.precoEnergia || 0,
-        precoOrigem: r.precoOrigem || 'informado',
         custoTotalPrevisto: r.custoTotal || totalPrev,
         custoPedagio: r.custoPedagio,
         temPedagio: r.temPedagio,
