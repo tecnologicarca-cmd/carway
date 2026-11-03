@@ -3126,6 +3126,14 @@ var resultado = await sb.functions.invoke(
         throw new Error('A IA não retornou uma resposta.');
       }
 
+      /* CARWAY_IA_PRIVACIDADE_V1: não exibir IDs internos de veículos. */
+      texto = texto
+        .replace(/\(\s*ID\s+VEI_[A-Za-z0-9_-]+\s*\)\s*[–—-]?\s*/gi, '')
+        .replace(/ID\s*[:#-]?\s*VEI_[A-Za-z0-9_-]+/gi, '')
+        .replace(/VEI_[A-Za-z0-9_-]+/g, '')
+        .replace(/[ 	]{2,}/g, ' ')
+        .replace(/ +([,.;:])/g, '$1');
+
       historico.push({ tipo: 'assistente', texto: texto });
     } catch (erro) {
       if (pedido !== sequencia || !autenticado) return;
