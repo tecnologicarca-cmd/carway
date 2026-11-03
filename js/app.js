@@ -2743,7 +2743,7 @@ document.addEventListener('DOMContentLoaded', App.init);
     botao.setAttribute('aria-expanded', 'false');
     botao.title = 'CarWay IA — consulte seus dados';
 
-    var icone = criarElemento('span', 'ms', 'smart_toy');
+    var icone = criarElemento('span', 'ms', 'directions_car');
     icone.setAttribute('aria-hidden', 'true');
     botao.appendChild(icone);
     botao.appendChild(criarElemento('span', '', 'IA'));
@@ -2833,16 +2833,110 @@ document.addEventListener('DOMContentLoaded', App.init);
     desenhar();
   }
 
+
+  /* CARWAY_IA_RENDER_V2: formatação por elementos seguros. */
+  function textoFormatado(destino, texto) {
+    var partes = String(texto).split(/(\*\*[^*]+\*\*)/g);
+
+    partes.forEach(function (parte) {
+      if (parte.startsWith('**') && parte.endsWith('**')) {
+        var destaque = document.createElement('b');
+        destaque.textContent = parte.slice(2, -2);
+        destino.appendChild(destaque);
+      } else {
+        destino.appendChild(document.createTextNode(parte));
+      }
+    });
+  }
+
+  function celulasTabela(linha) {
+    return linha.trim()
+      .replace(/^\|/, '')
+      .replace(/\|$/, '')
+      .split('|')
+      .map(function (celula) {
+        return celula.trim();
+      });
+  }
+
+  function respostaFormatada(destino, texto) {
+    var linhas = String(texto)
+      .replace(/<br\s*\/?\s*>/gi, '\n')
+      .replace(/\r\n?/g, '\n')
+      .split('\n');
+
+    for (var i = 0; i < linhas.length; i++) {
+      var linha = linhas[i].trim();
+
+      if (!linha) continue;
+
+      var seguinte = (linhas[i + 1] || '').trim();
+
+      var ehTabela =
+        linha.startsWith('|') &&
+        seguinte.startsWith('|') &&
+        celulasTabela(seguinte).every(function (celula) {
+          return /^:?-{3,}:?$/.test(celula);
+        });
+
+      if (ehTabela) {
+        var cabecalhos = celulasTabela(linha);
+        i += 2;
+
+        while (
+          i < linhas.length &&
+          linhas[i].trim().startsWith('|')
+        ) {
+          var valores = celulasTabela(linhas[i]);
+
+          var card = document.createElement('div');
+          card.style.cssText =
+            'padding:10px;margin:8px 0;border:1px solid #64748b;' +
+            'border-radius:10px;background:#0f172a';
+
+          valores.forEach(function (valor, indice) {
+            var campo = document.createElement('div');
+            campo.style.marginBottom = '5px';
+
+            var rotulo = document.createElement('b');
+            rotulo.textContent =
+              (cabecalhos[indice] || 'Informação') + ': ';
+
+            campo.appendChild(rotulo);
+            textoFormatado(campo, valor);
+            card.appendChild(campo);
+          });
+
+          destino.appendChild(card);
+          i++;
+        }
+
+        i--;
+        continue;
+      }
+
+      var paragrafo = document.createElement('div');
+      paragrafo.style.marginBottom = '8px';
+
+      linha = linha.replace(/^#{1,6}\s+/, '');
+      linha = linha.replace(/^[-*]\s+/, '• ');
+
+      textoFormatado(paragrafo, linha);
+      destino.appendChild(paragrafo);
+    }
+  }
+
   function desenhar() {
     var lista = document.getElementById('cwIaMensagens');
     if (!lista) return;
+
     lista.replaceChildren();
 
     if (!historico.length) {
       lista.appendChild(criarElemento(
         'p',
         '',
-        'Olá! Pergunte, por exemplo: “Quais são meus veículos?” ou “Resuma a viagem CASA - RJ”.'
+        'Olá! Consulte seus veículos, viagens e lançamentos.'
       ));
     }
 
@@ -2851,10 +2945,23 @@ document.addEventListener('DOMContentLoaded', App.init);
         'div',
         'cw-ia-mensagem ' + item.tipo
       );
+
       bloco.appendChild(criarElemento(
-        'strong', '', item.tipo === 'usuario' ? 'Você' : 'CarWay IA'
+        'strong',
+        '',
+        item.tipo === 'usuario' ? 'Você' : 'CarWay IA'
       ));
-      bloco.appendChild(criarElemento('div', '', item.texto));
+
+      var corpo = document.createElement('div');
+
+      if (item.tipo === 'usuario') {
+        corpo.textContent = item.texto;
+      } else {
+        corpo.style.whiteSpace = 'normal';
+        respostaFormatada(corpo, item.texto);
+      }
+
+      bloco.appendChild(corpo);
       lista.appendChild(bloco);
     });
 
