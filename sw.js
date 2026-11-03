@@ -60,8 +60,8 @@ const APP_SHELL = [
   './js/equipe.js?v=18.5.0',
   './js/conta.js?v=18.5.0',
   './js/paineladmin.js?v=18.5.0',
-  './js/viagens.js?v=18.5.2',
-  './js/viagens_mapsme_paradas.js?v=18.5.2',
+  './js/viagens.js?v=18.5.3',
+  './js/viagens_mapsme_paradas.js?v=18.5.3',
   './js/carway-correcao-abastecimento-senha-18.2.4.js?v=18.5.0',
   './pwa-install.js?v=18.5.0'
 ];
