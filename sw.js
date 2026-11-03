@@ -50,7 +50,7 @@ const APP_SHELL = [
   './css/img/flags@2x.png',
   './css/img/globe.png',
   './css/img/globe@2x.png',
-  './js/app.js?v=18.5.0',
+  './js/app.js?v=18.5.2',
   './js/offline.js?v=18.5.0',
   './js/veiculos.js?v=18.5.0',
   './js/abastecimentos.js?v=18.5.0',
