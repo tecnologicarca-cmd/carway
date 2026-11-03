@@ -2980,14 +2980,40 @@ document.addEventListener('DOMContentLoaded', App.init);
 
   function fechar() {
     aberto = false;
-    var painel = document.getElementById('cwIaPainel');
-    if (painel) painel.hidden = true;
-    var botao = document.getElementById('cwIaBotao');
-    if (botao) botao.setAttribute('aria-expanded', 'false');
 
-    if (focoAnterior && focoAnterior.isConnected) {
+    // Invalida qualquer resposta da conversa que ainda esteja pendente.
+    sequencia++;
+
+    // Cada nova abertura começa uma conversa limpa.
+    historico = [];
+
+    var painel = document.getElementById('cwIaPainel');
+    if (painel) {
+      painel.hidden = true;
+    }
+
+    var botao = document.getElementById('cwIaBotao');
+    if (botao) {
+      botao.setAttribute('aria-expanded', 'false');
+    }
+
+    var entrada = document.getElementById('cwIaEntrada');
+    if (entrada) {
+      entrada.value = '';
+    }
+
+    definirOcupado(false);
+    desenhar();
+
+    if (
+      focoAnterior &&
+      focoAnterior.isConnected &&
+      typeof focoAnterior.focus === 'function'
+    ) {
       focoAnterior.focus();
     }
+
+    focoAnterior = null;
   }
 
   function limparSessao() {
