@@ -6,7 +6,7 @@
 
 'use strict';
 
-const CACHE_VERSION = 'carway-shell-18.5.2';
+const CACHE_VERSION = 'carway-shell-18.5.3';
 const OFFLINE_PAGE = './index.html';
 
 /*
