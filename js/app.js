@@ -2684,3 +2684,319 @@ _renderConteudoBarraVeiculoGlobal: function () {
   }
 };
 document.addEventListener('DOMContentLoaded', App.init);
+
+
+/* CARWAY_IA_INTERFACE_V1
+   Interface textual. Não realiza gravações.
+   Cada pergunta é independente nesta versão.
+*/
+(function () {
+  var aberto = false;
+  var ocupado = false;
+  var autenticado = false;
+  var dono = null;
+  var historico = [];
+  var sequencia = 0;
+  var focoAnterior = null;
+
+  function criarElemento(tag, classe, texto) {
+    var el = document.createElement(tag);
+    if (classe) el.className = classe;
+    if (texto !== undefined) el.textContent = texto;
+    return el;
+  }
+
+  function criarInterface() {
+    if (document.getElementById('cwIaBotao')) return;
+
+    var estilo = document.createElement('style');
+    estilo.textContent = [
+      '#cwIaBotao{position:fixed;right:max(14px,env(safe-area-inset-right,0px));bottom:calc(155px + env(safe-area-inset-bottom,0px));z-index:780;display:flex;align-items:center;gap:7px;padding:13px 15px;border:2px solid #c4b5fd;border-radius:22px;background:linear-gradient(135deg,#1d4ed8,#7c3aed);color:#fff;box-shadow:0 5px 20px #0005;font:800 16px system-ui;cursor:pointer}',
+      '#cwIaBotao .ms{font-size:28px}',
+      '#cwIaBotao[hidden],#cwIaPainel[hidden]{display:none!important}',
+      '#cwIaBotao:focus-visible,#cwIaPainel button:focus-visible,#cwIaEntrada:focus-visible{outline:3px solid #38bdf8;outline-offset:3px}',
+      '#cwIaPainel{position:fixed;inset:0;z-index:3000;background:#0009;display:flex;align-items:center;justify-content:flex-end;padding:14px;box-sizing:border-box}',
+      '.cw-ia-caixa{display:flex;flex-direction:column;width:min(440px,100%);height:min(680px,90dvh);background:#111827;color:#f8fafc;border:1px solid #64748b;border-radius:20px;box-shadow:0 15px 50px #0008;overflow:hidden;font:15px/1.5 system-ui}',
+      '.cw-ia-topo{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;background:#1e293b}',
+      '.cw-ia-topo strong{font-size:18px}',
+      '.cw-ia-topo button{background:transparent;border:1px solid #94a3b8;color:#fff;border-radius:9px;padding:7px 11px;cursor:pointer}',
+      '.cw-ia-nota{padding:9px 16px;background:#172554;color:#dbeafe;font-size:12px}',
+      '.cw-ia-mensagens{flex:1;min-height:0;overflow:auto;padding:14px;overscroll-behavior:contain}',
+      '.cw-ia-mensagem{margin:0 0 12px;padding:12px;border-radius:13px;background:#1e293b;white-space:pre-wrap;overflow-wrap:anywhere}',
+      '.cw-ia-mensagem.usuario{background:#1e3a8a}',
+      '.cw-ia-mensagem strong{display:block;margin-bottom:5px;font-size:12px;color:#c4b5fd}',
+      '.cw-ia-estado{min-height:22px;padding:0 16px;color:#cbd5e1;font-size:12px}',
+      '.cw-ia-form{display:flex;gap:8px;padding:12px;border-top:1px solid #475569}',
+      '#cwIaEntrada{flex:1;min-width:0;resize:vertical;max-height:140px;min-height:50px;background:#0f172a;color:#fff;border:1px solid #94a3b8;border-radius:10px;padding:10px;font:16px system-ui;box-sizing:border-box}',
+      '.cw-ia-form button{align-self:flex-end;background:#6d28d9;color:#fff;border:0;border-radius:10px;padding:14px;font-weight:700;cursor:pointer}',
+      '.cw-ia-form button:disabled{opacity:.55;cursor:wait}',
+      '@media(max-width:600px){#cwIaPainel{padding:8px;padding-bottom:max(8px,env(safe-area-inset-bottom,0px))}.cw-ia-caixa{width:100%;height:92dvh}}'
+    ].join('');
+    document.head.appendChild(estilo);
+
+    var botao = criarElemento('button');
+    botao.id = 'cwIaBotao';
+    botao.type = 'button';
+    botao.hidden = true;
+    botao.setAttribute('aria-label', 'Abrir CarWay IA');
+    botao.setAttribute('aria-haspopup', 'dialog');
+    botao.setAttribute('aria-expanded', 'false');
+    botao.title = 'CarWay IA — consulte seus dados';
+
+    var icone = criarElemento('span', 'ms', 'smart_toy');
+    icone.setAttribute('aria-hidden', 'true');
+    botao.appendChild(icone);
+    botao.appendChild(criarElemento('span', '', 'IA'));
+    botao.addEventListener('click', abrir);
+    document.body.appendChild(botao);
+
+    var painel = criarElemento('div');
+    painel.id = 'cwIaPainel';
+    painel.hidden = true;
+
+    var caixa = criarElemento('section', 'cw-ia-caixa');
+    caixa.setAttribute('role', 'dialog');
+    caixa.setAttribute('aria-modal', 'true');
+    caixa.setAttribute('aria-labelledby', 'cwIaTitulo');
+
+    var topo = criarElemento('div', 'cw-ia-topo');
+    var titulo = criarElemento('strong', '', 'CarWay IA');
+    titulo.id = 'cwIaTitulo';
+    topo.appendChild(titulo);
+
+    var fecharBotao = criarElemento('button', '', 'Fechar');
+    fecharBotao.type = 'button';
+    fecharBotao.addEventListener('click', fechar);
+    topo.appendChild(fecharBotao);
+    caixa.appendChild(topo);
+
+    caixa.appendChild(criarElemento(
+      'div',
+      'cw-ia-nota',
+      'Somente consultas. Cada pergunta é independente. Voz em etapa posterior.'
+    ));
+
+    var mensagens = criarElemento('div', 'cw-ia-mensagens');
+    mensagens.id = 'cwIaMensagens';
+    caixa.appendChild(mensagens);
+
+    var estado = criarElemento('div', 'cw-ia-estado');
+    estado.id = 'cwIaEstado';
+    estado.setAttribute('role', 'status');
+    caixa.appendChild(estado);
+
+    var form = criarElemento('form', 'cw-ia-form');
+    var entrada = criarElemento('textarea');
+    entrada.id = 'cwIaEntrada';
+    entrada.maxLength = 4000;
+    entrada.placeholder = 'Pergunte sobre veículos, viagens ou lançamentos…';
+    entrada.setAttribute('aria-label', 'Mensagem para a CarWay IA');
+    form.appendChild(entrada);
+
+    var enviarBotao = criarElemento('button', '', 'Enviar');
+    enviarBotao.id = 'cwIaEnviar';
+    enviarBotao.type = 'submit';
+    form.appendChild(enviarBotao);
+    form.addEventListener('submit', enviar);
+    caixa.appendChild(form);
+    painel.appendChild(caixa);
+    document.body.appendChild(painel);
+
+    painel.addEventListener('click', function (e) {
+      if (e.target === painel) fechar();
+    });
+
+    painel.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        fechar();
+        return;
+      }
+
+      if (e.key === 'Tab') {
+        var itens = Array.from(caixa.querySelectorAll(
+          'button:not(:disabled),textarea:not(:disabled)'
+        ));
+        var primeiro = itens[0];
+        var ultimo = itens[itens.length - 1];
+
+        if (e.shiftKey && document.activeElement === primeiro) {
+          e.preventDefault();
+          ultimo.focus();
+        } else if (!e.shiftKey && document.activeElement === ultimo) {
+          e.preventDefault();
+          primeiro.focus();
+        }
+      }
+    });
+
+    desenhar();
+  }
+
+  function desenhar() {
+    var lista = document.getElementById('cwIaMensagens');
+    if (!lista) return;
+    lista.replaceChildren();
+
+    if (!historico.length) {
+      lista.appendChild(criarElemento(
+        'p',
+        '',
+        'Olá! Pergunte, por exemplo: “Quais são meus veículos?” ou “Resuma a viagem CASA - RJ”.'
+      ));
+    }
+
+    historico.forEach(function (item) {
+      var bloco = criarElemento(
+        'div',
+        'cw-ia-mensagem ' + item.tipo
+      );
+      bloco.appendChild(criarElemento(
+        'strong', '', item.tipo === 'usuario' ? 'Você' : 'CarWay IA'
+      ));
+      bloco.appendChild(criarElemento('div', '', item.texto));
+      lista.appendChild(bloco);
+    });
+
+    lista.scrollTop = lista.scrollHeight;
+  }
+
+  function definirOcupado(valor) {
+    ocupado = valor;
+    var enviarBotao = document.getElementById('cwIaEnviar');
+    var entrada = document.getElementById('cwIaEntrada');
+    if (enviarBotao) enviarBotao.disabled = valor;
+    if (entrada) entrada.disabled = valor;
+    var estado = document.getElementById('cwIaEstado');
+    if (estado) estado.textContent = valor ? 'Consultando…' : '';
+  }
+
+  function fechar() {
+    aberto = false;
+    var painel = document.getElementById('cwIaPainel');
+    if (painel) painel.hidden = true;
+    var botao = document.getElementById('cwIaBotao');
+    if (botao) botao.setAttribute('aria-expanded', 'false');
+
+    if (focoAnterior && focoAnterior.isConnected) {
+      focoAnterior.focus();
+    }
+  }
+
+  function limparSessao() {
+    autenticado = false;
+    dono = null;
+    sequencia++;
+    historico = [];
+    fechar();
+    definirOcupado(false);
+    var entrada = document.getElementById('cwIaEntrada');
+    if (entrada) entrada.value = '';
+    var botao = document.getElementById('cwIaBotao');
+    if (botao) botao.hidden = true;
+    desenhar();
+  }
+
+  function abrir() {
+    if (!autenticado || !usuarioAtual || !orgAtual) return;
+    focoAnterior = document.activeElement;
+    aberto = true;
+    document.getElementById('cwIaPainel').hidden = false;
+    document.getElementById('cwIaBotao')
+      .setAttribute('aria-expanded', 'true');
+    desenhar();
+    document.getElementById('cwIaEntrada').focus();
+  }
+
+  async function enviar(evento) {
+    evento.preventDefault();
+    if (ocupado || !autenticado) return;
+
+    var entrada = document.getElementById('cwIaEntrada');
+    var pergunta = entrada.value.trim();
+    var estado = document.getElementById('cwIaEstado');
+
+    if (!pergunta) return;
+
+    if (!navigator.onLine) {
+      estado.textContent =
+        'A CarWay IA exige internet. Seus lançamentos offline continuam disponíveis.';
+      return;
+    }
+
+    var pedido = ++sequencia;
+    var identidade = dono;
+    historico.push({ tipo: 'usuario', texto: pergunta });
+    entrada.value = '';
+    desenhar();
+    definirOcupado(true);
+
+    try {
+      var resultado = await sb.functions.invoke('swift-endpoint', {
+        body: { mensagem: pergunta }
+      });
+
+      if (
+        pedido !== sequencia ||
+        !autenticado ||
+        identidade !== dono
+      ) return;
+
+      if (resultado.error || !resultado.data || !resultado.data.ok) {
+        throw new Error('Não foi possível concluir a consulta.');
+      }
+
+      var texto = resultado.data.resposta;
+      if (typeof texto !== 'string' || !texto.trim()) {
+        throw new Error('A IA não retornou uma resposta.');
+      }
+
+      historico.push({ tipo: 'assistente', texto: texto });
+    } catch (erro) {
+      if (pedido !== sequencia || !autenticado) return;
+
+      historico.push({
+        tipo: 'assistente',
+        texto: 'Não foi possível consultar a CarWay IA. Verifique a conexão e tente novamente.'
+      });
+    } finally {
+      if (pedido === sequencia && autenticado) {
+        definirOcupado(false);
+        desenhar();
+        if (aberto) entrada.focus();
+      }
+    }
+  }
+
+  var entrarOriginal = App.entrarNoApp;
+  App.entrarNoApp = function () {
+    var retorno = entrarOriginal.apply(this, arguments);
+    criarInterface();
+
+    var identidade = String(usuarioAtual.auth_id || usuarioAtual.id) +
+      ':' + String(orgAtual && orgAtual.id);
+
+    if (dono !== identidade) {
+      limparSessao();
+      dono = identidade;
+    }
+
+    autenticado = true;
+    document.getElementById('cwIaBotao').hidden = false;
+    return retorno;
+  };
+
+  var mostrarOriginal = App.mostrarTela;
+  App.mostrarTela = function () {
+    limparSessao();
+    return mostrarOriginal.apply(this, arguments);
+  };
+
+  if (typeof sb !== 'undefined' && sb && sb.auth) {
+    sb.auth.onAuthStateChange(function (evento) {
+      if (evento === 'SIGNED_OUT' || evento === 'PASSWORD_RECOVERY') {
+        limparSessao();
+      }
+    });
+  }
+})();
