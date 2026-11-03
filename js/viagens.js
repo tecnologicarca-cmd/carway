@@ -1,4 +1,4 @@
-/* APP_VERSION: v10.21 - rotas ilimitadas normalizadas */
+/* APP_VERSION: v10.22 - rotas ilimitadas normalizadas */
 /* =====================================================================
    CARWAY v16 - VIAGENS
    Planejador completo com Google Routes + Geocoding + Places
