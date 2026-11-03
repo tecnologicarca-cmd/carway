@@ -3039,9 +3039,51 @@ document.addEventListener('DOMContentLoaded', App.init);
     definirOcupado(true);
 
     try {
-      var resultado = await sb.functions.invoke('swift-endpoint', {
-        body: { mensagem: pergunta }
-      });
+var contexto = {
+  organizacaoId:
+    orgAtual && orgAtual.id
+      ? String(orgAtual.id)
+      : null,
+
+  organizacaoNome:
+    orgAtual && orgAtual.nome
+      ? String(orgAtual.nome)
+      : null,
+
+  veiculoAtivoId:
+    App.veiculoAtivoId
+      ? String(App.veiculoAtivoId)
+      : null,
+
+  agora:
+    new Date().toISOString(),
+
+  timezone:
+    Intl.DateTimeFormat()
+      .resolvedOptions()
+      .timeZone || null,
+
+  historico:
+    historico.slice(-10).map(function (item) {
+      return {
+        role:
+          item.tipo === 'usuario'
+            ? 'user'
+            : 'assistant',
+        content: String(item.texto || '')
+      };
+    })
+};
+
+var resultado = await sb.functions.invoke(
+  'swift-endpoint',
+  {
+    body: {
+      mensagem: pergunta,
+      contexto: contexto
+    }
+  }
+);
 
       if (
         pedido !== sequencia ||
