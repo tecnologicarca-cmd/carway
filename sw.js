@@ -6,7 +6,7 @@
 
 'use strict';
 
-const CACHE_VERSION = 'carway-shell-18.5.8';
+const CACHE_VERSION = 'carway-shell-18.5.9';
 const OFFLINE_PAGE = './index.html';
 
 /*
@@ -59,7 +59,7 @@ const APP_SHELL = [
   './js/documentos.js?v=18.5.0',
   './js/equipe.js?v=18.5.0',
   './js/conta.js?v=18.5.0',
-  './js/paineladmin.js?v=18.5.0',
+  './js/paineladmin.js?v=18.5.1',
   './js/viagens.js?v=18.5.8',
   './js/viagens_mapsme_paradas.js?v=18.5.8',
   './js/carway-correcao-abastecimento-senha-18.2.4.js?v=18.5.0',
