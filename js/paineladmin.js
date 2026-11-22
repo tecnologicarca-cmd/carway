@@ -702,24 +702,190 @@ var PainelAdmin = {
     }, 'Salvar plano');
   },
 
-  salvarPlano: function (organizacaoId) {
-    var select = document.getElementById('adminNovoPlano');
-    if (!select) return;
-    var novoPlano = select.value;
+salvarPlano: function (organizacaoId) {
+  var select = document.getElementById('adminNovoPlano');
+  if (!select) {
+    App.toast('Não foi possível identificar o novo plano', 'erro');
+    return;
+  }
 
-    sb.from('organizacoes').update({
+  var novoPlano = String(select.value || '').trim().toUpperCase();
+  var org = PainelAdmin._organizacaoPorId(organizacaoId);
+
+  if (!org) {
+    App.toast('Organização não encontrada no painel', 'erro');
+    return;
+  }
+
+  var planoAnterior = String(org.tipoPlano || 'FREE').trim().toUpperCase();
+
+  if (novoPlano === planoAnterior) {
+    App.toast('A organização já está neste plano', 'ok');
+    App.fecharModal();
+    return;
+  }
+
+  var planoValido = PainelAdmin._planos().some(function (plano) {
+    return String(plano.id).toUpperCase() === novoPlano;
+  });
+
+  if (!planoValido) {
+    App.toast('O plano selecionado não é válido', 'erro');
+    return;
+  }
+
+  var btnSalvar = document.getElementById('btnModalSalvar');
+  var textoOriginal = btnSalvar ? btnSalvar.textContent : 'Salvar plano';
+
+  if (btnSalvar) {
+    btnSalvar.disabled = true;
+    btnSalvar.setAttribute('aria-busy', 'true');
+    btnSalvar.textContent = 'Salvando...';
+  }
+
+  sb.from('organizacoes')
+    .update({
       tipoPlano: novoPlano,
       atualizadoEm: new Date().toISOString()
-    }).eq('id', organizacaoId).then(function (r) {
-      if (r.error) {
-        App.toast('Erro: ' + r.error.message, 'erro');
-        return;
+    })
+    .eq('id', organizacaoId)
+    .select('id,nome,tipoPlano,status,cortesia,atualizadoEm')
+    .then(function (resultado) {
+      if (resultado.error) {
+        throw resultado.error;
       }
+
+      var registros = resultado.data || [];
+
+      /*
+       * O Supabase pode retornar sucesso com zero linhas quando:
+       * - a RLS bloqueia a atualização;
+       * - o ID não existe;
+       * - o usuário não tem permissão para editar a organização.
+       */
+      if (!registros.length) {
+        throw new Error(
+          'Nenhuma organização foi atualizada. Verifique a política RLS da tabela organizacoes e a permissão do usuário master.'
+        );
+      }
+
+      var organizacaoAtualizada = registros[0];
+      var planoConfirmado = String(
+        organizacaoAtualizada.tipoPlano || ''
+      ).trim().toUpperCase();
+
+      if (planoConfirmado !== novoPlano) {
+        throw new Error(
+          'O Supabase não confirmou a alteração. Plano retornado: ' +
+          (planoConfirmado || 'não informado')
+        );
+      }
+
+      /*
+       * Atualiza imediatamente a cópia utilizada pelo painel,
+       * evitando que ele continue mostrando o plano anterior.
+       */
+      var indice = PainelAdmin.organizacoes.findIndex(function (item) {
+        return String(item.id) === String(organizacaoId);
+      });
+
+      if (indice >= 0) {
+        PainelAdmin.organizacoes[indice] = Object.assign(
+          {},
+          PainelAdmin.organizacoes[indice],
+          organizacaoAtualizada,
+          {
+            tipoPlano: novoPlano
+          }
+        );
+      }
+
+      /*
+       * Limpa possíveis informações antigas da organização mantidas
+       * no navegador. As chaves inexistentes não causam erro.
+       */
+      try {
+        localStorage.removeItem('carway_organizacao');
+        localStorage.removeItem('carway_organizacao_atual');
+        localStorage.removeItem('carway_plano');
+        localStorage.removeItem('carway_tipo_plano');
+        localStorage.removeItem('organizacaoAtual');
+        localStorage.removeItem('tipoPlano');
+
+        sessionStorage.removeItem('carway_organizacao');
+        sessionStorage.removeItem('carway_organizacao_atual');
+        sessionStorage.removeItem('carway_plano');
+        sessionStorage.removeItem('carway_tipo_plano');
+        sessionStorage.removeItem('organizacaoAtual');
+        sessionStorage.removeItem('tipoPlano');
+      } catch (e) {
+        console.warn('CarWay: não foi possível limpar o cache do plano:', e);
+      }
+
       App.fecharModal();
-      App.toast('Plano alterado com sucesso!', 'ok');
+
+      App.toast(
+        'Plano alterado de ' +
+        App.nomePlano(planoAnterior) +
+        ' para ' +
+        App.nomePlano(novoPlano) +
+        '!',
+        'ok'
+      );
+
+      /*
+       * Recarrega os dados administrativos diretamente do Supabase.
+       */
       PainelAdmin.carregarDados();
+
+      /*
+       * Se a organização alterada for a organização atualmente logada,
+       * o restante do CarWay pode continuar com o plano antigo em memória.
+       * O reload força a reconstrução da sessão e dos limites.
+       *
+       * A aplicação recebe alguns milissegundos para exibir o toast.
+       */
+      var organizacaoAtualId = null;
+
+      if (
+        typeof organizacaoAtual !== 'undefined' &&
+        organizacaoAtual &&
+        organizacaoAtual.id
+      ) {
+        organizacaoAtualId = organizacaoAtual.id;
+      } else if (
+        typeof usuarioAtual !== 'undefined' &&
+        usuarioAtual &&
+        usuarioAtual.organizacaoId
+      ) {
+        organizacaoAtualId = usuarioAtual.organizacaoId;
+      }
+
+      if (
+        organizacaoAtualId &&
+        String(organizacaoAtualId) === String(organizacaoId)
+      ) {
+        window.setTimeout(function () {
+          window.location.reload();
+        }, 900);
+      }
+    })
+    .catch(function (erro) {
+      console.error('CarWay - erro ao alterar plano:', erro);
+
+      if (btnSalvar) {
+        btnSalvar.disabled = false;
+        btnSalvar.removeAttribute('aria-busy');
+        btnSalvar.textContent = textoOriginal;
+      }
+
+      App.toast(
+        'Não foi possível alterar o plano: ' +
+        ((erro && erro.message) || 'erro desconhecido'),
+        'erro'
+      );
     });
-  },
+},
 
   abrirCortesia: function (organizacaoId) {
     var org = PainelAdmin._organizacaoPorId(organizacaoId);
